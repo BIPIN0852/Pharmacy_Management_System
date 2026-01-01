@@ -365,6 +365,131 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const { body, validationResult } = require("express-validator");
+// const mongoose = require("mongoose");
+// const authenticateToken = require("../middleware/auth");
+// const multer = require("multer");
+// const path = require("path");
+
+// const Prescription = require("../models/prescription.model");
+// const Appointment = require("../models/Appointment");
+// const Doctor = require("../models/Doctor");
+// const User = require("../models/User");
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     const uploadPath = path.join(__dirname, "../uploads/profiles");
+//     const fs = require("fs");
+//     if (!fs.existsSync(uploadPath)) {
+//       fs.mkdirSync(uploadPath, { recursive: true });
+//     }
+//     cb(null, uploadPath);
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+//     cb(
+//       null,
+//       `profile-${req.user?.id || "user"}-${uniqueSuffix}${path.extname(
+//         file.originalname
+//       )}`
+//     );
+//   },
+// });
+
+// const uploadProfilePhoto = multer({
+//   storage,
+//   limits: { fileSize: 5 * 1024 * 1024 },
+//   fileFilter: (req, file, cb) => {
+//     if (file.mimetype.startsWith("image/")) cb(null, true);
+//     else cb(new Error("Only image files are allowed!"), false);
+//   },
+// });
+
+// const router = express.Router();
+
+// // ---------- GET customer's prescriptions ----------
+// router.get("/prescriptions", authenticateToken, async (req, res) => {
+//   try {
+//     if (!req.user?.id) {
+//       return res.status(401).json({ message: "No user ID in token" });
+//     }
+
+//     const prescriptions = await Prescription.find({ customer: req.user.id })
+//       .populate("doctor", "name speciality")
+//       .sort({ createdAt: -1 });
+
+//     res.json(prescriptions);
+//   } catch (err) {
+//     console.error("Get prescriptions error:", err);
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// });
+
+// // ---------- GET customer's appointments ----------
+// router.get("/appointments", authenticateToken, async (req, res) => {
+//   try {
+//     const appointments = await Appointment.find({ customer: req.user.id })
+//       .populate("doctor", "name speciality nmcNumber")
+//       .sort({ date: 1, timeSlot: 1 })
+//       .lean();
+
+//     res.json(appointments);
+//   } catch (err) {
+//     console.error("Get customer appointments error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // ---------- Customer profile (get) ----------
+// router.get("/profile", authenticateToken, async (req, res) => {
+//   try {
+//     const profile = await User.findById(req.user.id)
+//       .select("name email phone address profilePhoto accountStatus")
+//       .lean();
+//     res.json(profile);
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // ---------- Customer profile (update) ----------
+// router.put(
+//   "/profile",
+//   authenticateToken,
+//   uploadProfilePhoto.single("profilePhoto"),
+//   async (req, res) => {
+//     try {
+//       const updates = {
+//         phone: req.body.phone?.trim(),
+//         address: {
+//           street: req.body.street?.trim(),
+//           city: req.body.city?.trim(),
+//           province: req.body.province?.trim(),
+//           postalCode: req.body.postalCode?.trim(),
+//         },
+//       };
+
+//       if (req.file) {
+//         updates.profilePhoto = `/uploads/profiles/${req.file.filename}`;
+//       }
+
+//       const user = await User.findByIdAndUpdate(req.user.id, updates, {
+//         new: true,
+//         runValidators: true,
+//       }).select("name email phone address profilePhoto accountStatus");
+
+//       res.json(user);
+//     } catch (err) {
+//       res.status(500).json({ message: "Update failed" });
+//     }
+//   }
+// );
+
+// module.exports = router;
+
+//
+
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
@@ -372,10 +497,12 @@ const authenticateToken = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
 
-const Prescription = require("../models/prescription.model");
+const Prescription = require("../models/Prescription"); // Correct casing
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Order = require("../models/Order");
+const Transaction = require("../models/Transaction"); // Ensure this model exists, or create it if missing
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -408,6 +535,19 @@ const uploadProfilePhoto = multer({
 
 const router = express.Router();
 
+// ---------- Helper: Format Prescription URL ----------
+const formatPrescription = (doc) => {
+  const p = doc.toObject ? doc.toObject() : doc;
+  // If it has a filename, construct the full URL
+  if (p.imageFilename) {
+    return {
+      ...p,
+      imageUrl: `/api/customer/prescriptions/image/${p.imageFilename}`,
+    };
+  }
+  return p;
+};
+
 // ---------- GET customer's prescriptions ----------
 router.get("/prescriptions", authenticateToken, async (req, res) => {
   try {
@@ -419,7 +559,9 @@ router.get("/prescriptions", authenticateToken, async (req, res) => {
       .populate("doctor", "name speciality")
       .sort({ createdAt: -1 });
 
-    res.json(prescriptions);
+    const formatted = prescriptions.map(formatPrescription);
+
+    res.json(formatted);
   } catch (err) {
     console.error("Get prescriptions error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
@@ -430,7 +572,7 @@ router.get("/prescriptions", authenticateToken, async (req, res) => {
 router.get("/appointments", authenticateToken, async (req, res) => {
   try {
     const appointments = await Appointment.find({ customer: req.user.id })
-      .populate("doctor", "name speciality nmcNumber")
+      .populate("doctor", "name speciality nmcNumber profilePhoto")
       .sort({ date: 1, timeSlot: 1 })
       .lean();
 
@@ -445,7 +587,10 @@ router.get("/appointments", authenticateToken, async (req, res) => {
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const profile = await User.findById(req.user.id)
-      .select("name email phone address profilePhoto accountStatus")
+      .select(
+        "name email phone address profilePhoto accountStatus savedMedicines"
+      )
+      .populate("savedMedicines")
       .lean();
     res.json(profile);
   } catch (err) {
@@ -485,5 +630,108 @@ router.put(
     }
   }
 );
+
+// ==========================================
+// [UPDATED] ROUTES FOR HISTORY & SAVED ITEMS
+// ==========================================
+
+// ---------- GET customer's orders (History) ----------
+router.get("/orders", authenticateToken, async (req, res) => {
+  try {
+    // UPDATED: Use 'customerId' and populate 'items.medicineId' with baseUnit
+    const orders = await Order.find({ customerId: req.user.id })
+      .populate({
+        path: "items.medicineId",
+        select: "name image price baseUnit",
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    console.error("Get orders error:", err);
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+});
+
+// ---------- GET transactions (History) ----------
+router.get("/transactions", authenticateToken, async (req, res) => {
+  try {
+    // If you haven't created a Transaction model yet, return empty array to prevent crash
+    if (!Transaction) return res.json([]);
+
+    const history = await Transaction.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(history);
+  } catch (err) {
+    // Fail silently with empty array if model missing, or log error
+    console.error(
+      "Get transactions error (Transaction model might be missing):",
+      err.message
+    );
+    res.json([]);
+  }
+});
+
+// ---------- POST simulate transaction (Helper) ----------
+router.post("/simulate-transaction", authenticateToken, async (req, res) => {
+  try {
+    if (!Transaction)
+      return res.status(500).json({ message: "Transaction model missing" });
+
+    const newTx = new Transaction({
+      user: req.user.id,
+      amount: req.body.amount,
+      type: req.body.type || "payment",
+      paymentMethod: req.body.method || "esewa",
+      status: "success",
+      description: req.body.desc || "Manual test transaction",
+    });
+    await newTx.save();
+    res.json(newTx);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to create transaction" });
+  }
+});
+
+// ---------- GET Saved Medicines (Wishlist) ----------
+router.get("/saved-medicines", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("savedMedicines");
+    res.json(user.savedMedicines || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ---------- TOGGLE Saved Medicine (Add/Remove) ----------
+router.post("/saved-medicines/:id", authenticateToken, async (req, res) => {
+  try {
+    const medicineId = req.params.id;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Initialize array if it doesn't exist
+    if (!user.savedMedicines) user.savedMedicines = [];
+
+    const index = user.savedMedicines.indexOf(medicineId);
+    let status;
+
+    if (index === -1) {
+      user.savedMedicines.push(medicineId);
+      status = "added";
+    } else {
+      user.savedMedicines.splice(index, 1);
+      status = "removed";
+    }
+
+    await user.save();
+    res.json({ status, savedMedicines: user.savedMedicines });
+  } catch (err) {
+    console.error("Toggle saved medicine error:", err);
+    res.status(500).json({ message: "Toggle failed" });
+  }
+});
 
 module.exports = router;

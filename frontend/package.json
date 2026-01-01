@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "@redux-devtools/extension": "^3.3.0",
     "@stripe/stripe-js": "^8.3.0",
     "bootstrap": "^5.3.8",
     "framer-motion": "^12.23.24",
