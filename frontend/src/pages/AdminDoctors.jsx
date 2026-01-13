@@ -1,44 +1,49 @@
-// import React, { useEffect, useState } from "react";
+// import React, { useState, useEffect } from "react";
 // import api from "../services/api";
+// import {
+//   Stethoscope,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   Clock,
+//   Save,
+//   AlertCircle,
+//   Mail,
+//   X,
+// } from "lucide-react";
 
 // const AdminDoctors = () => {
 //   const [doctors, setDoctors] = useState([]);
 //   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
 //   const [error, setError] = useState("");
 //   const [success, setSuccess] = useState("");
 
-//   const [showForm, setShowForm] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
+//   // Modal & Form State
+//   const [showModal, setShowModal] = useState(false);
+//   const [saving, setSaving] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
 //   const [formData, setFormData] = useState({
 //     name: "",
 //     speciality: "",
 //     nmcNumber: "",
+//     email: "",
+//     phone: "",
+//     experience: 0,
+//     consultationFee: 500,
+//     slots: [],
 //   });
 
-//   const resetForm = () => {
-//     setEditingId(null);
-//     setFormData({
-//       name: "",
-//       speciality: "",
-//       nmcNumber: "",
-//     });
-//   };
-
+//   // Fetch Doctors from DB
 //   const fetchDoctors = async () => {
 //     try {
 //       setLoading(true);
-//       setError("");
-//       const token = localStorage.getItem("token");
-//       const res = await api.get("/admin/doctors", {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-//       setDoctors(res.data || []);
+//       const res = await api.get("/admin/doctors");
+//       const data = res.data?.doctors || res.data || [];
+//       setDoctors(Array.isArray(data) ? data : []);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message || "Failed to load doctors from server."
-//       );
+//       setError("Failed to load doctor records.");
 //     } finally {
 //       setLoading(false);
 //     }
@@ -48,476 +53,171 @@
 //     fetchDoctors();
 //   }, []);
 
-//   const openCreate = () => {
-//     resetForm();
-//     setShowForm(true);
-//   };
-
-//   const openEdit = (doc) => {
-//     setEditingId(doc._id);
+//   // ✅ FIX: handleEdit correctly maps existing doctor data to form state
+//   const handleEdit = (doctor) => {
+//     setError("");
+//     setIsEditing(true);
+//     setCurrentDoctorId(doctor._id);
 //     setFormData({
-//       name: doc.name || "",
-//       speciality: doc.speciality || "",
-//       nmcNumber: doc.nmcNumber || "",
+//       name: doctor.name || "",
+//       speciality: doctor.speciality || "",
+//       nmcNumber: doctor.nmcNumber || "",
+//       email: doctor.email || "",
+//       phone: doctor.phone || "",
+//       experience: doctor.experience || 0,
+//       consultationFee: doctor.consultationFee || 500,
+//       slots: doctor.slots || [],
 //     });
-//     setShowForm(true);
+//     setShowModal(true);
 //   };
 
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((f) => ({ ...f, [name]: value }));
+//   const addSlot = () => {
+//     setFormData({
+//       ...formData,
+//       slots: [
+//         ...formData.slots,
+//         { day: "MONDAY", startTime: "09:00", endTime: "12:00" },
+//       ],
+//     });
 //   };
 
+//   const removeSlot = (index) => {
+//     const newSlots = formData.slots.filter((_, i) => i !== index);
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   const updateSlot = (index, field, value) => {
+//     const newSlots = [...formData.slots];
+//     // Ensure day is uppercase to match Mongoose Schema
+//     newSlots[index][field] = field === "day" ? value.toUpperCase() : value;
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   // ✅ FIX: handleSubmit ensures correct method (PUT vs POST) is called
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-//     setError("");
-//     setSuccess("");
-
-//     if (!formData.name || !formData.speciality || !formData.nmcNumber) {
-//       setError("Name, speciality and NMC number are required.");
-//       return;
-//     }
+//     console.log("Submit event triggered");
 
 //     try {
 //       setSaving(true);
-//       const token = localStorage.getItem("token");
+//       setError("");
 
-//       if (editingId) {
-//         await api.put(`/admin/doctors/${editingId}`, formData, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor updated successfully.");
+//       if (isEditing) {
+//         // Update existing record
+//         await api.put(`/admin/doctors/${currentDoctorId}`, formData);
+//         setSuccess("Doctor profile updated successfully!");
 //       } else {
-//         await api.post("/admin/doctors", formData, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor created successfully.");
+//         // Create new record
+//         await api.post("/admin/doctors", formData);
+//         setSuccess("Doctor registered successfully!");
 //       }
 
-//       setShowForm(false);
+//       setShowModal(false);
 //       resetForm();
 //       fetchDoctors();
+//       setTimeout(() => setSuccess(""), 3000);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to save doctor. Please try again."
-//       );
+//       console.error("Save Error:", err.response?.data);
+//       setError(err.response?.data?.message || "Failed to save record.");
 //     } finally {
 //       setSaving(false);
 //     }
 //   };
 
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
-//     try {
-//       setError("");
-//       setSuccess("");
-//       const token = localStorage.getItem("token");
-//       await api.delete(`/admin/doctors/${id}`, {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-//       setSuccess("Doctor deleted successfully.");
-//       setDoctors((prev) => prev.filter((d) => d._id !== id));
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to delete doctor. Please try again."
-//       );
+//   const handleDelete = async (id, name) => {
+//     if (window.confirm(`Delete ${name}?`)) {
+//       try {
+//         await api.delete(`/admin/doctors/${id}`);
+//         fetchDoctors();
+//       } catch (err) {
+//         alert("Delete failed.");
+//       }
 //     }
 //   };
 
-//   return (
-//     <div className="container-fluid">
-//       <div className="d-flex justify-content-between align-items-center mb-3">
-//         <h3 className="fw-bold mb-0">Doctors Management</h3>
-//         <button className="btn btn-success" onClick={openCreate}>
-//           + Add Doctor
-//         </button>
-//       </div>
-
-//       {error && (
-//         <div className="alert alert-danger py-2" role="alert">
-//           {error}
-//         </div>
-//       )}
-//       {success && (
-//         <div className="alert alert-success py-2" role="alert">
-//           {success}
-//         </div>
-//       )}
-
-//       {loading ? (
-//         <div className="d-flex align-items-center justify-content-center py-5">
-//           <div className="spinner-border text-primary me-2" role="status" />
-//           <span>Loading doctors...</span>
-//         </div>
-//       ) : doctors.length === 0 ? (
-//         <p className="text-muted">
-//           No doctors found. Click “Add Doctor” to create one.
-//         </p>
-//       ) : (
-//         <div className="table-responsive">
-//           <table className="table table-striped table-hover align-middle">
-//             <thead className="table-light">
-//               <tr>
-//                 <th>Name</th>
-//                 <th>Speciality</th>
-//                 <th>NMC Number</th>
-//                 <th style={{ width: 140 }}>Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {doctors.map((d) => (
-//                 <tr key={d._id}>
-//                   <td>{d.name}</td>
-//                   <td>{d.speciality}</td>
-//                   <td>{d.nmcNumber}</td>
-//                   <td>
-//                     <button
-//                       className="btn btn-sm btn-outline-primary me-2"
-//                       onClick={() => openEdit(d)}
-//                     >
-//                       Edit
-//                     </button>
-//                     <button
-//                       className="btn btn-sm btn-outline-danger"
-//                       onClick={() => handleDelete(d._id)}
-//                     >
-//                       Delete
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       )}
-
-//       {/* Modal-like form */}
-//       {showForm && (
-//         <div
-//           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
-//           style={{ zIndex: 1050 }}
-//         >
-//           <div
-//             className="bg-white rounded shadow p-4"
-//             style={{ maxWidth: 480, width: "100%" }}
-//           >
-//             <div className="d-flex justify-content-between align-items-center mb-3">
-//               <h5 className="mb-0">
-//                 {editingId ? "Edit Doctor" : "Add Doctor"}
-//               </h5>
-//               <button
-//                 className="btn btn-sm btn-outline-secondary"
-//                 onClick={() => {
-//                   if (!saving) {
-//                     setShowForm(false);
-//                     resetForm();
-//                   }
-//                 }}
-//               >
-//                 ✕
-//               </button>
-//             </div>
-
-//             <form onSubmit={handleSubmit}>
-//               <div className="mb-3">
-//                 <label className="form-label">Name *</label>
-//                 <input
-//                   type="text"
-//                   name="name"
-//                   className="form-control"
-//                   value={formData.name}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">Speciality *</label>
-//                 <input
-//                   type="text"
-//                   name="speciality"
-//                   className="form-control"
-//                   value={formData.speciality}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">NMC Number *</label>
-//                 <input
-//                   type="text"
-//                   name="nmcNumber"
-//                   className="form-control"
-//                   value={formData.nmcNumber}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving || !!editingId} // usually NMC is immutable
-//                 />
-//               </div>
-
-//               <div className="d-flex justify-content-end gap-2">
-//                 <button
-//                   type="button"
-//                   className="btn btn-outline-secondary"
-//                   onClick={() => {
-//                     if (!saving) {
-//                       setShowForm(false);
-//                       resetForm();
-//                     }
-//                   }}
-//                   disabled={saving}
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="btn btn-primary"
-//                   disabled={saving}
-//                 >
-//                   {saving
-//                     ? editingId
-//                       ? "Updating..."
-//                       : "Creating..."
-//                     : editingId
-//                     ? "Update"
-//                     : "Create"}
-//                 </button>
-//               </div>
-//             </form>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AdminDoctors;
-
-/////////////////////////////////////////////////////////////////////////////
-
-// import React, { useEffect, useState } from "react";
-// import api from "../services/api";
-
-// const AdminDoctors = () => {
-//   const [doctors, setDoctors] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
-//   const [error, setError] = useState("");
-//   const [success, setSuccess] = useState("");
-
-//   const [showForm, setShowForm] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
-
-//   const [formData, setFormData] = useState({
-//     name: "",
-//     speciality: "",
-//     nmcNumber: "",
-//     timeSlotsText: "", // comma-separated time slots string for UI
-//   });
-
 //   const resetForm = () => {
-//     setEditingId(null);
 //     setFormData({
 //       name: "",
 //       speciality: "",
 //       nmcNumber: "",
-//       timeSlotsText: "",
+//       email: "",
+//       phone: "",
+//       experience: 0,
+//       consultationFee: 500,
+//       slots: [],
 //     });
+//     setIsEditing(false);
+//     setCurrentDoctorId(null);
 //   };
 
-//   const fetchDoctors = async () => {
-//     try {
-//       setLoading(true);
-//       setError("");
-//       const token = localStorage.getItem("token");
-//       const res = await api.get("/admin/doctors", {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-//       const docs = res.data || [];
-//       // Map backend timeSlots (array) into text field for display
-//       const mapped = docs.map((doc) => ({
-//         ...doc,
-//         _timeSlotsText: Array.isArray(doc.timeSlots)
-//           ? doc.timeSlots.join(", ")
-//           : "",
-//       }));
-//       setDoctors(mapped);
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message || "Failed to load doctors from server."
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchDoctors();
-//   }, []);
-
-//   const openCreate = () => {
-//     resetForm();
-//     setShowForm(true);
-//   };
-
-//   const openEdit = (doc) => {
-//     setEditingId(doc._id);
-//     setFormData({
-//       name: doc.name || "",
-//       speciality: doc.speciality || "",
-//       nmcNumber: doc.nmcNumber || "",
-//       timeSlotsText: Array.isArray(doc.timeSlots)
-//         ? doc.timeSlots.join(", ")
-//         : doc._timeSlotsText || "",
-//     });
-//     setShowForm(true);
-//   };
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((f) => ({ ...f, [name]: value }));
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-//     setSuccess("");
-
-//     if (!formData.name || !formData.speciality || !formData.nmcNumber) {
-//       setError("Name, speciality and NMC number are required.");
-//       return;
-//     }
-
-//     // Convert comma-separated text into array of trimmed slots
-//     const timeSlotsArray = formData.timeSlotsText
-//       .split(",")
-//       .map((s) => s.trim())
-//       .filter((s) => s.length > 0);
-
-//     const payload = {
-//       name: formData.name,
-//       speciality: formData.speciality,
-//       nmcNumber: formData.nmcNumber,
-//       timeSlots: timeSlotsArray, // this expects backend doctor model to have `timeSlots: [String]`
-//     };
-
-//     try {
-//       setSaving(true);
-//       const token = localStorage.getItem("token");
-
-//       if (editingId) {
-//         await api.put(`/admin/doctors/${editingId}`, payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor updated successfully.");
-//       } else {
-//         await api.post("/admin/doctors", payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor created successfully.");
-//       }
-
-//       setShowForm(false);
-//       resetForm();
-//       fetchDoctors();
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to save doctor. Please try again."
-//       );
-//     } finally {
-//       setSaving(false);
-//     }
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
-//     try {
-//       setError("");
-//       setSuccess("");
-//       const token = localStorage.getItem("token");
-//       await api.delete(`/admin/doctors/${id}`, {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-//       setSuccess("Doctor deleted successfully.");
-//       setDoctors((prev) => prev.filter((d) => d._id !== id));
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to delete doctor. Please try again."
-//       );
-//     }
-//   };
+//   if (loading)
+//     return <div className="text-center py-5">Loading Directory...</div>;
 
 //   return (
-//     <div className="container-fluid">
-//       <div className="d-flex justify-content-between align-items-center mb-3">
-//         <h3 className="fw-bold mb-0">Doctors Management</h3>
-//         <button className="btn btn-success" onClick={openCreate}>
-//           + Add Doctor
+//     <div className="container-fluid p-0 animate-fade-in">
+//       {/* Header */}
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <h3 className="fw-bold">
+//           <Stethoscope className="text-primary me-2" />
+//           Doctors Management
+//         </h3>
+//         <button
+//           className="btn btn-primary rounded-pill px-4"
+//           onClick={() => {
+//             resetForm();
+//             setShowModal(true);
+//           }}
+//         >
+//           <Plus size={18} className="me-2" /> Register Doctor
 //         </button>
 //       </div>
 
-//       {error && (
-//         <div className="alert alert-danger py-2" role="alert">
-//           {error}
-//         </div>
-//       )}
-//       {success && (
-//         <div className="alert alert-success py-2" role="alert">
-//           {success}
-//         </div>
-//       )}
+//       {success && <div className="alert alert-success">{success}</div>}
+//       {error && <div className="alert alert-danger">{error}</div>}
 
-//       {loading ? (
-//         <div className="d-flex align-items-center justify-content-center py-5">
-//           <div className="spinner-border text-primary me-2" role="status" />
-//           <span>Loading doctors...</span>
-//         </div>
-//       ) : doctors.length === 0 ? (
-//         <p className="text-muted">
-//           No doctors found. Click “Add Doctor” to create one.
-//         </p>
-//       ) : (
+//       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
 //         <div className="table-responsive">
-//           <table className="table table-striped table-hover align-middle">
+//           <table className="table table-hover align-middle mb-0">
 //             <thead className="table-light">
-//               <tr>
-//                 <th>Name</th>
+//               <tr className="small text-uppercase fw-bold">
+//                 <th className="ps-4">Specialist</th>
 //                 <th>Speciality</th>
 //                 <th>NMC Number</th>
-//                 <th>Time Slots</th>
-//                 <th style={{ width: 180 }}>Actions</th>
+//                 <th>Availability</th>
+//                 <th className="text-end pe-4">Management</th>
 //               </tr>
 //             </thead>
 //             <tbody>
-//               {doctors.map((d) => (
-//                 <tr key={d._id}>
-//                   <td>{d.name}</td>
-//                   <td>{d.speciality}</td>
-//                   <td>{d.nmcNumber}</td>
+//               {doctors.map((doc) => (
+//                 <tr key={doc._id}>
+//                   <td className="ps-4 fw-bold">{doc.name}</td>
 //                   <td>
-//                     {Array.isArray(d.timeSlots) && d.timeSlots.length > 0
-//                       ? d.timeSlots.join(", ")
-//                       : d._timeSlotsText || (
-//                           <span className="text-muted">No slots set</span>
-//                         )}
+//                     <span className="badge bg-primary-subtle text-primary">
+//                       {doc.speciality}
+//                     </span>
 //                   </td>
+//                   <td>{doc.nmcNumber}</td>
 //                   <td>
+//                     {doc.slots.map((s, i) => (
+//                       <div key={i} className="small">
+//                         <Clock size={12} className="me-1" /> {s.day}:{" "}
+//                         {s.startTime}-{s.endTime}
+//                       </div>
+//                     ))}
+//                   </td>
+//                   <td className="text-end pe-4">
+//                     {/* ✅ Edit Button - Calls handleEdit */}
 //                     <button
-//                       className="btn btn-sm btn-outline-primary me-2"
-//                       onClick={() => openEdit(d)}
+//                       className="btn btn-sm btn-outline-primary border-0 me-2"
+//                       onClick={() => handleEdit(doc)}
 //                     >
-//                       Edit
+//                       <Edit size={16} />
 //                     </button>
 //                     <button
-//                       className="btn btn-sm btn-outline-danger"
-//                       onClick={() => handleDelete(d._id)}
+//                       className="btn btn-sm btn-outline-danger border-0"
+//                       onClick={() => handleDelete(doc._id, doc.name)}
 //                     >
-//                       Delete
+//                       <Trash2 size={16} />
 //                     </button>
 //                   </td>
 //                 </tr>
@@ -525,122 +225,192 @@
 //             </tbody>
 //           </table>
 //         </div>
-//       )}
+//       </div>
 
-//       {/* Modal-like form */}
-//       {showForm && (
+//       {/* ✅ Modal Window */}
+//       {showModal && (
 //         <div
-//           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
-//           style={{ zIndex: 1050 }}
+//           className="modal show d-block"
+//           style={{ background: "rgba(0,0,0,0.5)" }}
 //         >
-//           <div
-//             className="bg-white rounded shadow p-4"
-//             style={{ maxWidth: 520, width: "100%" }}
-//           >
-//             <div className="d-flex justify-content-between align-items-center mb-3">
-//               <h5 className="mb-0">
-//                 {editingId ? "Edit Doctor" : "Add Doctor"}
-//               </h5>
-//               <button
-//                 className="btn btn-sm btn-outline-secondary"
-//                 onClick={() => {
-//                   if (!saving) {
-//                     setShowForm(false);
-//                     resetForm();
-//                   }
-//                 }}
-//               >
-//                 ✕
-//               </button>
-//             </div>
-
-//             <form onSubmit={handleSubmit}>
-//               <div className="mb-3">
-//                 <label className="form-label">Name *</label>
-//                 <input
-//                   type="text"
-//                   name="name"
-//                   className="form-control"
-//                   value={formData.name}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">Speciality *</label>
-//                 <input
-//                   type="text"
-//                   name="speciality"
-//                   className="form-control"
-//                   value={formData.speciality}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">NMC Number *</label>
-//                 <input
-//                   type="text"
-//                   name="nmcNumber"
-//                   className="form-control"
-//                   value={formData.nmcNumber}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving || !!editingId} // usually NMC is immutable
-//                 />
-//               </div>
-
-//               {/* New Time Slots section */}
-//               <div className="mb-3">
-//                 <label className="form-label">
-//                   Time Slots (comma separated, e.g. 09:00-11:00, 14:00-16:00)
-//                 </label>
-//                 <textarea
-//                   name="timeSlotsText"
-//                   className="form-control"
-//                   rows={2}
-//                   placeholder="09:00-11:00, 14:00-16:00"
-//                   value={formData.timeSlotsText}
-//                   onChange={handleChange}
-//                   disabled={saving}
-//                 />
-//                 <div className="form-text">
-//                   These slots will be used to show available appointment times
-//                   for this doctor.
+//           <div className="modal-dialog modal-lg modal-dialog-centered">
+//             <div className="modal-content border-0 shadow-lg rounded-4">
+//               {/* Form strictly wraps the content to ensure Submit works */}
+//               <form onSubmit={handleSubmit}>
+//                 <div className="modal-header border-bottom">
+//                   <h5 className="fw-bold m-0">
+//                     {isEditing
+//                       ? "Update Specialist Info"
+//                       : "New Doctor Registration"}
+//                   </h5>
+//                   <button
+//                     type="button"
+//                     className="btn-close"
+//                     onClick={() => setShowModal(false)}
+//                   ></button>
 //                 </div>
-//               </div>
 
-//               <div className="d-flex justify-content-end gap-2">
-//                 <button
-//                   type="button"
-//                   className="btn btn-outline-secondary"
-//                   onClick={() => {
-//                     if (!saving) {
-//                       setShowForm(false);
-//                       resetForm();
-//                     }
-//                   }}
-//                   disabled={saving}
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="btn btn-primary"
-//                   disabled={saving}
-//                 >
-//                   {saving
-//                     ? editingId
-//                       ? "Updating..."
-//                       : "Creating..."
-//                     : editingId
-//                     ? "Update"
-//                     : "Create"}
-//                 </button>
-//               </div>
-//             </form>
+//                 <div className="modal-body p-4">
+//                   <div className="row g-3">
+//                     <div className="col-md-6">
+//                       <label className="small fw-bold text-muted">
+//                         Full Name *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control"
+//                         value={formData.name}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, name: e.target.value })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="small fw-bold text-muted">
+//                         Speciality *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control"
+//                         value={formData.speciality}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             speciality: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="small fw-bold text-muted">
+//                         NMC Number *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control"
+//                         value={formData.nmcNumber}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             nmcNumber: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="small fw-bold text-muted">
+//                         Contact Email
+//                       </label>
+//                       <input
+//                         type="email"
+//                         className="form-control"
+//                         value={formData.email}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, email: e.target.value })
+//                         }
+//                       />
+//                     </div>
+
+//                     <div className="col-12 mt-4">
+//                       <div className="d-flex justify-content-between align-items-center mb-2">
+//                         <label className="small fw-bold text-primary">
+//                           Working Shifts
+//                         </label>
+//                         <button
+//                           type="button"
+//                           className="btn btn-sm btn-outline-primary"
+//                           onClick={addSlot}
+//                         >
+//                           + Add Slot
+//                         </button>
+//                       </div>
+//                       <div className="p-3 bg-light rounded-3 border">
+//                         {formData.slots.map((slot, index) => (
+//                           <div
+//                             key={index}
+//                             className="row g-2 mb-2 align-items-end"
+//                           >
+//                             <div className="col-md-4">
+//                               <select
+//                                 className="form-select form-select-sm"
+//                                 value={slot.day}
+//                                 onChange={(e) =>
+//                                   updateSlot(index, "day", e.target.value)
+//                                 }
+//                               >
+//                                 <option value="MONDAY">Monday</option>
+//                                 <option value="TUESDAY">Tuesday</option>
+//                                 <option value="WEDNESDAY">Wednesday</option>
+//                                 <option value="THURSDAY">Thursday</option>
+//                                 <option value="FRIDAY">Friday</option>
+//                                 <option value="SATURDAY">Saturday</option>
+//                                 <option value="SUNDAY">Sunday</option>
+//                               </select>
+//                             </div>
+//                             <div className="col-md-3">
+//                               <input
+//                                 type="text"
+//                                 className="form-control form-control-sm"
+//                                 placeholder="09:00"
+//                                 value={slot.startTime}
+//                                 onChange={(e) =>
+//                                   updateSlot(index, "startTime", e.target.value)
+//                                 }
+//                               />
+//                             </div>
+//                             <div className="col-md-3">
+//                               <input
+//                                 type="text"
+//                                 className="form-control form-control-sm"
+//                                 placeholder="17:00"
+//                                 value={slot.endTime}
+//                                 onChange={(e) =>
+//                                   updateSlot(index, "endTime", e.target.value)
+//                                 }
+//                               />
+//                             </div>
+//                             <div className="col-md-2">
+//                               <button
+//                                 type="button"
+//                                 className="btn btn-sm text-danger"
+//                                 onClick={() => removeSlot(index)}
+//                               >
+//                                 <Trash2 size={16} />
+//                               </button>
+//                             </div>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <div className="modal-footer border-top">
+//                   <button
+//                     type="button"
+//                     className="btn btn-light rounded-pill"
+//                     onClick={() => setShowModal(false)}
+//                   >
+//                     Cancel
+//                   </button>
+//                   {/* ✅ type="submit" is essential for the Update button to work */}
+//                   <button
+//                     type="submit"
+//                     className="btn btn-primary rounded-pill px-4 shadow-sm"
+//                     disabled={saving}
+//                   >
+//                     {saving
+//                       ? "Processing..."
+//                       : isEditing
+//                       ? "Save Changes"
+//                       : "Authorize Doctor"}
+//                   </button>
+//                 </div>
+//               </form>
+//             </div>
 //           </div>
 //         </div>
 //       )}
@@ -650,61 +420,51 @@
 
 // export default AdminDoctors;
 
-// import React, { useEffect, useState } from "react";
+// import React, { useState, useEffect } from "react";
 // import api from "../services/api";
+// import {
+//   Stethoscope,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   Clock,
+//   Save,
+//   AlertCircle,
+//   Mail,
+//   Phone, // ✅ Added Phone icon
+//   X,
+// } from "lucide-react";
 
 // const AdminDoctors = () => {
 //   const [doctors, setDoctors] = useState([]);
 //   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
 //   const [error, setError] = useState("");
 //   const [success, setSuccess] = useState("");
 
-//   const [showForm, setShowForm] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
+//   const [showModal, setShowModal] = useState(false);
+//   const [saving, setSaving] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
 //   const [formData, setFormData] = useState({
 //     name: "",
 //     speciality: "",
 //     nmcNumber: "",
-//     timeSlotsText: "", // comma-separated time slots string for UI
+//     email: "",
+//     phone: "", // ✅ Ensure phone is initialized
+//     experience: 0,
+//     consultationFee: 500,
+//     slots: [],
 //   });
-
-//   const resetForm = () => {
-//     setEditingId(null);
-//     setFormData({
-//       name: "",
-//       speciality: "",
-//       nmcNumber: "",
-//       timeSlotsText: "",
-//     });
-//   };
 
 //   const fetchDoctors = async () => {
 //     try {
 //       setLoading(true);
-//       setError("");
-//       const token = localStorage.getItem("token");
-
-//       // ✅ UPDATED: use /doctors/pharmacist/doctors
-//       const res = await api.get("/doctors/pharmacist/doctors", {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-
-//       const docs = res.data || [];
-
-//       // Map backend timeSlots (array) into text field for display
-//       const mapped = docs.map((doc) => ({
-//         ...doc,
-//         _timeSlotsText: Array.isArray(doc.timeSlots)
-//           ? doc.timeSlots.join(", ")
-//           : "",
-//       }));
-//       setDoctors(mapped);
+//       const res = await api.get("/admin/doctors");
+//       const data = res.data?.doctors || res.data || [];
+//       setDoctors(Array.isArray(data) ? data : []);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message || "Failed to load doctors from server."
-//       );
+//       setError("Failed to load doctor records.");
 //     } finally {
 //       setLoading(false);
 //     }
@@ -714,171 +474,177 @@
 //     fetchDoctors();
 //   }, []);
 
-//   const openCreate = () => {
-//     resetForm();
-//     setShowForm(true);
-//   };
-
-//   const openEdit = (doc) => {
-//     setEditingId(doc._id);
+//   const handleEdit = (doctor) => {
+//     setError("");
+//     setIsEditing(true);
+//     setCurrentDoctorId(doctor._id);
 //     setFormData({
-//       name: doc.name || "",
-//       speciality: doc.speciality || "",
-//       nmcNumber: doc.nmcNumber || "",
-//       timeSlotsText: Array.isArray(doc.timeSlots)
-//         ? doc.timeSlots.join(", ")
-//         : doc._timeSlotsText || "",
+//       name: doctor.name || "",
+//       speciality: doctor.speciality || "",
+//       nmcNumber: doctor.nmcNumber || "",
+//       email: doctor.email || "",
+//       phone: doctor.phone || "", // ✅ Load existing phone number
+//       experience: doctor.experience || 0,
+//       consultationFee: doctor.consultationFee || 500,
+//       slots: doctor.slots || [],
 //     });
-//     setShowForm(true);
+//     setShowModal(true);
 //   };
 
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((f) => ({ ...f, [name]: value }));
+//   const addSlot = () => {
+//     setFormData({
+//       ...formData,
+//       slots: [
+//         ...formData.slots,
+//         { day: "MONDAY", startTime: "09:00", endTime: "12:00" },
+//       ],
+//     });
+//   };
+
+//   const removeSlot = (index) => {
+//     const newSlots = formData.slots.filter((_, i) => i !== index);
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   const updateSlot = (index, field, value) => {
+//     const newSlots = [...formData.slots];
+//     newSlots[index][field] = field === "day" ? value.toUpperCase() : value;
+//     setFormData({ ...formData, slots: newSlots });
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-//     setError("");
-//     setSuccess("");
-
-//     if (!formData.name || !formData.speciality || !formData.nmcNumber) {
-//       setError("Name, speciality and NMC number are required.");
-//       return;
-//     }
-
-//     // Convert comma-separated text into array of trimmed slots
-//     const timeSlotsArray = formData.timeSlotsText
-//       .split(",")
-//       .map((s) => s.trim())
-//       .filter((s) => s.length > 0);
-
-//     const payload = {
-//       name: formData.name,
-//       speciality: formData.speciality,
-//       nmcNumber: formData.nmcNumber,
-//       timeSlots: timeSlotsArray, // backend expects `timeSlots: [String]`
-//     };
-
 //     try {
 //       setSaving(true);
-//       const token = localStorage.getItem("token");
+//       setError("");
 
-//       if (editingId) {
-//         // ✅ UPDATED: /doctors/:id
-//         await api.put(`/doctors/${editingId}`, payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor updated successfully.");
+//       if (isEditing) {
+//         await api.put(`/admin/doctors/${currentDoctorId}`, formData);
+//         setSuccess("Doctor profile updated successfully!");
 //       } else {
-//         // ✅ UPDATED: /doctors
-//         await api.post("/doctors", payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor created successfully.");
+//         await api.post("/admin/doctors", formData);
+//         setSuccess("Doctor registered successfully!");
 //       }
 
-//       setShowForm(false);
+//       setShowModal(false);
 //       resetForm();
 //       fetchDoctors();
+//       setTimeout(() => setSuccess(""), 3000);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to save doctor. Please try again."
-//       );
+//       setError(err.response?.data?.message || "Failed to save record.");
 //     } finally {
 //       setSaving(false);
 //     }
 //   };
 
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
-//     try {
-//       setError("");
-//       setSuccess("");
-//       const token = localStorage.getItem("token");
-
-//       // ✅ UPDATED: /doctors/:id
-//       await api.delete(`/doctors/${id}`, {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-
-//       setSuccess("Doctor deleted successfully.");
-//       setDoctors((prev) => prev.filter((d) => d._id !== id));
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to delete doctor. Please try again."
-//       );
+//   const handleDelete = async (id, name) => {
+//     if (window.confirm(`Delete ${name}?`)) {
+//       try {
+//         await api.delete(`/admin/doctors/${id}`);
+//         fetchDoctors();
+//       } catch (err) {
+//         alert("Delete failed.");
+//       }
 //     }
 //   };
 
+//   const resetForm = () => {
+//     setFormData({
+//       name: "",
+//       speciality: "",
+//       nmcNumber: "",
+//       email: "",
+//       phone: "",
+//       experience: 0,
+//       consultationFee: 500,
+//       slots: [],
+//     });
+//     setIsEditing(false);
+//     setCurrentDoctorId(null);
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="text-center py-5 text-muted">Accessing Registry...</div>
+//     );
+
 //   return (
-//     <div className="container-fluid">
-//       <div className="d-flex justify-content-between align-items-center mb-3">
-//         <h3 className="fw-bold mb-0">Doctors Management</h3>
-//         <button className="btn btn-success" onClick={openCreate}>
-//           + Add Doctor
+//     <div className="container-fluid p-0 animate-fade-in">
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <h3 className="fw-bold">
+//           <Stethoscope className="text-primary me-2" />
+//           Doctors Management
+//         </h3>
+//         <button
+//           className="btn btn-primary rounded-pill px-4"
+//           onClick={() => {
+//             resetForm();
+//             setShowModal(true);
+//           }}
+//         >
+//           <Plus size={18} className="me-2" /> Register Doctor
 //         </button>
 //       </div>
 
+//       {success && (
+//         <div className="alert alert-success border-0 shadow-sm">{success}</div>
+//       )}
 //       {error && (
-//         <div className="alert alert-danger py-2" role="alert">
+//         <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2">
+//           <AlertCircle size={18} />
 //           {error}
 //         </div>
 //       )}
-//       {success && (
-//         <div className="alert alert-success py-2" role="alert">
-//           {success}
-//         </div>
-//       )}
 
-//       {loading ? (
-//         <div className="d-flex align-items-center justify-content-center py-5">
-//           <div className="spinner-border text-primary me-2" role="status" />
-//           <span>Loading doctors...</span>
-//         </div>
-//       ) : doctors.length === 0 ? (
-//         <p className="text-muted">
-//           No doctors found. Click “Add Doctor” to create one.
-//         </p>
-//       ) : (
+//       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
 //         <div className="table-responsive">
-//           <table className="table table-striped table-hover align-middle">
+//           <table className="table table-hover align-middle mb-0">
 //             <thead className="table-light">
-//               <tr>
-//                 <th>Name</th>
+//               <tr className="small text-uppercase fw-bold text-muted">
+//                 <th className="ps-4">Specialist</th>
 //                 <th>Speciality</th>
-//                 <th>NMC Number</th>
-//                 <th>Time Slots</th>
-//                 <th style={{ width: 180 }}>Actions</th>
+//                 <th>Contact</th>
+//                 <th>Availability</th>
+//                 <th className="text-end pe-4">Actions</th>
 //               </tr>
 //             </thead>
 //             <tbody>
-//               {doctors.map((d) => (
-//                 <tr key={d._id}>
-//                   <td>{d.name}</td>
-//                   <td>{d.speciality}</td>
-//                   <td>{d.nmcNumber}</td>
+//               {doctors.map((doc) => (
+//                 <tr key={doc._id}>
+//                   <td className="ps-4 fw-bold">{doc.name}</td>
 //                   <td>
-//                     {Array.isArray(d.timeSlots) && d.timeSlots.length > 0
-//                       ? d.timeSlots.join(", ")
-//                       : d._timeSlotsText || (
-//                           <span className="text-muted">No slots set</span>
-//                         )}
+//                     <span className="badge bg-primary-subtle text-primary">
+//                       {doc.speciality}
+//                     </span>
 //                   </td>
 //                   <td>
+//                     <div className="small text-dark">
+//                       {doc.phone || "No phone"}
+//                     </div>
+//                     <div className="small text-muted">
+//                       {doc.email || "No email"}
+//                     </div>
+//                   </td>
+//                   <td>
+//                     {doc.slots.map((s, i) => (
+//                       <div key={i} className="small text-muted">
+//                         <Clock size={12} className="me-1" /> {s.day}:{" "}
+//                         {s.startTime}-{s.endTime}
+//                       </div>
+//                     ))}
+//                   </td>
+//                   <td className="text-end pe-4">
 //                     <button
-//                       className="btn btn-sm btn-outline-primary me-2"
-//                       onClick={() => openEdit(d)}
+//                       className="btn btn-sm btn-outline-primary border-0 me-2"
+//                       onClick={() => handleEdit(doc)}
 //                     >
-//                       Edit
+//                       <Edit size={16} />
 //                     </button>
 //                     <button
-//                       className="btn btn-sm btn-outline-danger"
-//                       onClick={() => handleDelete(d._id)}
+//                       className="btn btn-sm btn-outline-danger border-0"
+//                       onClick={() => handleDelete(doc._id, doc.name)}
 //                     >
-//                       Delete
+//                       <Trash2 size={16} />
 //                     </button>
 //                   </td>
 //                 </tr>
@@ -886,122 +652,216 @@
 //             </tbody>
 //           </table>
 //         </div>
-//       )}
+//       </div>
 
-//       {/* Modal-like form */}
-//       {showForm && (
+//       {showModal && (
 //         <div
-//           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
-//           style={{ zIndex: 1050 }}
+//           className="modal show d-block"
+//           style={{ background: "rgba(0,0,0,0.5)" }}
 //         >
-//           <div
-//             className="bg-white rounded shadow p-4"
-//             style={{ maxWidth: 520, width: "100%" }}
-//           >
-//             <div className="d-flex justify-content-between align-items-center mb-3">
-//               <h5 className="mb-0">
-//                 {editingId ? "Edit Doctor" : "Add Doctor"}
-//               </h5>
-//               <button
-//                 className="btn btn-sm btn-outline-secondary"
-//                 onClick={() => {
-//                   if (!saving) {
-//                     setShowForm(false);
-//                     resetForm();
-//                   }
-//                 }}
-//               >
-//                 ✕
-//               </button>
-//             </div>
-
-//             <form onSubmit={handleSubmit}>
-//               <div className="mb-3">
-//                 <label className="form-label">Name *</label>
-//                 <input
-//                   type="text"
-//                   name="name"
-//                   className="form-control"
-//                   value={formData.name}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">Speciality *</label>
-//                 <input
-//                   type="text"
-//                   name="speciality"
-//                   className="form-control"
-//                   value={formData.speciality}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">NMC Number *</label>
-//                 <input
-//                   type="text"
-//                   name="nmcNumber"
-//                   className="form-control"
-//                   value={formData.nmcNumber}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving || !!editingId} // usually NMC is immutable
-//                 />
-//               </div>
-
-//               {/* Time Slots section */}
-//               <div className="mb-3">
-//                 <label className="form-label">
-//                   Time Slots (comma separated, e.g. 09:00-10:00, 14:00-15:00)
-//                 </label>
-//                 <textarea
-//                   name="timeSlotsText"
-//                   className="form-control"
-//                   rows={2}
-//                   placeholder="09:00-10:00, 14:00-15:00"
-//                   value={formData.timeSlotsText}
-//                   onChange={handleChange}
-//                   disabled={saving}
-//                 />
-//                 <div className="form-text">
-//                   These slots will be used to show available appointment times
-//                   for this doctor.
+//           <div className="modal-dialog modal-lg modal-dialog-centered">
+//             <div className="modal-content border-0 shadow-lg rounded-4">
+//               <form onSubmit={handleSubmit}>
+//                 <div className="modal-header border-bottom">
+//                   <h5 className="fw-bold m-0">
+//                     {isEditing
+//                       ? "Update Specialist Info"
+//                       : "New Doctor Registration"}
+//                   </h5>
+//                   <button
+//                     type="button"
+//                     className="btn-close"
+//                     onClick={() => setShowModal(false)}
+//                   ></button>
 //                 </div>
-//               </div>
 
-//               <div className="d-flex justify-content-end gap-2">
-//                 <button
-//                   type="button"
-//                   className="btn btn-outline-secondary"
-//                   onClick={() => {
-//                     if (!saving) {
-//                       setShowForm(false);
-//                       resetForm();
-//                     }
-//                   }}
-//                   disabled={saving}
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="btn btn-primary"
-//                   disabled={saving}
-//                 >
-//                   {saving
-//                     ? editingId
-//                       ? "Updating..."
-//                       : "Creating..."
-//                     : editingId
-//                     ? "Update"
-//                     : "Create"}
-//                 </button>
-//               </div>
-//             </form>
+//                 <div className="modal-body p-4">
+//                   <div className="row g-3">
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Full Name *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2"
+//                         value={formData.name}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, name: e.target.value })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Speciality *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2"
+//                         value={formData.speciality}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             speciality: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         NMC Registration No. *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2"
+//                         value={formData.nmcNumber}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             nmcNumber: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     {/* ✅ FIXED: Added Contact Number field */}
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Contact Number *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2"
+//                         value={formData.phone}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, phone: e.target.value })
+//                         }
+//                         required
+//                         placeholder="+977-..."
+//                       />
+//                     </div>
+//                     <div className="col-md-12">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Email Address
+//                       </label>
+//                       <input
+//                         type="email"
+//                         className="form-control border-2"
+//                         value={formData.email}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, email: e.target.value })
+//                         }
+//                       />
+//                     </div>
+
+//                     <div className="col-12 mt-4">
+//                       <div className="d-flex justify-content-between align-items-center mb-2">
+//                         <label className="form-label small fw-bold text-primary mb-0 text-uppercase">
+//                           Working Shifts
+//                         </label>
+//                         <button
+//                           type="button"
+//                           className="btn btn-sm btn-outline-primary rounded-pill px-3"
+//                           onClick={addSlot}
+//                         >
+//                           + Add Slot
+//                         </button>
+//                       </div>
+//                       <div className="p-3 bg-light rounded-3 border">
+//                         {formData.slots.length === 0 ? (
+//                           <p className="text-center text-muted small m-0">
+//                             No shifts scheduled
+//                           </p>
+//                         ) : (
+//                           formData.slots.map((slot, index) => (
+//                             <div
+//                               key={index}
+//                               className="row g-2 mb-2 align-items-end"
+//                             >
+//                               <div className="col-md-4">
+//                                 <select
+//                                   className="form-select form-select-sm"
+//                                   value={slot.day}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "day", e.target.value)
+//                                   }
+//                                 >
+//                                   <option value="MONDAY">Monday</option>
+//                                   <option value="TUESDAY">Tuesday</option>
+//                                   <option value="WEDNESDAY">Wednesday</option>
+//                                   <option value="THURSDAY">Thursday</option>
+//                                   <option value="FRIDAY">Friday</option>
+//                                   <option value="SATURDAY">Saturday</option>
+//                                   <option value="SUNDAY">Sunday</option>
+//                                 </select>
+//                               </div>
+//                               <div className="col-md-3">
+//                                 <input
+//                                   type="text"
+//                                   className="form-control form-control-sm"
+//                                   placeholder="09:00"
+//                                   value={slot.startTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(
+//                                       index,
+//                                       "startTime",
+//                                       e.target.value
+//                                     )
+//                                   }
+//                                 />
+//                               </div>
+//                               <div className="col-md-3">
+//                                 <input
+//                                   type="text"
+//                                   className="form-control form-control-sm"
+//                                   placeholder="17:00"
+//                                   value={slot.endTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "endTime", e.target.value)
+//                                   }
+//                                 />
+//                               </div>
+//                               <div className="col-md-2">
+//                                 <button
+//                                   type="button"
+//                                   className="btn btn-sm text-danger"
+//                                   onClick={() => removeSlot(index)}
+//                                 >
+//                                   <Trash2 size={16} />
+//                                 </button>
+//                               </div>
+//                             </div>
+//                           ))
+//                         )}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <div className="modal-footer border-top p-4 pt-0">
+//                   <button
+//                     type="button"
+//                     className="btn btn-light rounded-pill px-4"
+//                     onClick={() => setShowModal(false)}
+//                   >
+//                     Cancel
+//                   </button>
+//                   <button
+//                     type="submit"
+//                     className="btn btn-primary rounded-pill px-4 shadow-sm fw-bold"
+//                     disabled={saving}
+//                   >
+//                     {saving ? (
+//                       <span className="spinner-border spinner-border-sm me-2" />
+//                     ) : (
+//                       <Save size={18} className="me-2" />
+//                     )}
+//                     {isEditing ? "Save Changes" : "Register Professional"}
+//                   </button>
+//                 </div>
+//               </form>
+//             </div>
 //           </div>
 //         </div>
 //       )}
@@ -1011,61 +871,53 @@
 
 // export default AdminDoctors;
 
-// import React, { useEffect, useState } from "react";
+// import React, { useState, useEffect } from "react";
 // import api from "../services/api";
+// import {
+//   Stethoscope,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   Clock,
+//   Save,
+//   AlertCircle,
+//   Mail,
+//   Phone,
+//   Briefcase, // ✅ Added for Experience
+//   DollarSign, // ✅ Added for Fees
+//   X,
+// } from "lucide-react";
 
 // const AdminDoctors = () => {
 //   const [doctors, setDoctors] = useState([]);
 //   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
 //   const [error, setError] = useState("");
 //   const [success, setSuccess] = useState("");
 
-//   const [showForm, setShowForm] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
+//   const [showModal, setShowModal] = useState(false);
+//   const [saving, setSaving] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
 //   const [formData, setFormData] = useState({
 //     name: "",
 //     speciality: "",
 //     nmcNumber: "",
-//     timeSlotsText: "", // comma-separated time slots string for UI
+//     email: "",
+//     phone: "",
+//     experience: 0,
+//     consultationFee: 500,
+//     slots: [],
 //   });
-
-//   const resetForm = () => {
-//     setEditingId(null);
-//     setFormData({
-//       name: "",
-//       speciality: "",
-//       nmcNumber: "",
-//       timeSlotsText: "",
-//     });
-//   };
 
 //   const fetchDoctors = async () => {
 //     try {
 //       setLoading(true);
-//       setError("");
-//       const token = localStorage.getItem("token");
-
-//       // uses /api/doctors/pharmacist/doctors
-//       const res = await api.get("/doctors/pharmacist/doctors", {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-
-//       const docs = res.data || [];
-
-//       // Map backend timeSlots (array) into text field for display
-//       const mapped = docs.map((doc) => ({
-//         ...doc,
-//         _timeSlotsText: Array.isArray(doc.timeSlots)
-//           ? doc.timeSlots.join(", ")
-//           : "",
-//       }));
-//       setDoctors(mapped);
+//       const res = await api.get("/admin/doctors");
+//       const data = res.data?.doctors || res.data || [];
+//       setDoctors(Array.isArray(data) ? data : []);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message || "Failed to load doctors from server."
-//       );
+//       setError("Failed to load doctor records.");
 //     } finally {
 //       setLoading(false);
 //     }
@@ -1075,168 +927,187 @@
 //     fetchDoctors();
 //   }, []);
 
-//   const openCreate = () => {
-//     resetForm();
-//     setShowForm(true);
-//   };
-
-//   const openEdit = (doc) => {
-//     setEditingId(doc._id);
+//   const handleEdit = (doctor) => {
+//     setError("");
+//     setIsEditing(true);
+//     setCurrentDoctorId(doctor._id);
 //     setFormData({
-//       name: doc.name || "",
-//       speciality: doc.speciality || "",
-//       nmcNumber: doc.nmcNumber || "",
-//       timeSlotsText: Array.isArray(doc.timeSlots)
-//         ? doc.timeSlots.join(", ")
-//         : doc._timeSlotsText || "",
+//       name: doctor.name || "",
+//       speciality: doctor.speciality || "",
+//       nmcNumber: doctor.nmcNumber || "",
+//       email: doctor.email || "",
+//       phone: doctor.phone || "",
+//       experience: doctor.experience || 0,
+//       consultationFee: doctor.consultationFee || 500,
+//       slots: doctor.slots || [],
 //     });
-//     setShowForm(true);
+//     setShowModal(true);
 //   };
 
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((f) => ({ ...f, [name]: value }));
+//   const addSlot = () => {
+//     setFormData({
+//       ...formData,
+//       slots: [
+//         ...formData.slots,
+//         { day: "MONDAY", startTime: "09:00", endTime: "12:00" },
+//       ],
+//     });
+//   };
+
+//   const removeSlot = (index) => {
+//     const newSlots = formData.slots.filter((_, i) => i !== index);
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   const updateSlot = (index, field, value) => {
+//     const newSlots = [...formData.slots];
+//     newSlots[index][field] = field === "day" ? value.toUpperCase() : value;
+//     setFormData({ ...formData, slots: newSlots });
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-//     setError("");
-//     setSuccess("");
-
-//     if (!formData.name || !formData.speciality || !formData.nmcNumber) {
-//       setError("Name, speciality and NMC number are required.");
-//       return;
-//     }
-
-//     // Convert comma-separated text into array of trimmed slots
-//     const timeSlotsArray = formData.timeSlotsText
-//       .split(",")
-//       .map((s) => s.trim())
-//       .filter((s) => s.length > 0);
-
-//     const payload = {
-//       name: formData.name,
-//       speciality: formData.speciality,
-//       nmcNumber: formData.nmcNumber,
-//       timeSlots: timeSlotsArray,
-//     };
-
 //     try {
 //       setSaving(true);
-//       const token = localStorage.getItem("token");
+//       setError("");
 
-//       if (editingId) {
-//         await api.put(`/doctors/${editingId}`, payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor updated successfully.");
+//       if (isEditing) {
+//         await api.put(`/admin/doctors/${currentDoctorId}`, formData);
+//         setSuccess("Doctor profile updated successfully!");
 //       } else {
-//         await api.post("/doctors", payload, {
-//           headers: { Authorization: token ? `Bearer ${token}` : "" },
-//         });
-//         setSuccess("Doctor created successfully.");
+//         await api.post("/admin/doctors", formData);
+//         setSuccess("Doctor registered successfully!");
 //       }
 
-//       setShowForm(false);
+//       setShowModal(false);
 //       resetForm();
 //       fetchDoctors();
+//       setTimeout(() => setSuccess(""), 3000);
 //     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to save doctor. Please try again."
-//       );
+//       setError(err.response?.data?.message || "Failed to save record.");
 //     } finally {
 //       setSaving(false);
 //     }
 //   };
 
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
-//     try {
-//       setError("");
-//       setSuccess("");
-//       const token = localStorage.getItem("token");
-
-//       await api.delete(`/doctors/${id}`, {
-//         headers: { Authorization: token ? `Bearer ${token}` : "" },
-//       });
-
-//       setSuccess("Doctor deleted successfully.");
-//       setDoctors((prev) => prev.filter((d) => d._id !== id));
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.message ||
-//           "Failed to delete doctor. Please try again."
-//       );
+//   const handleDelete = async (id, name) => {
+//     if (window.confirm(`Delete ${name}?`)) {
+//       try {
+//         await api.delete(`/admin/doctors/${id}`);
+//         fetchDoctors();
+//       } catch (err) {
+//         alert("Delete failed.");
+//       }
 //     }
 //   };
 
+//   const resetForm = () => {
+//     setFormData({
+//       name: "",
+//       speciality: "",
+//       nmcNumber: "",
+//       email: "",
+//       phone: "",
+//       experience: 0,
+//       consultationFee: 500,
+//       slots: [],
+//     });
+//     setIsEditing(false);
+//     setCurrentDoctorId(null);
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="text-center py-5 text-muted">Accessing Registry...</div>
+//     );
+
 //   return (
-//     <div className="container-fluid">
-//       <div className="d-flex justify-content-between align-items-center mb-3">
-//         <h3 className="fw-bold mb-0">Doctors Management</h3>
-//         <button className="btn btn-success" onClick={openCreate}>
-//           + Add Doctor
+//     <div className="container-fluid p-0 animate-fade-in">
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <h3 className="fw-bold">
+//           <Stethoscope className="text-primary me-2" />
+//           Doctors Management
+//         </h3>
+//         <button
+//           className="btn btn-primary rounded-pill px-4"
+//           onClick={() => {
+//             resetForm();
+//             setShowModal(true);
+//           }}
+//         >
+//           <Plus size={18} className="me-2" /> Register Doctor
 //         </button>
 //       </div>
 
+//       {success && (
+//         <div className="alert alert-success border-0 shadow-sm">{success}</div>
+//       )}
 //       {error && (
-//         <div className="alert alert-danger py-2" role="alert">
+//         <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2">
+//           <AlertCircle size={18} />
 //           {error}
 //         </div>
 //       )}
-//       {success && (
-//         <div className="alert alert-success py-2" role="alert">
-//           {success}
-//         </div>
-//       )}
 
-//       {loading ? (
-//         <div className="d-flex align-items-center justify-content-center py-5">
-//           <div className="spinner-border text-primary me-2" role="status" />
-//           <span>Loading doctors...</span>
-//         </div>
-//       ) : doctors.length === 0 ? (
-//         <p className="text-muted">
-//           No doctors found. Click “Add Doctor” to create one.
-//         </p>
-//       ) : (
+//       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
 //         <div className="table-responsive">
-//           <table className="table table-striped table-hover align-middle">
+//           <table className="table table-hover align-middle mb-0">
 //             <thead className="table-light">
-//               <tr>
-//                 <th>Name</th>
-//                 <th>Speciality</th>
-//                 <th>NMC Number</th>
-//                 <th>Time Slots</th> {/* added column */}
-//                 <th style={{ width: 180 }}>Actions</th>
+//               <tr className="small text-uppercase fw-bold text-muted">
+//                 <th className="ps-4">Specialist</th>
+//                 <th>Details</th>
+//                 <th>Contact</th>
+//                 <th>Availability</th>
+//                 <th className="text-end pe-4">Actions</th>
 //               </tr>
 //             </thead>
 //             <tbody>
-//               {doctors.map((d) => (
-//                 <tr key={d._id}>
-//                   <td>{d.name}</td>
-//                   <td>{d.speciality}</td>
-//                   <td>{d.nmcNumber}</td>
-//                   <td>
-//                     {Array.isArray(d.timeSlots) && d.timeSlots.length > 0
-//                       ? d.timeSlots.join(", ")
-//                       : d._timeSlotsText || (
-//                           <span className="text-muted">No slots set</span>
-//                         )}
+//               {doctors.map((doc) => (
+//                 <tr key={doc._id}>
+//                   <td className="ps-4">
+//                     <div className="fw-bold text-dark">{doc.name}</div>
+//                     <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
+//                       {doc.speciality}
+//                     </span>
 //                   </td>
 //                   <td>
+//                     <div className="small text-muted d-flex align-items-center gap-1">
+//                       <Briefcase size={12} /> {doc.experience} Years Exp.
+//                     </div>
+//                     <div className="small text-muted d-flex align-items-center gap-1">
+//                       <DollarSign size={12} /> Fee: Rs. {doc.consultationFee}
+//                     </div>
+//                   </td>
+//                   <td>
+//                     <div className="small text-dark">
+//                       <Phone size={12} className="me-1" />
+//                       {doc.phone || "No phone"}
+//                     </div>
+//                     <div className="small text-muted">
+//                       <Mail size={12} className="me-1" />
+//                       {doc.email || "No email"}
+//                     </div>
+//                   </td>
+//                   <td>
+//                     {doc.slots.map((s, i) => (
+//                       <div key={i} className="small text-muted">
+//                         <Clock size={12} className="me-1" /> {s.day}:{" "}
+//                         {s.startTime}-{s.endTime}
+//                       </div>
+//                     ))}
+//                   </td>
+//                   <td className="text-end pe-4">
 //                     <button
-//                       className="btn btn-sm btn-outline-primary me-2"
-//                       onClick={() => openEdit(d)}
+//                       className="btn btn-sm btn-outline-primary border-0 me-2"
+//                       onClick={() => handleEdit(doc)}
 //                     >
-//                       Edit
+//                       <Edit size={16} />
 //                     </button>
 //                     <button
-//                       className="btn btn-sm btn-outline-danger"
-//                       onClick={() => handleDelete(d._id)}
+//                       className="btn btn-sm btn-outline-danger border-0"
+//                       onClick={() => handleDelete(doc._id, doc.name)}
 //                     >
-//                       Delete
+//                       <Trash2 size={16} />
 //                     </button>
 //                   </td>
 //                 </tr>
@@ -1244,122 +1115,250 @@
 //             </tbody>
 //           </table>
 //         </div>
-//       )}
+//       </div>
 
-//       {/* Modal-like form */}
-//       {showForm && (
+//       {showModal && (
 //         <div
-//           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
-//           style={{ zIndex: 1050 }}
+//           className="modal show d-block"
+//           style={{ background: "rgba(0,0,0,0.5)" }}
 //         >
-//           <div
-//             className="bg-white rounded shadow p-4"
-//             style={{ maxWidth: 520, width: "100%" }}
-//           >
-//             <div className="d-flex justify-content-between align-items-center mb-3">
-//               <h5 className="mb-0">
-//                 {editingId ? "Edit Doctor" : "Add Doctor"}
-//               </h5>
-//               <button
-//                 className="btn btn-sm btn-outline-secondary"
-//                 onClick={() => {
-//                   if (!saving) {
-//                     setShowForm(false);
-//                     resetForm();
-//                   }
-//                 }}
-//               >
-//                 ✕
-//               </button>
-//             </div>
-
-//             <form onSubmit={handleSubmit}>
-//               <div className="mb-3">
-//                 <label className="form-label">Name *</label>
-//                 <input
-//                   type="text"
-//                   name="name"
-//                   className="form-control"
-//                   value={formData.name}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">Speciality *</label>
-//                 <input
-//                   type="text"
-//                   name="speciality"
-//                   className="form-control"
-//                   value={formData.speciality}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving}
-//                 />
-//               </div>
-//               <div className="mb-3">
-//                 <label className="form-label">NMC Number *</label>
-//                 <input
-//                   type="text"
-//                   name="nmcNumber"
-//                   className="form-control"
-//                   value={formData.nmcNumber}
-//                   onChange={handleChange}
-//                   required
-//                   disabled={saving || !!editingId}
-//                 />
-//               </div>
-
-//               {/* Time Slots section */}
-//               <div className="mb-3">
-//                 <label className="form-label">
-//                   Time Slots (comma separated, e.g. 09:00-10:00, 14:00-15:00)
-//                 </label>
-//                 <textarea
-//                   name="timeSlotsText"
-//                   className="form-control"
-//                   rows={2}
-//                   placeholder="09:00-10:00, 14:00-15:00"
-//                   value={formData.timeSlotsText}
-//                   onChange={handleChange}
-//                   disabled={saving}
-//                 />
-//                 <div className="form-text">
-//                   These slots will be used to show available appointment times
-//                   for this doctor.
+//           <div className="modal-dialog modal-lg modal-dialog-centered">
+//             <div className="modal-content border-0 shadow-lg rounded-4">
+//               <form onSubmit={handleSubmit}>
+//                 <div className="modal-header border-bottom">
+//                   <h5 className="fw-bold m-0">
+//                     {isEditing
+//                       ? "Update Specialist Info"
+//                       : "New Doctor Registration"}
+//                   </h5>
+//                   <button
+//                     type="button"
+//                     className="btn-close shadow-none"
+//                     onClick={() => setShowModal(false)}
+//                   ></button>
 //                 </div>
-//               </div>
 
-//               <div className="d-flex justify-content-end gap-2">
-//                 <button
-//                   type="button"
-//                   className="btn btn-outline-secondary"
-//                   onClick={() => {
-//                     if (!saving) {
-//                       setShowForm(false);
-//                       resetForm();
-//                     }
-//                   }}
-//                   disabled={saving}
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="btn btn-primary"
-//                   disabled={saving}
-//                 >
-//                   {saving
-//                     ? editingId
-//                       ? "Updating..."
-//                       : "Creating..."
-//                     : editingId
-//                     ? "Update"
-//                     : "Create"}
-//                 </button>
-//               </div>
-//             </form>
+//                 <div className="modal-body p-4">
+//                   <div className="row g-3">
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Full Name *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.name}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, name: e.target.value })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Speciality *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.speciality}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             speciality: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         NMC Registration No. *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.nmcNumber}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             nmcNumber: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Contact Number *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.phone}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, phone: e.target.value })
+//                         }
+//                         required
+//                         placeholder="+977-..."
+//                       />
+//                     </div>
+
+//                     {/* ✅ New: Experience and Fees Fields */}
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Years of Experience
+//                       </label>
+//                       <input
+//                         type="number"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.experience}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             experience: e.target.value,
+//                           })
+//                         }
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Consultation Fee (Rs.)
+//                       </label>
+//                       <input
+//                         type="number"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.consultationFee}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             consultationFee: e.target.value,
+//                           })
+//                         }
+//                       />
+//                     </div>
+
+//                     <div className="col-md-12">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Email Address
+//                       </label>
+//                       <input
+//                         type="email"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.email}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, email: e.target.value })
+//                         }
+//                       />
+//                     </div>
+
+//                     <div className="col-12 mt-4">
+//                       <div className="d-flex justify-content-between align-items-center mb-2">
+//                         <label className="form-label small fw-bold text-primary mb-0 text-uppercase">
+//                           Working Shifts
+//                         </label>
+//                         <button
+//                           type="button"
+//                           className="btn btn-sm btn-outline-primary rounded-pill px-3"
+//                           onClick={addSlot}
+//                         >
+//                           + Add Slot
+//                         </button>
+//                       </div>
+//                       <div className="p-3 bg-light rounded-3 border">
+//                         {formData.slots.length === 0 ? (
+//                           <p className="text-center text-muted small m-0">
+//                             No shifts scheduled
+//                           </p>
+//                         ) : (
+//                           formData.slots.map((slot, index) => (
+//                             <div
+//                               key={index}
+//                               className="row g-2 mb-2 align-items-end"
+//                             >
+//                               <div className="col-md-4">
+//                                 <select
+//                                   className="form-select form-select-sm border-2"
+//                                   value={slot.day}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "day", e.target.value)
+//                                   }
+//                                 >
+//                                   <option value="MONDAY">Monday</option>
+//                                   <option value="TUESDAY">Tuesday</option>
+//                                   <option value="WEDNESDAY">Wednesday</option>
+//                                   <option value="THURSDAY">Thursday</option>
+//                                   <option value="FRIDAY">Friday</option>
+//                                   <option value="SATURDAY">Saturday</option>
+//                                   <option value="SUNDAY">Sunday</option>
+//                                 </select>
+//                               </div>
+//                               <div className="col-md-3">
+//                                 <input
+//                                   type="text"
+//                                   className="form-control form-control-sm border-2"
+//                                   placeholder="09:00"
+//                                   value={slot.startTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(
+//                                       index,
+//                                       "startTime",
+//                                       e.target.value
+//                                     )
+//                                   }
+//                                 />
+//                               </div>
+//                               <div className="col-md-3">
+//                                 <input
+//                                   type="text"
+//                                   className="form-control form-control-sm border-2"
+//                                   placeholder="17:00"
+//                                   value={slot.endTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "endTime", e.target.value)
+//                                   }
+//                                 />
+//                               </div>
+//                               <div className="col-md-2 text-center">
+//                                 <button
+//                                   type="button"
+//                                   className="btn btn-sm text-danger"
+//                                   onClick={() => removeSlot(index)}
+//                                 >
+//                                   <Trash2 size={16} />
+//                                 </button>
+//                               </div>
+//                             </div>
+//                           ))
+//                         )}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <div className="modal-footer border-top p-4 pt-0">
+//                   <button
+//                     type="button"
+//                     className="btn btn-light rounded-pill px-4"
+//                     onClick={() => setShowModal(false)}
+//                   >
+//                     Cancel
+//                   </button>
+//                   <button
+//                     type="submit"
+//                     className="btn btn-primary rounded-pill px-4 shadow-sm fw-bold"
+//                     disabled={saving}
+//                   >
+//                     {saving ? (
+//                       <span className="spinner-border spinner-border-sm me-2" />
+//                     ) : (
+//                       <Save size={18} className="me-2" />
+//                     )}
+//                     {isEditing ? "Save Changes" : "Register Professional"}
+//                   </button>
+//                 </div>
+//               </form>
+//             </div>
 //           </div>
 //         </div>
 //       )}
@@ -1369,55 +1368,611 @@
 
 // export default AdminDoctors;
 
-import React, { useEffect, useState } from "react";
+// import React, { useState, useEffect } from "react";
+// import api from "../services/api";
+// import {
+//   Stethoscope,
+//   Plus,
+//   Edit,
+//   Trash2,
+//   Clock,
+//   Save,
+//   AlertCircle,
+//   Mail,
+//   Phone,
+//   Briefcase,
+//   DollarSign,
+//   X,
+//   CheckCircle2,
+//   Loader2,
+// } from "lucide-react";
+
+// const AdminDoctors = () => {
+//   const [doctors, setDoctors] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const [success, setSuccess] = useState("");
+
+//   const [showModal, setShowModal] = useState(false);
+//   const [saving, setSaving] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentDoctorId, setCurrentDoctorId] = useState(null);
+
+//   const [formData, setFormData] = useState({
+//     name: "",
+//     speciality: "",
+//     nmcNumber: "",
+//     email: "",
+//     phone: "",
+//     experience: 0,
+//     consultationFee: 500,
+//     slots: [],
+//     isAvailable: true, // ✅ Added availability state
+//   });
+
+//   const fetchDoctors = async () => {
+//     try {
+//       setLoading(true);
+//       // ✅ Use the admin specific route if you have one, or the public one is fine too.
+//       // Assuming GET /admin/doctors returns full data including hidden fields.
+//       const res = await api.get("/admin/doctors");
+//       const data = res.data?.doctors || res.data || [];
+//       setDoctors(Array.isArray(data) ? data : []);
+//     } catch (err) {
+//       setError("Failed to load doctor records.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchDoctors();
+//   }, []);
+
+//   const handleEdit = (doctor) => {
+//     setError("");
+//     setIsEditing(true);
+//     setCurrentDoctorId(doctor._id);
+//     setFormData({
+//       name: doctor.name || "",
+//       speciality: doctor.speciality || "",
+//       nmcNumber: doctor.nmcNumber || "",
+//       email: doctor.email || "",
+//       phone: doctor.phone || "",
+//       experience: doctor.experience || 0,
+//       consultationFee: doctor.consultationFee || 500,
+//       slots: doctor.slots || [],
+//       isAvailable: doctor.isAvailable !== undefined ? doctor.isAvailable : true,
+//     });
+//     setShowModal(true);
+//   };
+
+//   const addSlot = () => {
+//     setFormData({
+//       ...formData,
+//       // ✅ Initialize with safe default times
+//       slots: [
+//         ...formData.slots,
+//         { day: "MONDAY", startTime: "09:00", endTime: "17:00" },
+//       ],
+//     });
+//   };
+
+//   const removeSlot = (index) => {
+//     const newSlots = formData.slots.filter((_, i) => i !== index);
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   const updateSlot = (index, field, value) => {
+//     const newSlots = [...formData.slots];
+//     newSlots[index][field] = field === "day" ? value.toUpperCase() : value;
+//     setFormData({ ...formData, slots: newSlots });
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     try {
+//       setSaving(true);
+//       setError("");
+
+//       if (isEditing) {
+//         await api.put(`/admin/doctors/${currentDoctorId}`, formData);
+//         setSuccess("Doctor profile updated successfully!");
+//       } else {
+//         await api.post("/admin/doctors", formData);
+//         setSuccess("Doctor registered successfully!");
+//       }
+
+//       setShowModal(false);
+//       resetForm();
+//       fetchDoctors();
+//       setTimeout(() => setSuccess(""), 3000);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to save record.");
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   const handleDelete = async (id, name) => {
+//     if (
+//       window.confirm(
+//         `Delete ${name}? This will remove them from the booking system.`
+//       )
+//     ) {
+//       try {
+//         await api.delete(`/admin/doctors/${id}`);
+//         fetchDoctors();
+//       } catch (err) {
+//         alert(err.response?.data?.message || "Delete failed.");
+//       }
+//     }
+//   };
+
+//   const resetForm = () => {
+//     setFormData({
+//       name: "",
+//       speciality: "",
+//       nmcNumber: "",
+//       email: "",
+//       phone: "",
+//       experience: 0,
+//       consultationFee: 500,
+//       slots: [],
+//       isAvailable: true,
+//     });
+//     setIsEditing(false);
+//     setCurrentDoctorId(null);
+//   };
+
+//   if (loading && doctors.length === 0)
+//     return (
+//       <div className="d-flex justify-content-center align-items-center vh-100">
+//         <Loader2 className="animate-spin text-primary" size={40} />
+//       </div>
+//     );
+
+//   return (
+//     <div className="container-fluid p-0 animate-fade-in">
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <h3 className="fw-bold d-flex align-items-center gap-2">
+//           <Stethoscope className="text-primary" /> Doctors Management
+//         </h3>
+//         <button
+//           className="btn btn-primary rounded-pill px-4 shadow-sm"
+//           onClick={() => {
+//             resetForm();
+//             setShowModal(true);
+//           }}
+//         >
+//           <Plus size={18} className="me-2" /> Register Doctor
+//         </button>
+//       </div>
+
+//       {success && (
+//         <div className="alert alert-success border-0 shadow-sm text-center">
+//           {success}
+//         </div>
+//       )}
+//       {error && (
+//         <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2">
+//           <AlertCircle size={18} />
+//           {error}
+//         </div>
+//       )}
+
+//       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
+//         <div className="table-responsive">
+//           <table className="table table-hover align-middle mb-0">
+//             <thead className="table-light">
+//               <tr className="small text-uppercase fw-bold text-muted">
+//                 <th className="ps-4">Specialist</th>
+//                 <th>Credentials</th>
+//                 <th>Contact</th>
+//                 <th>Schedule</th>
+//                 <th className="text-end pe-4">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {doctors.map((doc) => (
+//                 <tr key={doc._id}>
+//                   <td className="ps-4">
+//                     <div className="fw-bold text-dark">{doc.name}</div>
+//                     <span className="badge bg-primary-subtle text-primary border border-primary-subtle me-1">
+//                       {doc.speciality}
+//                     </span>
+//                     {!doc.isAvailable && (
+//                       <span className="badge bg-danger">Unavailable</span>
+//                     )}
+//                   </td>
+//                   <td>
+//                     <div className="small text-muted d-flex align-items-center gap-1">
+//                       <Briefcase size={12} /> {doc.experience} Yrs Exp.
+//                     </div>
+//                     <div className="small text-muted d-flex align-items-center gap-1">
+//                       <DollarSign size={12} /> Fee: Rs. {doc.consultationFee}
+//                     </div>
+//                     <div
+//                       className="small text-muted"
+//                       style={{ fontSize: "0.75rem" }}
+//                     >
+//                       NMC: {doc.nmcNumber}
+//                     </div>
+//                   </td>
+//                   <td>
+//                     <div className="small text-dark fw-medium">
+//                       <Phone size={12} className="me-1" /> {doc.phone || "N/A"}
+//                     </div>
+//                     <div className="small text-muted">
+//                       <Mail size={12} className="me-1" /> {doc.email || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td>
+//                     {/* ✅ Safe Check: doc.slots?.map to prevent crashes */}
+//                     {doc.slots && doc.slots.length > 0 ? (
+//                       doc.slots.map((s, i) => (
+//                         <div key={i} className="small text-muted">
+//                           <Clock size={12} className="me-1" />
+//                           <span className="fw-bold">
+//                             {s.day.slice(0, 3)}
+//                           </span>: {s.startTime}-{s.endTime}
+//                         </div>
+//                       ))
+//                     ) : (
+//                       <span className="text-muted small fst-italic">
+//                         No slots configured
+//                       </span>
+//                     )}
+//                   </td>
+//                   <td className="text-end pe-4">
+//                     <button
+//                       className="btn btn-sm btn-outline-primary border-0 me-2"
+//                       onClick={() => handleEdit(doc)}
+//                     >
+//                       <Edit size={16} />
+//                     </button>
+//                     <button
+//                       className="btn btn-sm btn-outline-danger border-0"
+//                       onClick={() => handleDelete(doc._id, doc.name)}
+//                     >
+//                       <Trash2 size={16} />
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       {showModal && (
+//         <div
+//           className="modal show d-block animate-fade-in"
+//           style={{ background: "rgba(0,0,0,0.5)" }}
+//           tabIndex="-1"
+//         >
+//           <div className="modal-dialog modal-lg modal-dialog-centered">
+//             <div className="modal-content border-0 shadow-lg rounded-4">
+//               <form onSubmit={handleSubmit}>
+//                 <div className="modal-header border-bottom px-4">
+//                   <h5 className="fw-bold m-0">
+//                     {isEditing
+//                       ? "Update Specialist Info"
+//                       : "New Doctor Registration"}
+//                   </h5>
+//                   <button
+//                     type="button"
+//                     className="btn-close shadow-none"
+//                     onClick={() => setShowModal(false)}
+//                   ></button>
+//                 </div>
+
+//                 <div className="modal-body p-4">
+//                   <div className="row g-3">
+//                     {/* Basic Info */}
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Full Name *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.name}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, name: e.target.value })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Speciality *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.speciality}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             speciality: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         NMC Registration *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.nmcNumber}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             nmcNumber: e.target.value,
+//                           })
+//                         }
+//                         required
+//                       />
+//                     </div>
+//                     <div className="col-md-6">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Contact Number *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.phone}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, phone: e.target.value })
+//                         }
+//                         required
+//                         placeholder="+977-..."
+//                       />
+//                     </div>
+
+//                     {/* Stats */}
+//                     <div className="col-md-4">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Experience (Yrs)
+//                       </label>
+//                       <input
+//                         type="number"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.experience}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             experience: e.target.value,
+//                           })
+//                         }
+//                       />
+//                     </div>
+//                     <div className="col-md-4">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Fee (Rs.)
+//                       </label>
+//                       <input
+//                         type="number"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.consultationFee}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             consultationFee: e.target.value,
+//                           })
+//                         }
+//                       />
+//                     </div>
+//                     <div className="col-md-4">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         System Status
+//                       </label>
+//                       <select
+//                         className="form-select border-2 shadow-none"
+//                         value={formData.isAvailable}
+//                         onChange={(e) =>
+//                           setFormData({
+//                             ...formData,
+//                             isAvailable: e.target.value === "true",
+//                           })
+//                         }
+//                       >
+//                         <option value="true">Available</option>
+//                         <option value="false">Unavailable</option>
+//                       </select>
+//                     </div>
+
+//                     <div className="col-md-12">
+//                       <label className="form-label small fw-bold text-muted text-uppercase">
+//                         Email Address
+//                       </label>
+//                       <input
+//                         type="email"
+//                         className="form-control border-2 shadow-none"
+//                         value={formData.email}
+//                         onChange={(e) =>
+//                           setFormData({ ...formData, email: e.target.value })
+//                         }
+//                       />
+//                     </div>
+
+//                     {/* Schedule Section */}
+//                     <div className="col-12 mt-4">
+//                       <div className="d-flex justify-content-between align-items-center mb-2">
+//                         <label className="form-label small fw-bold text-primary mb-0 text-uppercase">
+//                           Weekly Schedule
+//                         </label>
+//                         <button
+//                           type="button"
+//                           className="btn btn-sm btn-outline-primary rounded-pill px-3"
+//                           onClick={addSlot}
+//                         >
+//                           + Add Shift
+//                         </button>
+//                       </div>
+//                       <div className="p-3 bg-light rounded-3 border">
+//                         {formData.slots.length === 0 ? (
+//                           <p className="text-center text-muted small m-0 fst-italic">
+//                             No working shifts added yet.
+//                           </p>
+//                         ) : (
+//                           formData.slots.map((slot, index) => (
+//                             <div
+//                               key={index}
+//                               className="row g-2 mb-2 align-items-end"
+//                             >
+//                               <div className="col-md-4">
+//                                 <select
+//                                   className="form-select form-select-sm border-2 shadow-none"
+//                                   value={slot.day}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "day", e.target.value)
+//                                   }
+//                                 >
+//                                   {[
+//                                     "MONDAY",
+//                                     "TUESDAY",
+//                                     "WEDNESDAY",
+//                                     "THURSDAY",
+//                                     "FRIDAY",
+//                                     "SATURDAY",
+//                                     "SUNDAY",
+//                                   ].map((d) => (
+//                                     <option key={d} value={d}>
+//                                       {d}
+//                                     </option>
+//                                   ))}
+//                                 </select>
+//                               </div>
+//                               <div className="col-md-3">
+//                                 {/* ✅ FIX: Changed type to 'time' for strict backend compatibility */}
+//                                 <input
+//                                   type="time"
+//                                   className="form-control form-control-sm border-2 shadow-none"
+//                                   value={slot.startTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(
+//                                       index,
+//                                       "startTime",
+//                                       e.target.value
+//                                     )
+//                                   }
+//                                   required
+//                                 />
+//                               </div>
+//                               <div className="col-md-3">
+//                                 <input
+//                                   type="time"
+//                                   className="form-control form-control-sm border-2 shadow-none"
+//                                   value={slot.endTime}
+//                                   onChange={(e) =>
+//                                     updateSlot(index, "endTime", e.target.value)
+//                                   }
+//                                   required
+//                                 />
+//                               </div>
+//                               <div className="col-md-2 text-center">
+//                                 <button
+//                                   type="button"
+//                                   className="btn btn-sm text-danger"
+//                                   onClick={() => removeSlot(index)}
+//                                 >
+//                                   <Trash2 size={16} />
+//                                 </button>
+//                               </div>
+//                             </div>
+//                           ))
+//                         )}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <div className="modal-footer border-top px-4 py-3">
+//                   <button
+//                     type="button"
+//                     className="btn btn-light rounded-pill px-4"
+//                     onClick={() => setShowModal(false)}
+//                   >
+//                     Cancel
+//                   </button>
+//                   <button
+//                     type="submit"
+//                     className="btn btn-primary rounded-pill px-4 shadow-sm fw-bold"
+//                     disabled={saving}
+//                   >
+//                     {saving ? (
+//                       <span className="spinner-border spinner-border-sm me-2" />
+//                     ) : (
+//                       <Save size={18} className="me-2" />
+//                     )}
+//                     {isEditing ? "Save Changes" : "Register Doctor"}
+//                   </button>
+//                 </div>
+//               </form>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//       <style>{`.animate-fade-in { animation: fadeIn 0.3s ease; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+//     </div>
+//   );
+// };
+
+// export default AdminDoctors;
+
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
-
-const emptySlot = { date: "", startTime: "", endTime: "" };
+import {
+  Stethoscope,
+  Plus,
+  Edit,
+  Trash2,
+  Clock,
+  Save,
+  AlertCircle,
+  Mail,
+  Phone,
+  Briefcase,
+  DollarSign,
+  Loader2,
+} from "lucide-react";
 
 const AdminDoctors = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
     speciality: "",
     nmcNumber: "",
-    slots: [emptySlot],
+    email: "",
+    phone: "",
+    experience: 0,
+    consultationFee: 500,
+    slots: [],
+    isAvailable: true,
   });
-
-  const resetForm = () => {
-    setEditingId(null);
-    setFormData({
-      name: "",
-      speciality: "",
-      nmcNumber: "",
-      slots: [emptySlot],
-    });
-  };
 
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      setError("");
-      const token = localStorage.getItem("token");
-
-      // uses /api/doctors/pharmacist/doctors
-      const res = await api.get("/doctors/pharmacist/doctors", {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-
-      const docs = res.data || [];
-      setDoctors(docs);
+      const res = await api.get("/admin/doctors");
+      const data = res.data?.doctors || res.data || [];
+      setDoctors(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to load doctors from server."
-      );
+      setError("Failed to load doctor records.");
     } finally {
       setLoading(false);
     }
@@ -1427,205 +1982,213 @@ const AdminDoctors = () => {
     fetchDoctors();
   }, []);
 
-  const openCreate = () => {
-    resetForm();
-    setShowForm(true);
-  };
-
-  const openEdit = (doc) => {
-    setEditingId(doc._id);
+  const handleEdit = (doctor) => {
+    setError("");
+    setIsEditing(true);
+    setCurrentDoctorId(doctor._id);
     setFormData({
-      name: doc.name || "",
-      speciality: doc.speciality || "",
-      nmcNumber: doc.nmcNumber || "",
-      slots:
-        Array.isArray(doc.slots) && doc.slots.length > 0
-          ? doc.slots.map((s) => ({
-              date: s.date ? String(s.date).substring(0, 10) : "",
-              startTime: s.startTime || "",
-              endTime: s.endTime || "",
-            }))
-          : [emptySlot],
+      name: doctor.name || "",
+      speciality: doctor.speciality || "",
+      nmcNumber: doctor.nmcNumber || "",
+      email: doctor.email || "",
+      phone: doctor.phone || "",
+      experience: doctor.experience || 0,
+      consultationFee: doctor.consultationFee || 500,
+      slots: doctor.slots || [],
+      isAvailable: doctor.isAvailable !== undefined ? doctor.isAvailable : true,
     });
-    setShowForm(true);
+    setShowModal(true);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleSlotChange = (index, field, value) => {
-    setFormData((f) => {
-      const nextSlots = [...f.slots];
-      nextSlots[index] = { ...nextSlots[index], [field]: value };
-      return { ...f, slots: nextSlots };
+  const addSlot = () => {
+    setFormData({
+      ...formData,
+      slots: [
+        ...formData.slots,
+        { day: "MONDAY", startTime: "09:00", endTime: "17:00" },
+      ],
     });
   };
 
-  const addSlotRow = () => {
-    setFormData((f) => ({ ...f, slots: [...f.slots, emptySlot] }));
+  const removeSlot = (index) => {
+    const newSlots = formData.slots.filter((_, i) => i !== index);
+    setFormData({ ...formData, slots: newSlots });
   };
 
-  const removeSlotRow = (index) => {
-    setFormData((f) => {
-      const nextSlots = f.slots.filter((_, i) => i !== index);
-      return { ...f, slots: nextSlots.length ? nextSlots : [emptySlot] };
-    });
+  const updateSlot = (index, field, value) => {
+    const newSlots = [...formData.slots];
+    newSlots[index][field] = field === "day" ? value.toUpperCase() : value;
+    setFormData({ ...formData, slots: newSlots });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!formData.name || !formData.speciality || !formData.nmcNumber) {
-      setError("Name, speciality and NMC number are required.");
-      return;
-    }
-
-    // clean slots: remove completely empty rows
-    const cleanedSlots = (formData.slots || [])
-      .map((s) => ({
-        date: s.date,
-        startTime: s.startTime,
-        endTime: s.endTime,
-      }))
-      .filter((s) => s.date && s.startTime && s.endTime);
-
-    const payload = {
-      name: formData.name,
-      speciality: formData.speciality,
-      nmcNumber: formData.nmcNumber,
-      slots: cleanedSlots,
-    };
-
     try {
       setSaving(true);
-      const token = localStorage.getItem("token");
+      setError("");
 
-      if (editingId) {
-        await api.put(`/doctors/${editingId}`, payload, {
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-        });
-        setSuccess("Doctor updated successfully.");
+      if (isEditing) {
+        await api.put(`/admin/doctors/${currentDoctorId}`, formData);
+        setSuccess("Doctor profile updated successfully!");
       } else {
-        await api.post("/doctors", payload, {
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-        });
-        setSuccess("Doctor created successfully.");
+        await api.post("/admin/doctors", formData);
+        setSuccess("Doctor registered successfully!");
       }
 
-      setShowForm(false);
+      setShowModal(false);
       resetForm();
       fetchDoctors();
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to save doctor. Please try again."
-      );
+      setError(err.response?.data?.message || "Failed to save record.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
-    try {
-      setError("");
-      setSuccess("");
-      const token = localStorage.getItem("token");
-
-      await api.delete(`/doctors/${id}`, {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-
-      setSuccess("Doctor deleted successfully.");
-      setDoctors((prev) => prev.filter((d) => d._id !== id));
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to delete doctor. Please try again."
-      );
+  const handleDelete = async (id, name) => {
+    if (
+      window.confirm(
+        `Delete ${name}? This will remove them from the booking system.`
+      )
+    ) {
+      try {
+        await api.delete(`/admin/doctors/${id}`);
+        fetchDoctors();
+      } catch (err) {
+        alert(err.response?.data?.message || "Delete failed.");
+      }
     }
   };
 
-  const formatSlotsForTable = (slots) => {
-    if (!Array.isArray(slots) || slots.length === 0) return "No slots set";
-    return slots
-      .map((s) => {
-        const d = s.date ? String(s.date).substring(0, 10) : "";
-        return `${d} ${s.startTime || ""}-${s.endTime || ""}`;
-      })
-      .join(", ");
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      speciality: "",
+      nmcNumber: "",
+      email: "",
+      phone: "",
+      experience: 0,
+      consultationFee: 500,
+      slots: [],
+      isAvailable: true,
+    });
+    setIsEditing(false);
+    setCurrentDoctorId(null);
   };
 
+  if (loading && doctors.length === 0)
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="fw-bold mb-0">Doctors Management</h3>
-        <button className="btn btn-success" onClick={openCreate}>
-          + Add Doctor
+    <div className="container-fluid p-0 animate-fade-in">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="fw-bold d-flex align-items-center gap-2">
+          <Stethoscope className="text-primary" /> Doctors Management
+        </h3>
+        <button
+          className="btn btn-primary rounded-pill px-4 shadow-sm"
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+        >
+          <Plus size={18} className="me-2" /> Register Doctor
         </button>
       </div>
 
-      {error && (
-        <div className="alert alert-danger py-2" role="alert">
-          {error}
-        </div>
-      )}
       {success && (
-        <div className="alert alert-success py-2" role="alert">
+        <div className="alert alert-success border-0 shadow-sm text-center">
           {success}
         </div>
       )}
-
-      {loading ? (
-        <div className="d-flex align-items-center justify-content-center py-5">
-          <div className="spinner-border text-primary me-2" role="status" />
-          <span>Loading doctors...</span>
+      {error && (
+        <div className="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-2">
+          <AlertCircle size={18} />
+          {error}
         </div>
-      ) : doctors.length === 0 ? (
-        <p className="text-muted">
-          No doctors found. Click “Add Doctor” to create one.
-        </p>
-      ) : (
+      )}
+
+      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div className="table-responsive">
-          <table className="table table-striped table-hover align-middle">
+          <table className="table table-hover align-middle mb-0">
             <thead className="table-light">
-              <tr>
-                <th>Name</th>
-                <th>Speciality</th>
-                <th>NMC Number</th>
-                <th>Slots (Date &amp; Time)</th>
-                <th style={{ width: 180 }}>Actions</th>
+              <tr className="small text-uppercase fw-bold text-muted">
+                <th className="ps-4">Specialist</th>
+                <th>Credentials</th>
+                <th>Contact</th>
+                <th>Schedule</th>
+                <th className="text-end pe-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {doctors.map((d) => (
-                <tr key={d._id}>
-                  <td>{d.name}</td>
-                  <td>{d.speciality}</td>
-                  <td>{d.nmcNumber}</td>
-                  <td>
-                    {Array.isArray(d.slots) && d.slots.length > 0 ? (
-                      formatSlotsForTable(d.slots)
-                    ) : (
-                      <span className="text-muted">No slots set</span>
+              {doctors.map((doc) => (
+                <tr key={doc._id}>
+                  <td className="ps-4">
+                    <div className="fw-bold text-dark">{doc.name}</div>
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle me-1">
+                      {doc.speciality}
+                    </span>
+                    {!doc.isAvailable && (
+                      <span className="badge bg-danger">Unavailable</span>
                     )}
                   </td>
                   <td>
-                    <button
-                      className="btn btn-sm btn-outline-primary me-2"
-                      onClick={() => openEdit(d)}
+                    <div className="small text-muted d-flex align-items-center gap-1">
+                      <Briefcase size={12} /> {doc.experience} Yrs Exp.
+                    </div>
+                    <div className="small text-muted d-flex align-items-center gap-1">
+                      <DollarSign size={12} /> Fee: Rs. {doc.consultationFee}
+                    </div>
+                    <div
+                      className="small text-muted"
+                      style={{ fontSize: "0.75rem" }}
                     >
-                      Edit
+                      NMC: {doc.nmcNumber}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="small text-dark fw-medium">
+                      <Phone size={12} className="me-1" /> {doc.phone || "N/A"}
+                    </div>
+                    <div className="small text-muted">
+                      <Mail size={12} className="me-1" /> {doc.email || "N/A"}
+                    </div>
+                  </td>
+                  <td>
+                    {/* ✅ FIX IS HERE: Added safety check (s.day || "") before .slice() */}
+                    {doc.slots && doc.slots.length > 0 ? (
+                      doc.slots.map((s, i) => (
+                        <div key={i} className="small text-muted">
+                          <Clock size={12} className="me-1" />
+                          <span className="fw-bold">
+                            {s.day ? s.day.slice(0, 3) : "UNK"}
+                          </span>
+                          : {s.startTime}-{s.endTime}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-muted small fst-italic">
+                        No slots configured
+                      </span>
+                    )}
+                  </td>
+                  <td className="text-end pe-4">
+                    <button
+                      className="btn btn-sm btn-outline-primary border-0 me-2"
+                      onClick={() => handleEdit(doc)}
+                    >
+                      <Edit size={16} />
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDelete(d._id)}
+                      className="btn btn-sm btn-outline-danger border-0"
+                      onClick={() => handleDelete(doc._id, doc.name)}
                     >
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
@@ -1633,176 +2196,278 @@ const AdminDoctors = () => {
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
-      {/* Modal-like form */}
-      {showForm && (
+      {showModal && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
-          style={{ zIndex: 1050 }}
+          className="modal show d-block animate-fade-in"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          tabIndex="-1"
         >
-          <div
-            className="bg-white rounded shadow p-4"
-            style={{ maxWidth: 600, width: "100%" }}
-          >
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0">
-                {editingId ? "Edit Doctor" : "Add Doctor"}
-              </h5>
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => {
-                  if (!saving) {
-                    setShowForm(false);
-                    resetForm();
-                  }
-                }}
-              >
-                ✕
-              </button>
-            </div>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg rounded-4">
+              <form onSubmit={handleSubmit}>
+                <div className="modal-header border-bottom px-4">
+                  <h5 className="fw-bold m-0">
+                    {isEditing
+                      ? "Update Specialist Info"
+                      : "New Doctor Registration"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close shadow-none"
+                    onClick={() => setShowModal(false)}
+                  ></button>
+                </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label">Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-control"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  disabled={saving}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Speciality *</label>
-                <input
-                  type="text"
-                  name="speciality"
-                  className="form-control"
-                  value={formData.speciality}
-                  onChange={handleChange}
-                  required
-                  disabled={saving}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">NMC Number *</label>
-                <input
-                  type="text"
-                  name="nmcNumber"
-                  className="form-control"
-                  value={formData.nmcNumber}
-                  onChange={handleChange}
-                  required
-                  disabled={saving || !!editingId}
-                />
-              </div>
+                <div className="modal-body p-4">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2 shadow-none"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Speciality *
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2 shadow-none"
+                        value={formData.speciality}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            speciality: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        NMC Registration *
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2 shadow-none"
+                        value={formData.nmcNumber}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            nmcNumber: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Contact Number *
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2 shadow-none"
+                        value={formData.phone}
+                        onChange={(e) =>
+                          setFormData({ ...formData, phone: e.target.value })
+                        }
+                        required
+                        placeholder="+977-..."
+                      />
+                    </div>
 
-              {/* Slots section */}
-              <div className="mb-2 d-flex justify-content-between align-items-center">
-                <label className="form-label mb-0">
-                  Time Slots (with date)
-                </label>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-success"
-                  onClick={addSlotRow}
-                  disabled={saving}
-                >
-                  + Add Slot
-                </button>
-              </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Experience (Yrs)
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control border-2 shadow-none"
+                        value={formData.experience}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            experience: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Fee (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control border-2 shadow-none"
+                        value={formData.consultationFee}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            consultationFee: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        System Status
+                      </label>
+                      <select
+                        className="form-select border-2 shadow-none"
+                        value={formData.isAvailable}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isAvailable: e.target.value === "true",
+                          })
+                        }
+                      >
+                        <option value="true">Available</option>
+                        <option value="false">Unavailable</option>
+                      </select>
+                    </div>
 
-              {formData.slots.map((slot, index) => (
-                <div className="row g-2 align-items-end mb-2" key={index}>
-                  <div className="col-md-4">
-                    <label className="form-label small mb-1">Date</label>
-                    <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={slot.date}
-                      onChange={(e) =>
-                        handleSlotChange(index, "date", e.target.value)
-                      }
-                      disabled={saving}
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label small mb-1">Start</label>
-                    <input
-                      type="time"
-                      className="form-control form-control-sm"
-                      value={slot.startTime}
-                      onChange={(e) =>
-                        handleSlotChange(index, "startTime", e.target.value)
-                      }
-                      disabled={saving}
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label small mb-1">End</label>
-                    <input
-                      type="time"
-                      className="form-control form-control-sm"
-                      value={slot.endTime}
-                      onChange={(e) =>
-                        handleSlotChange(index, "endTime", e.target.value)
-                      }
-                      disabled={saving}
-                    />
-                  </div>
-                  <div className="col-md-2 d-flex">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-danger w-100"
-                      onClick={() => removeSlotRow(index)}
-                      disabled={saving}
-                    >
-                      Remove
-                    </button>
+                    <div className="col-md-12">
+                      <label className="form-label small fw-bold text-muted text-uppercase">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        className="form-control border-2 shadow-none"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-12 mt-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <label className="form-label small fw-bold text-primary mb-0 text-uppercase">
+                          Weekly Schedule
+                        </label>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                          onClick={addSlot}
+                        >
+                          + Add Shift
+                        </button>
+                      </div>
+                      <div className="p-3 bg-light rounded-3 border">
+                        {formData.slots.length === 0 ? (
+                          <p className="text-center text-muted small m-0 fst-italic">
+                            No working shifts added yet.
+                          </p>
+                        ) : (
+                          formData.slots.map((slot, index) => (
+                            <div
+                              key={index}
+                              className="row g-2 mb-2 align-items-end"
+                            >
+                              <div className="col-md-4">
+                                <select
+                                  className="form-select form-select-sm border-2 shadow-none"
+                                  value={slot.day}
+                                  onChange={(e) =>
+                                    updateSlot(index, "day", e.target.value)
+                                  }
+                                >
+                                  {[
+                                    "MONDAY",
+                                    "TUESDAY",
+                                    "WEDNESDAY",
+                                    "THURSDAY",
+                                    "FRIDAY",
+                                    "SATURDAY",
+                                    "SUNDAY",
+                                  ].map((d) => (
+                                    <option key={d} value={d}>
+                                      {d}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-md-3">
+                                <input
+                                  type="time"
+                                  className="form-control form-control-sm border-2 shadow-none"
+                                  value={slot.startTime}
+                                  onChange={(e) =>
+                                    updateSlot(
+                                      index,
+                                      "startTime",
+                                      e.target.value
+                                    )
+                                  }
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-3">
+                                <input
+                                  type="time"
+                                  className="form-control form-control-sm border-2 shadow-none"
+                                  value={slot.endTime}
+                                  onChange={(e) =>
+                                    updateSlot(index, "endTime", e.target.value)
+                                  }
+                                  required
+                                />
+                              </div>
+                              <div className="col-md-2 text-center">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm text-danger"
+                                  onClick={() => removeSlot(index)}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
 
-              <div className="form-text mb-3">
-                Each slot will be stored with a specific date and start/end time
-                for appointment booking.
-              </div>
-
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    if (!saving) {
-                      setShowForm(false);
-                      resetForm();
-                    }
-                  }}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={saving}
-                >
-                  {saving
-                    ? editingId
-                      ? "Updating..."
-                      : "Creating..."
-                    : editingId
-                    ? "Update"
-                    : "Create"}
-                </button>
-              </div>
-            </form>
+                <div className="modal-footer border-top px-4 py-3">
+                  <button
+                    type="button"
+                    className="btn btn-light rounded-pill px-4"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary rounded-pill px-4 shadow-sm fw-bold"
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <span className="spinner-border spinner-border-sm me-2" />
+                    ) : (
+                      <Save size={18} className="me-2" />
+                    )}
+                    {isEditing ? "Save Changes" : "Register Doctor"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
+      <style>{`.animate-fade-in { animation: fadeIn 0.3s ease; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
     </div>
   );
 };

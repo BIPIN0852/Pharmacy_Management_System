@@ -1,131 +1,22 @@
-// import React, { useState, useEffect } from "react";
-// import api from "../services/api";
-
-// const AdminAppointments = () => {
-//   const [appointments, setAppointments] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [filters, setFilters] = useState({});
-
-//   const fetchAppointments = async () => {
-//     try {
-//       setLoading(true);
-//       const token = localStorage.getItem("token");
-//       const params = new URLSearchParams(filters);
-//       const res = await api.get(`/admin/appointments?${params}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setAppointments(res.data.appointments || []);
-//     } catch (err) {
-//       console.error("Failed to fetch appointments");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchAppointments();
-//   }, [filters]);
-
-//   const updateStatus = async (id, status) => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       await api.put(
-//         `/admin/appointments/${id}/status`,
-//         { status },
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       fetchAppointments();
-//     } catch (err) {
-//       console.error("Failed to update status");
-//     }
-//   };
-
-//   const getStatusBadge = (status) => {
-//     const badges = {
-//       pending: "bg-warning text-dark",
-//       confirmed: "bg-info text-white",
-//       completed: "bg-success",
-//       cancelled: "bg-secondary",
-//     };
-//     return `badge ${badges[status] || "bg-secondary"}`;
-//   };
-
-//   if (loading)
-//     return <div className="spinner-border text-primary mx-auto d-block mt-5" />;
-
-//   return (
-//     <div className="container-fluid">
-//       <h3 className="fw-bold mb-4">Appointments</h3>
-
-//       <div className="table-responsive">
-//         <table className="table table-hover">
-//           <thead className="table-light">
-//             <tr>
-//               <th>Date & Time</th>
-//               <th>Doctor</th>
-//               <th>Customer</th>
-//               <th>Status</th>
-//               <th>Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {appointments.map((appt) => (
-//               <tr key={appt._id}>
-//                 <td>
-//                   <div>{new Date(appt.date).toLocaleDateString()}</div>
-//                   <small>{appt.timeSlot}</small>
-//                 </td>
-//                 <td>
-//                   <div className="fw-medium">{appt.doctor?.name}</div>
-//                   <small>{appt.doctor?.speciality}</small>
-//                 </td>
-//                 <td>
-//                   <div>{appt.customer?.name}</div>
-//                   <small>{appt.customer?.email}</small>
-//                 </td>
-//                 <td>
-//                   <span className={getStatusBadge(appt.status)}>
-//                     {appt.status.toUpperCase()}
-//                   </span>
-//                 </td>
-//                 <td>
-//                   {appt.status === "pending" && (
-//                     <select
-//                       className="form-select form-select-sm"
-//                       defaultValue={appt.status}
-//                       onChange={(e) => updateStatus(appt._id, e.target.value)}
-//                     >
-//                       <option value="pending">Pending</option>
-//                       <option value="confirmed">Confirm</option>
-//                       <option value="cancelled">Cancel</option>
-//                     </select>
-//                   )}
-//                   {appt.status !== "pending" && (
-//                     <span className="small text-muted">{appt.status}</span>
-//                   )}
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminAppointments;
-
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import {
+  Calendar,
+  Clock,
+  User,
+  FileText,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Filter,
+} from "lucide-react";
 
 const AdminAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
-    date: "",
+    day: "",
     status: "",
     doctor: "",
   });
@@ -135,13 +26,24 @@ const AdminAppointments = () => {
       setLoading(true);
       setError("");
       const token = localStorage.getItem("token");
-      const params = new URLSearchParams(filters);
-      const res = await api.get(`/admin/appointments?${params}`, {
+
+      const params = new URLSearchParams();
+      if (filters.day) params.append("day", filters.day);
+      if (filters.status) params.append("status", filters.status);
+
+      const res = await api.get(`/appointments?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAppointments(res.data.appointments || []);
+
+      // Handle pagination wrapper if present, otherwise array
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.appointments || [];
+
+      setAppointments(data);
     } catch (err) {
-      setError("Failed to load appointments.");
+      console.error(err);
+      setError("Failed to load appointment registry.");
     } finally {
       setLoading(false);
     }
@@ -152,144 +54,245 @@ const AdminAppointments = () => {
   }, [filters]);
 
   const updateStatus = async (id, status) => {
+    if (!window.confirm(`Mark this appointment as ${status}?`)) return;
+
     try {
       const token = localStorage.getItem("token");
       await api.put(
-        `/admin/appointments/${id}/status`,
+        `/appointments/${id}/status`,
         { status },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchAppointments();
     } catch {
-      setError("Failed to update status.");
+      alert("Failed to update status. Please try again.");
     }
   };
 
   const handleFilterChange = (e) => {
-    setFilters((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const statusOptions = ["", "pending", "confirmed", "completed", "cancelled"];
+  const dayOptions = [
+    "",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+  ];
+  const statusOptions = [
+    "",
+    "pending",
+    "confirmed",
+    "completed",
+    "cancelled",
+    "missed",
+  ];
 
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-warning text-dark";
-      case "confirmed":
-        return "bg-info text-white";
-      case "completed":
-        return "bg-success";
-      case "cancelled":
-        return "bg-secondary";
-      default:
-        return "bg-light text-dark";
-    }
+  const getStatusBadge = (status) => {
+    const styles = {
+      pending: "bg-warning text-dark border-warning",
+      confirmed: "bg-primary text-white border-primary",
+      completed: "bg-success text-white border-success",
+      cancelled: "bg-secondary text-white border-secondary",
+      missed: "bg-danger text-white border-danger",
+    };
+    return `badge rounded-pill px-3 py-1 border ${
+      styles[status] || "bg-light text-dark"
+    }`;
   };
 
   return (
-    <div className="container-fluid">
-      <h3 className="fw-bold mb-4">Manage Appointments</h3>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <div className="d-flex gap-3 mb-4 flex-wrap">
-        <input
-          type="date"
-          name="date"
-          className="form-control form-control-sm"
-          value={filters.date}
-          onChange={handleFilterChange}
-          style={{ maxWidth: 180 }}
-        />
-        <select
-          name="status"
-          className="form-select form-select-sm"
-          value={filters.status}
-          onChange={handleFilterChange}
-          style={{ maxWidth: 150 }}
-        >
-          {statusOptions.map((sts) => (
-            <option key={sts} value={sts}>
-              {sts === ""
-                ? "All Statuses"
-                : sts.charAt(0).toUpperCase() + sts.slice(1)}
-            </option>
-          ))}
-        </select>
-        {/* Doctor filter can be added when you have doctor list */}
+    <div className="container-fluid p-0 animate-fade-in">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3 className="fw-bold m-0 d-flex align-items-center gap-2">
+          <Calendar className="text-primary" /> Appointment Registry
+        </h3>
+        <span className="badge bg-white text-muted border shadow-sm p-2">
+          Total Records: {appointments.length}
+        </span>
       </div>
 
-      {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status" />
-        </div>
-      ) : appointments.length === 0 ? (
-        <p className="text-muted">No appointments found.</p>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
-              <tr>
-                <th>Date</th>
-                <th>Time Slot</th>
-                <th>Doctor</th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((appt) => (
-                <tr key={appt._id}>
-                  <td>{new Date(appt.date).toLocaleDateString()}</td>
-                  <td>{appt.timeSlot}</td>
-                  <td>
-                    <div>{appt.doctor?.name || "-"}</div>
-                    <small className="text-muted">
-                      {appt.doctor?.speciality || ""}
-                    </small>
-                  </td>
-                  <td>
-                    <div>{appt.customer?.name || "-"}</div>
-                    <small className="text-muted">
-                      {appt.customer?.email || ""}
-                    </small>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${getStatusBadgeClass(appt.status)}`}
-                    >
-                      {appt.status.charAt(0).toUpperCase() +
-                        appt.status.slice(1)}
-                    </span>
-                  </td>
-                  <td>
-                    {appt.status === "pending" && (
-                      <select
-                        className="form-select form-select-sm"
-                        defaultValue={appt.status}
-                        onChange={(e) => updateStatus(appt._id, e.target.value)}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirm</option>
-                        <option value="cancelled">Cancel</option>
-                      </select>
-                    )}
-                    {appt.status !== "pending" && (
-                      <small className="text-muted">{appt.status}</small>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && (
+        <div className="alert alert-danger shadow-sm border-0">
+          <AlertCircle size={16} className="me-2" />
+          {error}
         </div>
       )}
+
+      {/* Control Panel */}
+      <div className="card shadow-sm border-0 rounded-4 mb-4">
+        <div className="card-body p-3 bg-light rounded-4">
+          <div className="row g-3 align-items-end">
+            <div className="col-md-3">
+              <label className="small fw-bold text-muted mb-1">
+                <Filter size={12} className="me-1" /> Filter by Day
+              </label>
+              <select
+                name="day"
+                className="form-select border-0 shadow-sm"
+                value={filters.day}
+                onChange={handleFilterChange}
+              >
+                {dayOptions.map((d) => (
+                  <option key={d} value={d}>
+                    {d === "" ? "All Days" : d}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="small fw-bold text-muted mb-1">
+                <Filter size={12} className="me-1" /> Filter Status
+              </label>
+              <select
+                name="status"
+                className="form-select border-0 shadow-sm"
+                value={filters.status}
+                onChange={handleFilterChange}
+              >
+                {statusOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s === "" ? "All Statuses" : s.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2 ms-auto">
+              <button
+                className="btn btn-outline-secondary w-100 border-0 shadow-sm bg-white"
+                onClick={() => setFilters({ day: "", status: "", doctor: "" })}
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Registry Table */}
+      <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary mb-3" role="status" />
+            <p className="text-muted small fw-bold">Syncing Records...</p>
+          </div>
+        ) : appointments.length === 0 ? (
+          <div className="text-center py-5">
+            <Calendar size={48} className="text-muted opacity-25 mb-3" />
+            <p className="text-muted">
+              No appointments found matching your filters.
+            </p>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="bg-light border-bottom">
+                <tr className="small text-uppercase text-muted">
+                  <th className="ps-4 py-3">Date & Time</th>
+                  <th>Reference</th>
+                  <th>Patient Details</th>
+                  <th>Assigned Doctor</th>
+                  <th>Status</th>
+                  <th className="text-end pe-4">Management</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.map((appt) => {
+                  // ✅ Prioritize Snapshot Data for integrity
+                  const pName =
+                    appt.customerDetails?.name || appt.user?.name || "Unknown";
+                  const pContact =
+                    appt.customerDetails?.phone || appt.user?.phone || "N/A";
+
+                  return (
+                    <tr key={appt._id}>
+                      <td className="ps-4">
+                        <div className="fw-bold text-dark">
+                          {appt.date
+                            ? new Date(appt.date).toLocaleDateString()
+                            : appt.day}
+                        </div>
+                        <div className="small text-muted d-flex align-items-center gap-1">
+                          <Clock size={12} /> {appt.timeSlot}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge bg-light text-dark border font-monospace">
+                          {appt.bookingReference || "N/A"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="fw-bold d-flex align-items-center gap-2">
+                          <User size={14} className="text-muted" /> {pName}
+                        </div>
+                        <div className="small text-muted ms-4">{pContact}</div>
+                      </td>
+                      <td>
+                        <div className="fw-medium text-primary">
+                          {appt.doctor?.name || "Unassigned"}
+                        </div>
+                        <small className="text-muted">
+                          {appt.doctor?.speciality}
+                        </small>
+                      </td>
+                      <td>
+                        <span className={getStatusBadge(appt.status)}>
+                          {appt.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="text-end pe-4">
+                        {/* Action Buttons based on Status */}
+                        {appt.status === "pending" && (
+                          <div className="btn-group shadow-sm">
+                            <button
+                              className="btn btn-sm btn-success"
+                              onClick={() =>
+                                updateStatus(appt._id, "confirmed")
+                              }
+                              title="Confirm Booking"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger bg-white"
+                              onClick={() =>
+                                updateStatus(appt._id, "cancelled")
+                              }
+                              title="Cancel Booking"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          </div>
+                        )}
+                        {appt.status === "confirmed" && (
+                          <button
+                            className="btn btn-sm btn-primary shadow-sm"
+                            onClick={() => updateStatus(appt._id, "completed")}
+                          >
+                            Mark Complete
+                          </button>
+                        )}
+                        {["cancelled", "completed", "missed"].includes(
+                          appt.status
+                        ) && (
+                          <span className="text-muted small fst-italic">
+                            Archived
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <style>{`.animate-fade-in { animation: fadeIn 0.4s ease; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     </div>
   );
 };

@@ -1725,59 +1725,954 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const { body, validationResult } = require("express-validator");
+// const bcrypt = require("bcryptjs");
+// const jwt = require("jsonwebtoken");
+// const passport = require("passport");
+// const nodemailer = require("nodemailer");
+
+// const User = require("../models/User");
+// const authenticateToken = require("../middleware/auth");
+
+// const router = express.Router();
+
+// // -------------------
+// // EMAIL TRANSPORT SETUP
+// // -------------------
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 587,
+//   secure: false, // true for 465, false for other ports
+//   auth: {
+//     user: process.env.SMTP_USER,
+//     pass: process.env.SMTP_PASSWORD,
+//   },
+// });
+
+// async function sendCodeEmail(to, subject, text) {
+//   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+//     console.warn(
+//       "⚠️ SMTP_USER or SMTP_PASSWORD not set; logging email instead."
+//     );
+//     console.log("TO:", to, "SUBJECT:", subject, "TEXT:", text);
+//     return;
+//   }
+//   return transporter.sendMail({
+//     from: `"Smart Pharmacy" <${process.env.SMTP_USER}>`,
+//     to,
+//     subject,
+//     text,
+//   });
+// }
+
+// // Utility: Generate 6-digit OTP
+// function generateOtp() {
+//   return Math.floor(100000 + Math.random() * 900000).toString();
+// }
+
+// // -------------------
+// // REGISTER (Customer)
+// // -------------------
+// router.post(
+//   "/register",
+//   [
+//     body("name").isLength({ min: 2 }).withMessage("Name required"),
+//     body("email").isEmail().withMessage("Valid email required"),
+//     body("password").isLength({ min: 6 }).withMessage("Password min 6 chars"),
+//   ],
+//   async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty())
+//       return res.status(400).json({ errors: errors.array() });
+
+//     const { name, email, password, phone } = req.body;
+
+//     try {
+//       let user = await User.findOne({ email });
+
+//       // Handle existing unverified user (Resend OTP case)
+//       if (user) {
+//         if (!user.isVerified) {
+//           const otpCode = generateOtp();
+//           const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+//           user.otpCode = otpCode;
+//           user.otpExpires = expiry;
+//           user.name = name;
+//           user.phone = phone;
+//           user.role = "customer";
+//           user.password = await bcrypt.hash(password, 10);
+//           await user.save();
+
+//           try {
+//             await sendCodeEmail(
+//               email,
+//               "Verification Code",
+//               `Your verification code is: ${otpCode}`
+//             );
+//           } catch (e) {
+//             console.error("Email Error:", e);
+//           }
+//           return res.json({ message: "Verification code resent." });
+//         }
+//         return res
+//           .status(400)
+//           .json({ message: "User with this email already exists." });
+//       }
+
+//       // Create New User
+//       const hashedPassword = await bcrypt.hash(password, 10);
+//       const otpCode = generateOtp();
+//       const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+//       user = new User({
+//         name,
+//         email,
+//         password: hashedPassword,
+//         role: "customer",
+//         phone,
+//         isVerified: false,
+//         otpCode,
+//         otpExpires: expiry,
+//       });
+//       await user.save();
+
+//       try {
+//         await sendCodeEmail(
+//           email,
+//           "Verification Code",
+//           `Your verification code is: ${otpCode}`
+//         );
+//       } catch (e) {
+//         console.error("Email Error:", e);
+//       }
+
+//       res
+//         .status(201)
+//         .json({ message: "User registered. Verification code sent to email." });
+//     } catch (err) {
+//       console.error("Register Error:", err);
+//       res.status(500).json({ message: "Server error" });
+//     }
+//   }
+// );
+
+// // -------------------
+// // VERIFY OTP (Registration)
+// // -------------------
+// router.post(
+//   "/verify-otp",
+//   [body("email").isEmail(), body("otp").isLength({ min: 4 })],
+//   async (req, res) => {
+//     const { email, otp } = req.body;
+//     try {
+//       const user = await User.findOne({ email });
+
+//       // Check if code matches and hasn't expired
+//       if (!user || user.otpCode !== otp || user.otpExpires < Date.now()) {
+//         return res.status(400).json({ message: "Invalid or Expired OTP" });
+//       }
+
+//       // Mark verified
+//       user.isVerified = true;
+//       user.otpCode = undefined;
+//       user.otpExpires = undefined;
+//       await user.save();
+
+//       // Generate Token
+//       const token = jwt.sign(
+//         { id: user._id, role: user.role },
+//         process.env.JWT_SECRET,
+//         { expiresIn: "7d" }
+//       );
+
+//       res.json({
+//         message: "Verified successfully",
+//         token,
+//         user: {
+//           id: user._id,
+//           name: user.name,
+//           email: user.email,
+//           role: user.role,
+//         },
+//       });
+//     } catch (err) {
+//       console.error("Verify OTP Error:", err);
+//       res.status(500).json({ message: "Server error" });
+//     }
+//   }
+// );
+
+// // -------------------
+// // RESEND OTP
+// // -------------------
+// router.post("/resend-otp", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+//     if (user.isVerified)
+//       return res.status(400).json({ message: "Account already verified" });
+
+//     const otpCode = generateOtp();
+//     user.otpCode = otpCode;
+//     user.otpExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(email, "Verification Code", `Code: ${otpCode}`);
+//     res.json({ message: "Verification code resent." });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // LOGIN (Password)
+// // -------------------
+// router.post("/login", async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+//     if (!user.isVerified) {
+//       return res
+//         .status(403)
+//         .json({ message: "Account not verified. Please verify OTP." });
+//     }
+
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch)
+//       return res.status(400).json({ message: "Invalid credentials" });
+
+//     const token = jwt.sign(
+//       { id: user._id, role: user.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "7d" }
+//     );
+
+//     res.json({
+//       message: "Logged in successfully",
+//       token,
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Login Error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // ADMIN: CREATE USER (Pharmacist/Staff)
+// // -------------------
+// router.post("/admin/create-user", authenticateToken, async (req, res) => {
+//   if (req.user.role !== "admin")
+//     return res.status(403).json({ message: "Admin only" });
+
+//   const { name, email, password, role, phone } = req.body;
+//   try {
+//     if (await User.findOne({ email }))
+//       return res.status(400).json({ message: "User already exists" });
+
+//     const user = new User({
+//       name,
+//       email,
+//       password: await bcrypt.hash(password, 10),
+//       role,
+//       phone,
+//       isVerified: true, // Admin created accounts are verified by default
+//     });
+
+//     await user.save();
+//     res.status(201).json({ message: `User created as ${role}`, user });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // LOGIN VIA EMAIL CODE (Passwordless)
+// // -------------------
+// router.post("/send-login-code", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const code = generateOtp();
+//     user.loginCode = code;
+//     user.loginCodeExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(email, "Login Code", `Your login code is: ${code}`);
+//     res.json({ message: "Login code sent to email" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/verify-login-code", async (req, res) => {
+//   const { email, code } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (
+//       !user ||
+//       user.loginCode !== code ||
+//       user.loginCodeExpires < Date.now()
+//     ) {
+//       return res.status(400).json({ message: "Invalid or expired login code" });
+//     }
+
+//     user.loginCode = undefined;
+//     user.loginCodeExpires = undefined;
+//     await user.save();
+
+//     const token = jwt.sign(
+//       { id: user._id, role: user.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "7d" }
+//     );
+
+//     res.json({ message: "Logged in", token, user });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // PASSWORD RESET FLOW
+// // -------------------
+// router.post("/forgot-password", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const code = generateOtp();
+//     user.resetPasswordCode = code;
+//     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(
+//       email,
+//       "Password Reset Code",
+//       `Your reset code is: ${code}`
+//     );
+//     res.json({ message: "Reset code sent to email" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/reset-password", async (req, res) => {
+//   const { email, code, newPassword } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (
+//       !user ||
+//       user.resetPasswordCode !== code ||
+//       user.resetPasswordExpires < Date.now()
+//     ) {
+//       return res.status(400).json({ message: "Invalid or expired reset code" });
+//     }
+
+//     user.password = await bcrypt.hash(newPassword, 10);
+//     user.resetPasswordCode = undefined;
+//     user.resetPasswordExpires = undefined;
+//     await user.save();
+
+//     res.json({ message: "Password has been reset successfully" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // GET CURRENT USER (/me)
+// // -------------------
+// router.get("/me", authenticateToken, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id).select("-password");
+//     res.json(user);
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------
+// // PROFILE MANAGEMENT (GET & UPDATE)
+// // -------------------
+// router.get("/profile", authenticateToken, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id).select("-password");
+//     if (!user) return res.status(404).json({ message: "User not found" });
+//     res.json(user);
+//   } catch (err) {
+//     console.error("Get Profile Error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.put("/profile", authenticateToken, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id);
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const {
+//       name,
+//       phone,
+//       gender,
+//       dob,
+//       address, // Can be string or object
+//       bloodGroup,
+//       allergies,
+//       chronicConditions,
+//       emergencyContact,
+//     } = req.body;
+
+//     if (name) user.name = name;
+//     if (phone) user.phone = phone;
+//     if (gender) user.gender = gender;
+//     if (dob) user.dob = dob;
+
+//     // ✅ FIX: Handle Address Mismatch (String vs Object) to prevent 500 error
+//     if (address) {
+//       if (typeof address === "string") {
+//         // Map string to object if backend expects object
+//         user.address = {
+//           street: address,
+//           city: address,
+//           province: user.address?.province || "",
+//           postalCode: user.address?.postalCode || "",
+//         };
+//       } else {
+//         // Save direct object
+//         user.address = address;
+//       }
+//     }
+
+//     if (bloodGroup) user.bloodGroup = bloodGroup;
+//     if (allergies) user.allergies = allergies;
+//     if (chronicConditions) user.chronicConditions = chronicConditions;
+//     if (emergencyContact) user.emergencyContact = emergencyContact;
+
+//     const updatedUser = await user.save();
+
+//     // Return without password
+//     const userResponse = updatedUser.toObject();
+//     delete userResponse.password;
+
+//     res.json(userResponse);
+//   } catch (err) {
+//     console.error("Update Profile Error:", err);
+//     res.status(500).json({ message: "Server error: " + err.message });
+//   }
+// });
+
+// // -------------------
+// // GOOGLE AUTH
+// // -------------------
+// router.get(
+//   "/google",
+//   passport.authenticate("google", { scope: ["profile", "email"] })
+// );
+
+// router.get(
+//   "/google/callback",
+//   passport.authenticate("google", { failureRedirect: "/login" }),
+//   (req, res) => {
+//     // Redirect to frontend dashboard with token
+//     res.redirect(`http://localhost:3000/dashboard?token=${req.user.token}`);
+//   }
+// );
+
+// module.exports = router;
+
+// const express = require("express");
+// const { body, validationResult } = require("express-validator");
+// const passport = require("passport");
+// const nodemailer = require("nodemailer");
+
+// // Models & Middleware
+// const User = require("../models/User");
+// const {
+//   protect,
+//   admin,
+//   generateToken,
+// } = require("../middleware/authMiddleware");
+
+// const router = express.Router();
+
+// // -------------------------------------------------------------------
+// // EMAIL TRANSPORT SETUP
+// // -------------------------------------------------------------------
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 587,
+//   secure: false, // true for 465, false for other ports
+//   auth: {
+//     user: process.env.SMTP_USER,
+//     pass: process.env.SMTP_PASSWORD,
+//   },
+// });
+
+// async function sendCodeEmail(to, subject, text) {
+//   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+//     console.warn("⚠️ SMTP_USER/PASS not set. Logging email:", {
+//       to,
+//       subject,
+//       text,
+//     });
+//     return;
+//   }
+//   return transporter.sendMail({
+//     from: `"Smart Pharmacy" <${process.env.SMTP_USER}>`,
+//     to,
+//     subject,
+//     text,
+//   });
+// }
+
+// // Utility: Generate 6-digit OTP
+// const generateOtp = () =>
+//   Math.floor(100000 + Math.random() * 900000).toString();
+
+// // -------------------------------------------------------------------
+// // REGISTER (Customer)
+// // -------------------------------------------------------------------
+// router.post(
+//   "/register",
+//   [
+//     body("name").trim().isLength({ min: 2 }).withMessage("Name required"),
+//     body("email").isEmail().withMessage("Valid email required"),
+//     body("password").isLength({ min: 6 }).withMessage("Password min 6 chars"),
+//   ],
+//   async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty())
+//       return res.status(400).json({ errors: errors.array() });
+
+//     const { name, email, password, phone } = req.body;
+
+//     try {
+//       let user = await User.findOne({ email });
+
+//       // Handle existing unverified user (Resend OTP case)
+//       if (user) {
+//         if (!user.isVerified) {
+//           const otpCode = generateOtp();
+
+//           user.otpCode = otpCode;
+//           user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+//           user.name = name;
+//           user.phone = phone;
+//           user.password = password; // Model pre-save will re-hash this
+//           await user.save();
+
+//           await sendCodeEmail(
+//             email,
+//             "Verification Code",
+//             `Your verification code is: ${otpCode}`
+//           );
+//           return res.json({
+//             message: "Account exists but unverified. Verification code resent.",
+//           });
+//         }
+//         return res
+//           .status(400)
+//           .json({ message: "User with this email already exists." });
+//       }
+
+//       // Create New User
+//       const otpCode = generateOtp();
+
+//       user = new User({
+//         name,
+//         email,
+//         password, // ✅ Passed as plain text; Model pre-save hashes it
+//         phone,
+//         role: "customer",
+//         isVerified: false,
+//         otpCode,
+//         otpExpires: Date.now() + 10 * 60 * 1000,
+//       });
+
+//       await user.save();
+
+//       await sendCodeEmail(
+//         email,
+//         "Verification Code",
+//         `Your verification code is: ${otpCode}`
+//       );
+
+//       res
+//         .status(201)
+//         .json({ message: "User registered. Verification code sent to email." });
+//     } catch (err) {
+//       console.error("Register Error:", err);
+//       res.status(500).json({ message: "Server error" });
+//     }
+//   }
+// );
+
+// // -------------------------------------------------------------------
+// // VERIFY OTP (Registration)
+// // -------------------------------------------------------------------
+// router.post("/verify-otp", async (req, res) => {
+//   const { email, otp } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user || user.otpCode !== otp || user.otpExpires < Date.now()) {
+//       return res.status(400).json({ message: "Invalid or expired OTP" });
+//     }
+
+//     // Mark verified
+//     user.isVerified = true;
+//     user.otpCode = undefined;
+//     user.otpExpires = undefined;
+//     await user.save();
+
+//     res.json({
+//       message: "Verified successfully",
+//       token: generateToken(user._id), // ✅ Use unified token generator
+//       user: {
+//         _id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Verify OTP Error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // RESEND OTP
+// // -------------------------------------------------------------------
+// router.post("/resend-otp", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+//     if (user.isVerified)
+//       return res.status(400).json({ message: "Account already verified" });
+
+//     const otpCode = generateOtp();
+//     user.otpCode = otpCode;
+//     user.otpExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(email, "Verification Code", `Code: ${otpCode}`);
+//     res.json({ message: "Verification code resent." });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // LOGIN (Password)
+// // -------------------------------------------------------------------
+// router.post("/login", async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+
+//     // Check user and password (using Model method)
+//     if (user && (await user.matchPassword(password))) {
+//       if (!user.isVerified) {
+//         return res
+//           .status(403)
+//           .json({ message: "Account not verified. Please verify OTP." });
+//       }
+
+//       res.json({
+//         message: "Logged in successfully",
+//         token: generateToken(user._id),
+//         user: {
+//           _id: user._id,
+//           name: user.name,
+//           email: user.email,
+//           role: user.role,
+//           image: user.profilePhoto || "",
+//         },
+//       });
+//     } else {
+//       res.status(401).json({ message: "Invalid email or password" });
+//     }
+//   } catch (err) {
+//     console.error("Login Error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // ADMIN: CREATE USER (Pharmacist/Staff)
+// // -------------------------------------------------------------------
+// router.post("/admin/create-user", protect, admin, async (req, res) => {
+//   const { name, email, password, role, phone } = req.body;
+
+//   try {
+//     if (await User.findOne({ email }))
+//       return res.status(400).json({ message: "User already exists" });
+
+//     const user = new User({
+//       name,
+//       email,
+//       password, // Model hashes this
+//       role,
+//       phone,
+//       isVerified: true, // Admin created accounts are pre-verified
+//     });
+
+//     await user.save();
+
+//     res.status(201).json({
+//       message: `User created as ${role}`,
+//       user: { _id: user._id, name: user.name, role: user.role },
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // LOGIN VIA EMAIL CODE (Passwordless)
+// // -------------------------------------------------------------------
+// router.post("/send-login-code", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const code = generateOtp();
+//     user.loginCode = code;
+//     user.loginCodeExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(email, "Login Code", `Your login code is: ${code}`);
+//     res.json({ message: "Login code sent to email" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/verify-login-code", async (req, res) => {
+//   const { email, code } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (
+//       !user ||
+//       user.loginCode !== code ||
+//       user.loginCodeExpires < Date.now()
+//     ) {
+//       return res.status(400).json({ message: "Invalid or expired login code" });
+//     }
+
+//     user.loginCode = undefined;
+//     user.loginCodeExpires = undefined;
+//     await user.save();
+
+//     res.json({
+//       message: "Logged in",
+//       token: generateToken(user._id),
+//       user: { _id: user._id, name: user.name, role: user.role },
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // PASSWORD RESET FLOW
+// // -------------------------------------------------------------------
+// router.post("/forgot-password", async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const code = generateOtp();
+//     user.resetPasswordCode = code;
+//     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+//     await user.save();
+
+//     await sendCodeEmail(
+//       email,
+//       "Password Reset Code",
+//       `Your reset code is: ${code}`
+//     );
+//     res.json({ message: "Reset code sent to email" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/reset-password", async (req, res) => {
+//   const { email, code, newPassword } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (
+//       !user ||
+//       user.resetPasswordCode !== code ||
+//       user.resetPasswordExpires < Date.now()
+//     ) {
+//       return res.status(400).json({ message: "Invalid or expired reset code" });
+//     }
+
+//     user.password = newPassword; // Model hashes this
+//     user.resetPasswordCode = undefined;
+//     user.resetPasswordExpires = undefined;
+//     await user.save();
+
+//     res.json({ message: "Password has been reset successfully" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // GET CURRENT USER (/me)
+// // -------------------------------------------------------------------
+// router.get("/me", protect, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select("-password");
+//     res.json(user);
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // PROFILE MANAGEMENT (GET & UPDATE)
+// // -------------------------------------------------------------------
+// router.get("/profile", protect, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select("-password");
+//     if (!user) return res.status(404).json({ message: "User not found" });
+//     res.json(user);
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.put("/profile", protect, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id);
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     const {
+//       name,
+//       phone,
+//       gender,
+//       dob,
+//       address,
+//       bloodGroup,
+//       allergies,
+//       chronicConditions,
+//       emergencyContact,
+//     } = req.body;
+
+//     if (name) user.name = name;
+//     if (phone) user.phone = phone;
+//     if (gender) user.gender = gender;
+//     if (dob) user.dob = dob;
+
+//     // ✅ Address Handling (String vs Object)
+//     if (address) {
+//       if (typeof address === "string") {
+//         user.address = {
+//           street: address,
+//           city: user.address?.city || "",
+//           province: user.address?.province || "",
+//           postalCode: user.address?.postalCode || "",
+//         };
+//       } else {
+//         user.address = {
+//           ...user.address, // Keep existing fields if partial update
+//           ...address,
+//         };
+//       }
+//     }
+
+//     if (bloodGroup) user.bloodGroup = bloodGroup;
+//     if (allergies) user.allergies = allergies;
+//     if (chronicConditions) user.chronicConditions = chronicConditions;
+//     if (emergencyContact) user.emergencyContact = emergencyContact;
+
+//     const updatedUser = await user.save();
+
+//     // Return without password
+//     const userResponse = updatedUser.toObject();
+//     delete userResponse.password;
+
+//     res.json(userResponse);
+//   } catch (err) {
+//     console.error("Update Profile Error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // GOOGLE AUTH ROUTES
+// // -------------------------------------------------------------------
+// router.get(
+//   "/google",
+//   passport.authenticate("google", { scope: ["profile", "email"] })
+// );
+
+// router.get(
+//   "/google/callback",
+//   passport.authenticate("google", { failureRedirect: "/login" }),
+//   (req, res) => {
+//     // Generate token for Google User
+//     const token = generateToken(req.user._id);
+//     // Redirect to frontend with token
+//     res.redirect(`http://localhost:3000/dashboard?token=${token}`);
+//   }
+// );
+
+// module.exports = router;
+
 const express = require("express");
 const { body, validationResult } = require("express-validator");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 
+// Models & Middleware
 const User = require("../models/User");
-const authenticateToken = require("../middleware/auth");
+const {
+  protect,
+  admin,
+  generateToken,
+} = require("../middleware/authMiddleware");
+
+// Utilities
+const sendEmail = require("../utils/sendEmail"); // ✅ Uses your fixed Gmail transporter
+const { getEmailTemplate } = require("../utils/emailTemplates"); // ✅ Uses your HTML template
 
 const router = express.Router();
 
-// -------------------
-// EMAIL TRANSPORT SETUP
-// -------------------
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
-
-async function sendCodeEmail(to, subject, text) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-    console.warn(
-      "⚠️ SMTP_USER or SMTP_PASSWORD not set; logging email instead."
-    );
-    console.log("TO:", to, "SUBJECT:", subject, "TEXT:", text);
-    return;
-  }
-  return transporter.sendMail({
-    from: `"Smart Pharmacy" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    text,
-  });
-}
-
 // Utility: Generate 6-digit OTP
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+const generateOtp = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
-// -------------------
-// REGISTER (Customer)
-// -------------------
+// -------------------------------------------------------------------
+// 1. REGISTER (Customer)
+// -------------------------------------------------------------------
 router.post(
   "/register",
   [
-    body("name").isLength({ min: 2 }).withMessage("Name required"),
+    body("name").trim().isLength({ min: 2 }).withMessage("Name required"),
     body("email").isEmail().withMessage("Valid email required"),
     body("password").isLength({ min: 6 }).withMessage("Password min 6 chars"),
   ],
@@ -1794,27 +2689,29 @@ router.post(
       // Handle existing unverified user (Resend OTP case)
       if (user) {
         if (!user.isVerified) {
-          const otpCode = generateOtp();
-          const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
-          user.otpCode = otpCode;
-          user.otpExpires = expiry;
+          const otp = generateOtp();
+          user.otp = otp;
+          user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
           user.name = name;
           user.phone = phone;
-          user.role = "customer";
-          user.password = await bcrypt.hash(password, 10);
+          user.password = password; // Model will re-hash
           await user.save();
 
-          try {
-            await sendCodeEmail(
-              email,
-              "Verification Code",
-              `Your verification code is: ${otpCode}`
-            );
-          } catch (e) {
-            console.error("Email Error:", e);
-          }
-          return res.json({ message: "Verification code resent." });
+          // Send Email
+          const htmlMsg = getEmailTemplate(
+            user.name,
+            "Here is your new verification code.",
+            otp
+          );
+          await sendEmail({
+            email: user.email,
+            subject: "Verify Your Account",
+            message: htmlMsg,
+          });
+
+          return res.json({
+            message: "Account exists but unverified. Verification code resent.",
+          });
         }
         return res
           .status(400)
@@ -1822,91 +2719,98 @@ router.post(
       }
 
       // Create New User
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const otpCode = generateOtp();
-      const expiry = new Date(Date.now() + 10 * 60 * 1000);
-
+      const otp = generateOtp();
       user = new User({
         name,
         email,
-        password: hashedPassword,
-        role: "customer",
+        password,
         phone,
+        role: "customer",
         isVerified: false,
-        otpCode,
-        otpExpires: expiry,
+        otp: otp, // ✅ Standardized field name
+        otpExpires: Date.now() + 10 * 60 * 1000,
       });
+
       await user.save();
 
-      try {
-        await sendCodeEmail(
-          email,
-          "Verification Code",
-          `Your verification code is: ${otpCode}`
-        );
-      } catch (e) {
-        console.error("Email Error:", e);
-      }
+      console.log(`🆕 Registered ${email} | OTP: ${otp}`);
 
-      res
-        .status(201)
-        .json({ message: "User registered. Verification code sent to email." });
-    } catch (err) {
-      console.error("Register Error:", err);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-// -------------------
-// VERIFY OTP (Registration)
-// -------------------
-router.post(
-  "/verify-otp",
-  [body("email").isEmail(), body("otp").isLength({ min: 4 })],
-  async (req, res) => {
-    const { email, otp } = req.body;
-    try {
-      const user = await User.findOne({ email });
-
-      // Check if code matches and hasn't expired
-      if (!user || user.otpCode !== otp || user.otpExpires < Date.now()) {
-        return res.status(400).json({ message: "Invalid or Expired OTP" });
-      }
-
-      // Mark verified
-      user.isVerified = true;
-      user.otpCode = undefined;
-      user.otpExpires = undefined;
-      await user.save();
-
-      // Generate Token
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
+      // Send Email
+      const htmlMsg = getEmailTemplate(
+        user.name,
+        "Welcome! Please verify your email.",
+        otp
       );
+      await sendEmail({
+        email: user.email,
+        subject: "Verify Your Account",
+        message: htmlMsg,
+      });
 
-      res.json({
-        message: "Verified successfully",
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
+      res.status(201).json({
+        message: "User registered. Verification code sent to email.",
+        email: user.email,
       });
     } catch (err) {
-      console.error("Verify OTP Error:", err);
-      res.status(500).json({ message: "Server error" });
+      console.error("❌ Register Error:", err);
+      res.status(500).json({ message: "Server error during registration" });
     }
   }
 );
 
-// -------------------
-// RESEND OTP
-// -------------------
+// -------------------------------------------------------------------
+// 2. VERIFY OTP (Robust Logic)
+// -------------------------------------------------------------------
+router.post("/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+  console.log(`🔍 Verifying: ${email} with code: ${otp}`);
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    // Debugging Logs
+    console.log(`   ➜ DB OTP: ${user.otp}`);
+    console.log(`   ➜ DB Expires: ${user.otpExpires}`);
+
+    // Check Match (String conversion + Trim for safety)
+    if (String(user.otp).trim() !== String(otp).trim()) {
+      return res.status(400).json({ message: "Invalid OTP code" });
+    }
+
+    // Check Expiry
+    if (new Date(user.otpExpires) < new Date()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+
+    // Mark verified
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    console.log(`✅ Verified ${email}`);
+
+    res.json({
+      message: "Verified successfully",
+      token: generateToken(user._id),
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Verify OTP Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// -------------------------------------------------------------------
+// 3. RESEND OTP
+// -------------------------------------------------------------------
 router.post("/resend-otp", async (req, res) => {
   const { email } = req.body;
   try {
@@ -1915,67 +2819,69 @@ router.post("/resend-otp", async (req, res) => {
     if (user.isVerified)
       return res.status(400).json({ message: "Account already verified" });
 
-    const otpCode = generateOtp();
-    user.otpCode = otpCode;
+    const otp = generateOtp();
+    user.otp = otp;
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendCodeEmail(email, "Verification Code", `Code: ${otpCode}`);
+    const htmlMsg = getEmailTemplate(
+      user.name,
+      "Here is your new verification code.",
+      otp
+    );
+    await sendEmail({
+      email: user.email,
+      subject: "New Verification Code",
+      message: htmlMsg,
+    });
+
     res.json({ message: "Verification code resent." });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// -------------------
-// LOGIN (Password)
-// -------------------
+// -------------------------------------------------------------------
+// 4. LOGIN (Password)
+// -------------------------------------------------------------------
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!user.isVerified) {
-      return res
-        .status(403)
-        .json({ message: "Account not verified. Please verify OTP." });
+    if (user && (await user.matchPassword(password))) {
+      if (!user.isVerified) {
+        return res
+          .status(403)
+          .json({ message: "Account not verified. Please verify OTP." });
+      }
+
+      res.json({
+        message: "Logged in successfully",
+        token: generateToken(user._id),
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          image: user.profilePhoto || "",
+        },
+      });
+    } else {
+      res.status(401).json({ message: "Invalid email or password" });
     }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      message: "Logged in successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// -------------------
-// ADMIN: CREATE USER (Pharmacist/Staff)
-// -------------------
-router.post("/admin/create-user", authenticateToken, async (req, res) => {
-  if (req.user.role !== "admin")
-    return res.status(403).json({ message: "Admin only" });
-
+// -------------------------------------------------------------------
+// 5. ADMIN: CREATE USER
+// -------------------------------------------------------------------
+router.post("/admin/create-user", protect, admin, async (req, res) => {
   const { name, email, password, role, phone } = req.body;
+
   try {
     if (await User.findOne({ email }))
       return res.status(400).json({ message: "User already exists" });
@@ -1983,71 +2889,26 @@ router.post("/admin/create-user", authenticateToken, async (req, res) => {
     const user = new User({
       name,
       email,
-      password: await bcrypt.hash(password, 10),
+      password,
       role,
       phone,
-      isVerified: true, // Admin created accounts are verified by default
+      isVerified: true, // Admin created accounts are pre-verified
     });
 
     await user.save();
-    res.status(201).json({ message: `User created as ${role}`, user });
+
+    res.status(201).json({
+      message: `User created as ${role}`,
+      user: { _id: user._id, name: user.name, role: user.role },
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// -------------------
-// LOGIN VIA EMAIL CODE (Passwordless)
-// -------------------
-router.post("/send-login-code", async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const code = generateOtp();
-    user.loginCode = code;
-    user.loginCodeExpires = Date.now() + 10 * 60 * 1000;
-    await user.save();
-
-    await sendCodeEmail(email, "Login Code", `Your login code is: ${code}`);
-    res.json({ message: "Login code sent to email" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.post("/verify-login-code", async (req, res) => {
-  const { email, code } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (
-      !user ||
-      user.loginCode !== code ||
-      user.loginCodeExpires < Date.now()
-    ) {
-      return res.status(400).json({ message: "Invalid or expired login code" });
-    }
-
-    user.loginCode = undefined;
-    user.loginCodeExpires = undefined;
-    await user.save();
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({ message: "Logged in", token, user });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// -------------------
-// PASSWORD RESET FLOW
-// -------------------
+// -------------------------------------------------------------------
+// 6. PASSWORD RESET FLOW
+// -------------------------------------------------------------------
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   try {
@@ -2059,11 +2920,17 @@ router.post("/forgot-password", async (req, res) => {
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendCodeEmail(
-      email,
-      "Password Reset Code",
-      `Your reset code is: ${code}`
+    const htmlMsg = getEmailTemplate(
+      user.name,
+      "Use this code to reset your password.",
+      code
     );
+    await sendEmail({
+      email: user.email,
+      subject: "Password Reset Request",
+      message: htmlMsg,
+    });
+
     res.json({ message: "Reset code sent to email" });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -2082,7 +2949,7 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired reset code" });
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = newPassword;
     user.resetPasswordCode = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
@@ -2093,35 +2960,31 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// -------------------
-// GET CURRENT USER (/me)
-// -------------------
-router.get("/me", authenticateToken, async (req, res) => {
+// -------------------------------------------------------------------
+// 7. PROFILE ROUTES
+// -------------------------------------------------------------------
+router.get("/me", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user._id).select("-password");
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// -------------------
-// PROFILE MANAGEMENT (GET & UPDATE)
-// -------------------
-router.get("/profile", authenticateToken, async (req, res) => {
+router.get("/profile", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {
-    console.error("Get Profile Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-router.put("/profile", authenticateToken, async (req, res) => {
+router.put("/profile", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const {
@@ -2129,7 +2992,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
       phone,
       gender,
       dob,
-      address, // Can be string or object
+      address,
       bloodGroup,
       allergies,
       chronicConditions,
@@ -2141,19 +3004,16 @@ router.put("/profile", authenticateToken, async (req, res) => {
     if (gender) user.gender = gender;
     if (dob) user.dob = dob;
 
-    // ✅ FIX: Handle Address Mismatch (String vs Object) to prevent 500 error
     if (address) {
       if (typeof address === "string") {
-        // Map string to object if backend expects object
         user.address = {
           street: address,
-          city: address,
+          city: user.address?.city || "",
           province: user.address?.province || "",
           postalCode: user.address?.postalCode || "",
         };
       } else {
-        // Save direct object
-        user.address = address;
+        user.address = { ...user.address, ...address };
       }
     }
 
@@ -2163,21 +3023,19 @@ router.put("/profile", authenticateToken, async (req, res) => {
     if (emergencyContact) user.emergencyContact = emergencyContact;
 
     const updatedUser = await user.save();
-
-    // Return without password
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
 
     res.json(userResponse);
   } catch (err) {
     console.error("Update Profile Error:", err);
-    res.status(500).json({ message: "Server error: " + err.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// -------------------
-// GOOGLE AUTH
-// -------------------
+// -------------------------------------------------------------------
+// 8. GOOGLE AUTH
+// -------------------------------------------------------------------
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -2187,8 +3045,8 @@ router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
-    // Redirect to frontend dashboard with token
-    res.redirect(`http://localhost:3000/dashboard?token=${req.user.token}`);
+    const token = generateToken(req.user._id);
+    res.redirect(`http://localhost:3000/dashboard?token=${token}`);
   }
 );
 

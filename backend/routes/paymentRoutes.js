@@ -279,31 +279,31 @@
 
 // module.exports = router;
 
-const express = require("express");
-const router = express.Router();
-const {
-  verifyKhalti,
-  createStripeSession,
-  setCodMethod,
-} = require("../controllers/paymentController");
+// const express = require("express");
+// const router = express.Router();
+// const {
+//   verifyKhalti,
+//   createStripeSession,
+//   setCodMethod,
+// } = require("../controllers/paymentController");
 
-// ✅ FIX: Import the middleware from 'auth.js', matching your project structure
-const authenticateToken = require("../middleware/auth");
+// // ✅ FIX: Import the middleware from 'auth.js', matching your project structure
+// const authenticateToken = require("../middleware/auth");
 
-// @desc    Verify Khalti Payment
-// @route   POST /api/payments/khalti-verify
-router.post("/khalti-verify", authenticateToken, verifyKhalti);
+// // @desc    Verify Khalti Payment
+// // @route   POST /api/payments/khalti-verify
+// router.post("/khalti-verify", authenticateToken, verifyKhalti);
 
-// @desc    Create Stripe Checkout Session
-// @route   POST /api/payments/create-stripe-session
-router.post("/create-stripe-session", authenticateToken, createStripeSession);
+// // @desc    Create Stripe Checkout Session
+// // @route   POST /api/payments/create-stripe-session
+// router.post("/create-stripe-session", authenticateToken, createStripeSession);
 
-// @desc    Set Payment Method to COD
-// @route   POST /api/payments/set-cod
-// ✅ This was likely the line causing the error if setCodMethod was undefined
-router.post("/set-cod", authenticateToken, setCodMethod);
+// // @desc    Set Payment Method to COD
+// // @route   POST /api/payments/set-cod
+// // ✅ This was likely the line causing the error if setCodMethod was undefined
+// router.post("/set-cod", authenticateToken, setCodMethod);
 
-module.exports = router;
+// module.exports = router;
 
 // const express = require("express");
 // const fetch = require("node-fetch");
@@ -480,3 +480,176 @@ module.exports = router;
 // });
 
 // module.exports = router;
+
+const express = require("express");
+const axios = require("axios");
+const router = express.Router();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // ✅ Initialize Stripe
+
+// Models
+const Order = require("../models/Order");
+const Transaction = require("../models/Transaction");
+
+// Middleware
+const { protect } = require("../middleware/authMiddleware");
+
+// -------------------------------------------------------------------
+// 1. STRIPE: Create Payment Intent
+// @desc    Step 1: Create intent so frontend can show card element
+// @route   POST /api/payments/create-stripe-intent
+// -------------------------------------------------------------------
+router.post("/create-stripe-intent", protect, async (req, res) => {
+  const { orderId } = req.body;
+
+  try {
+    // 1. Fetch Order to calculate accurate amount (Security)
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // 2. Convert to cents (Stripe expects lowest currency unit)
+    // Example: $10.00 -> 1000 cents
+    const amountInCents = Math.round(order.totalPrice * 100);
+
+    // 3. Create PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: "usd", // Change to 'npr' if your Stripe account supports it, otherwise convert
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        orderId: order._id.toString(),
+        userId: req.user._id.toString(),
+      },
+    });
+
+    // 4. Send Client Secret to Frontend
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error("Stripe Intent Error:", error);
+    res.status(500).json({ message: "Failed to create payment intent" });
+  }
+});
+
+// -------------------------------------------------------------------
+// 2. STRIPE: Verify Payment (Webhook or Manual Confirmation)
+// @desc    Step 2: Confirm success after frontend finishes payment
+// @route   POST /api/payments/verify-stripe
+// -------------------------------------------------------------------
+router.post("/verify-stripe", protect, async (req, res) => {
+  const { paymentIntentId, orderId } = req.body;
+
+  try {
+    // 1. Retrieve Intent from Stripe to confirm status
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === "succeeded") {
+      const order = await Order.findById(orderId);
+      if (!order) return res.status(404).json({ message: "Order not found" });
+
+      if (order.isPaid) return res.json({ message: "Order already paid" });
+
+      // 2. Update Order
+      order.isPaid = true;
+      order.paidAt = Date.now();
+      order.paymentMethod = "Stripe";
+      order.paymentResult = {
+        id: paymentIntent.id,
+        status: paymentIntent.status,
+        email: req.user.email,
+      };
+
+      await order.save();
+
+      // 3. Create Transaction Record
+      await Transaction.create({
+        user: req.user._id,
+        order: order._id,
+        amount: paymentIntent.amount / 100, // Convert back to main unit
+        type: "Payment",
+        paymentMethod: "Stripe",
+        status: "Success",
+        referenceId: paymentIntent.id,
+        description: `Stripe Payment for Order #${order._id}`,
+      });
+
+      res.json({ success: true, message: "Payment Successful" });
+    } else {
+      res.status(400).json({ message: "Payment not successful" });
+    }
+  } catch (error) {
+    console.error("Stripe Verification Error:", error);
+    res.status(500).json({ message: "Verification failed" });
+  }
+});
+
+// -------------------------------------------------------------------
+// 3. KHALTI: Verify Payment
+// @route   POST /api/payments/verify-khalti
+// -------------------------------------------------------------------
+router.post("/verify-khalti", protect, async (req, res) => {
+  const { token, amount, orderId } = req.body;
+
+  try {
+    const khaltiResponse = await axios.post(
+      "https://khalti.com/api/v2/payment/verify/",
+      { token, amount },
+      {
+        headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
+      }
+    );
+
+    if (khaltiResponse.data) {
+      const order = await Order.findById(orderId);
+      if (!order) return res.status(404).json({ message: "Order not found" });
+
+      order.isPaid = true;
+      order.paidAt = Date.now();
+      order.paymentMethod = "Khalti";
+      order.paymentResult = {
+        id: khaltiResponse.data.idx,
+        status: "success",
+        email: req.user.email,
+      };
+
+      await order.save();
+
+      await Transaction.create({
+        user: req.user._id,
+        order: order._id,
+        amount: amount / 100,
+        type: "Payment",
+        paymentMethod: "Khalti",
+        status: "Success",
+        referenceId: khaltiResponse.data.idx,
+        description: `Khalti Payment for Order #${order._id}`,
+      });
+
+      res.json({ message: "Payment Verified", order });
+    }
+  } catch (error) {
+    console.error("Khalti Error:", error.response?.data || error.message);
+    res.status(400).json({ message: "Khalti verification failed" });
+  }
+});
+
+// -------------------------------------------------------------------
+// 4. CASH ON DELIVERY (COD)
+// @route   POST /api/payments/cod
+// -------------------------------------------------------------------
+router.post("/cod", protect, async (req, res) => {
+  const { orderId } = req.body;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.paymentMethod = "COD";
+    order.isPaid = false;
+    await order.save();
+
+    res.json({ message: "Order confirmed for COD", order });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+module.exports = router;

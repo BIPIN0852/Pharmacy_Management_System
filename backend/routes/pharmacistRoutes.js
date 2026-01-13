@@ -1,34 +1,100 @@
+// const express = require("express");
+// const router = express.Router();
+// const Prescription = require("../models/Prescription");
+// const Medicine = require("../models/Medicine");
+// // const Order = require("../models/Order"); // Uncomment when Order system is ready
+// const { protect } = require("../middleware/authMiddleware");
+// const authorizeRoles = require("../middleware/role");
+
+// // @desc    Get Pharmacist Dashboard Stats
+// // @route   GET /api/pharmacist/dashboard
+// router.get(
+//   "/dashboard",
+//   protect,
+//   authorizeRoles("pharmacist", "admin"),
+//   async (req, res) => {
+//     try {
+//       // 1. Count Pending Prescriptions
+//       const pendingRxCount = await Prescription.countDocuments({
+//         status: "Pending",
+//       });
+
+//       // 2. Count Low Stock Medicines (Threshold < 15)
+//       const lowStockCount = await Medicine.countDocuments({
+//         countInStock: { $lt: 15 },
+//       });
+
+//       // 3. Total Medicines
+//       const totalMedicines = await Medicine.countDocuments({});
+
+//       // 4. Pending Orders (Placeholder until Order system is active)
+//       // const pendingOrdersCount = await Order.countDocuments({ status: "Processing" });
+//       const pendingOrdersCount = 0;
+//       const todaysOrdersCount = 0;
+
+//       res.json({
+//         pendingPrescriptionsCount: pendingRxCount,
+//         lowStockCount,
+//         totalMedicines,
+//         pendingOrdersCount,
+//         todaysOrdersCount,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: "Server Error loading stats" });
+//     }
+//   }
+// );
+
+// module.exports = router;
+
 const express = require("express");
-const Order = require("../models/order.model"); // adjust path
-const authenticateToken = require("../middleware/auth");
-
 const router = express.Router();
+// ✅ FIXED: Changed from "../models/Prescription" to "../models/prescriptionModel"
+const Prescription = require("../models/prescriptionModel");
+const Medicine = require("../models/Medicine");
+// const Order = require("../models/Order"); // Uncomment when Order model exists
+const { protect } = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/role");
 
-// Pharmacist: Get all customer orders
-router.get("/orders", authenticateToken, async (req, res) => {
-  try {
-    if (!["pharmacist", "admin"].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
+// @desc    Get Pharmacist Dashboard Stats
+// @route   GET /api/pharmacist/dashboard
+router.get(
+  "/dashboard",
+  protect,
+  authorizeRoles("pharmacist", "admin"),
+  async (req, res) => {
+    try {
+      // 1. Count Pending Prescriptions
+      const pendingRxCount = await Prescription.countDocuments({
+        status: "Pending",
+      });
+
+      // 2. Count Low Stock Medicines (Threshold < 15)
+      const lowStockCount = await Medicine.countDocuments({
+        countInStock: { $lt: 15 },
+      });
+
+      // 3. Total Medicines
+      const totalMedicines = await Medicine.countDocuments({});
+
+      // 4. Order Stats (Placeholder until Order System is fully active)
+      // const pendingOrdersCount = await Order.countDocuments({ status: "Processing" });
+      const pendingOrdersCount = 0;
+      const todaysOrdersCount = 0;
+
+      res.json({
+        pendingPrescriptionsCount: pendingRxCount,
+        lowStockCount,
+        totalMedicines,
+        pendingOrdersCount,
+        todaysOrdersCount,
+      });
+    } catch (error) {
+      console.error("Dashboard Stats Error:", error);
+      res.status(500).json({ message: "Server Error loading stats" });
     }
-
-    const orders = await Order.find({ status: { $ne: "cancelled" } })
-      .populate("customer", "name email")
-      .populate("medicines.medicine", "name")
-      .sort({ createdAt: -1 });
-
-    res.json(
-      orders.map((o) => ({
-        id: o._id,
-        customer: o.customer?.name || "N/A",
-        medicine: o.medicines?.[0]?.medicine?.name || "Mixed",
-        qty: o.medicines?.reduce((sum, m) => sum + m.quantity, 0) || 0,
-        paymentStatus: o.paymentStatus || "Pending",
-      }))
-    );
-  } catch (err) {
-    console.error("pharmacist orders error:", err);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 module.exports = router;

@@ -316,59 +316,230 @@
 // const Medicine = mongoose.model("Medicine", medicineSchema);
 // module.exports = Medicine;
 
+// const mongoose = require("mongoose");
+
+// const orderSchema = new mongoose.Schema(
+//   {
+//     user: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       required: true,
+//       ref: "User",
+//     },
+//     // ✅ ONE-TO-MANY Relationship: One Order contains multiple OrderItems
+//     orderItems: [
+//       {
+//         name: { type: String, required: true },
+//         qty: { type: Number, required: true },
+//         image: { type: String, required: true },
+//         price: { type: Number, required: true },
+//         product: {
+//           type: mongoose.Schema.Types.ObjectId,
+//           required: true,
+//           ref: "Medicine",
+//         },
+//       },
+//     ],
+//     shippingAddress: {
+//       address: { type: String, required: true },
+//       city: { type: String, required: true },
+//       postalCode: { type: String, required: true },
+//       country: { type: String, required: true },
+//     },
+//     paymentMethod: {
+//       type: String,
+//       required: true,
+//     },
+//     paymentResult: {
+//       id: { type: String },
+//       status: { type: String },
+//       update_time: { type: String },
+//       email_address: { type: String },
+//     },
+//     taxPrice: { type: Number, default: 0.0 },
+//     shippingPrice: { type: Number, default: 0.0 },
+//     totalPrice: { type: Number, default: 0.0 },
+//     isPaid: { type: Boolean, default: false },
+//     paidAt: { type: Date },
+//     isDelivered: { type: Boolean, default: false },
+//     deliveredAt: { type: Date },
+//     status: { type: String, default: "Processing" },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+// const Order = mongoose.model("Order", orderSchema);
+
+// module.exports = Order;
+
+// const mongoose = require("mongoose");
+
+// const orderSchema = new mongoose.Schema(
+//   {
+//     user: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       required: true,
+//       ref: "User",
+//     },
+
+//     // ✅ ONE-TO-MANY Relationship: One Order contains multiple OrderItems
+//     orderItems: [
+//       {
+//         name: { type: String, required: true },
+//         qty: { type: Number, required: true },
+//         image: { type: String, required: true },
+//         price: { type: Number, required: true },
+//         product: {
+//           type: mongoose.Schema.Types.ObjectId,
+//           required: true,
+//           ref: "Medicine",
+//         },
+//       },
+//     ],
+
+//     shippingAddress: {
+//       address: { type: String, required: true },
+//       city: { type: String, required: true },
+//       postalCode: { type: String, required: true },
+//       country: { type: String, required: true },
+//     },
+
+//     paymentMethod: {
+//       type: String,
+//       required: true,
+//     },
+
+//     paymentResult: {
+//       id: { type: String },
+//       status: { type: String },
+//       update_time: { type: String },
+//       email_address: { type: String },
+//     },
+
+//     // ✅ ADDED: itemsPrice (Required to store the subtotal before tax/shipping)
+//     itemsPrice: { type: Number, default: 0.0 },
+
+//     taxPrice: { type: Number, default: 0.0 },
+//     shippingPrice: { type: Number, default: 0.0 },
+//     totalPrice: { type: Number, default: 0.0 },
+
+//     isPaid: { type: Boolean, default: false },
+//     paidAt: { type: Date },
+
+//     isDelivered: { type: Boolean, default: false },
+//     deliveredAt: { type: Date },
+
+//     // ✅ UPDATED: Added Enums to match Pharmacist Dashboard options
+//     status: {
+//       type: String,
+//       enum: ["Pending", "Processing", "Ready", "Delivered", "Cancelled"],
+//       default: "Processing",
+//     },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+// const Order = mongoose.model("Order", orderSchema);
+
+// module.exports = Order;
+
 const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+    // Reference to the Customer
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User",
+      index: true, // Optimizes "My Orders" queries
     },
+
     // ✅ ONE-TO-MANY Relationship: One Order contains multiple OrderItems
     orderItems: [
       {
         name: { type: String, required: true },
-        qty: { type: Number, required: true },
+        qty: { type: Number, required: true }, // e.g., 2
         image: { type: String, required: true },
         price: { type: Number, required: true },
+
+        // Reference to Medicine Model
         product: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
           ref: "Medicine",
         },
+
+        // ✅ UNIT TRACKING (Crucial for Inventory)
+        // Tracks which pack size was bought (e.g., "Strip", "Bottle", "Box")
+        unit: {
+          type: String,
+          default: "Unit",
+        },
+
+        // Tracks how many base units this equals (e.g., 1 Strip = 10 Tablets)
+        // Used to deduct correct amount from Medicine.countInStock
+        buyingMultiplier: {
+          type: Number,
+          default: 1,
+        },
       },
     ],
+
     shippingAddress: {
       address: { type: String, required: true },
       city: { type: String, required: true },
       postalCode: { type: String, required: true },
       country: { type: String, required: true },
     },
+
     paymentMethod: {
       type: String,
-      required: true,
+      required: true, // "Khalti", "Stripe", "COD"
     },
+
+    // Payment Gateway Response Details
     paymentResult: {
       id: { type: String },
       status: { type: String },
       update_time: { type: String },
       email_address: { type: String },
     },
-    taxPrice: { type: Number, default: 0.0 },
-    shippingPrice: { type: Number, default: 0.0 },
-    totalPrice: { type: Number, default: 0.0 },
-    isPaid: { type: Boolean, default: false },
+
+    // --- PRICING BREAKDOWN ---
+    itemsPrice: { type: Number, required: true, default: 0.0 },
+    taxPrice: { type: Number, required: true, default: 0.0 },
+    shippingPrice: { type: Number, required: true, default: 0.0 },
+    totalPrice: { type: Number, required: true, default: 0.0 },
+
+    // --- STATUS FLAGS ---
+    isPaid: { type: Boolean, required: true, default: false },
     paidAt: { type: Date },
-    isDelivered: { type: Boolean, default: false },
+
+    isDelivered: { type: Boolean, required: true, default: false },
     deliveredAt: { type: Date },
-    status: { type: String, default: "Processing" },
+
+    // Order Lifecycle Status
+    status: {
+      type: String,
+      enum: ["Pending", "Processing", "Ready", "Delivered", "Cancelled"],
+      default: "Processing",
+      index: true, // Optimizes Pharmacist Dashboard filtering
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Order = mongoose.model("Order", orderSchema);
+// -------------------------------------------------------------------
+// ✅ INDEXES
+// -------------------------------------------------------------------
 
-module.exports = Order;
+// 1. Efficient "My Orders" lookup: Find orders by user, sorted by newest
+orderSchema.index({ user: 1, createdAt: -1 });
+
+module.exports = mongoose.model("Order", orderSchema);

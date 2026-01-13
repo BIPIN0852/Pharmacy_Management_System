@@ -343,18 +343,155 @@
 // // ✅ IMPORTANT: Ensure all 3 functions are exported here
 // module.exports = { verifyKhalti, createStripeSession, setCodMethod };
 
+// const Order = require("../models/Order");
+// const axios = require("axios");
+// // Ensure STRIPE_SECRET_KEY is in your .env file
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+// // 1. Verify Khalti
+// const verifyKhalti = async (req, res) => {
+//   const { token, amount, orderId } = req.body;
+//   try {
+//     const khaltiConfig = {
+//       headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
+//     };
+//     const khaltiRes = await axios.post(
+//       "https://khalti.com/api/v2/payment/verify/",
+//       { token, amount },
+//       khaltiConfig
+//     );
+
+//     if (khaltiRes.data) {
+//       if (orderId && orderId !== "new") {
+//         const order = await Order.findById(orderId);
+//         if (order) {
+//           order.isPaid = true;
+//           order.paidAt = Date.now();
+//           order.paymentMethod = "Khalti";
+//           order.paymentResult = {
+//             id: khaltiRes.data.idx,
+//             status: "completed",
+//             update_time: Date.now(),
+//             email_address: req.user.email,
+//           };
+//           await order.save();
+//           return res.json({ success: true, message: "Payment verified" });
+//         }
+//       }
+//       return res.json({
+//         success: true,
+//         message: "Payment verified (New Order)",
+//       });
+//     }
+//     res
+//       .status(400)
+//       .json({ success: false, message: "Invalid Khalti response" });
+//   } catch (error) {
+//     console.error("Khalti Error:", error.message);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Payment verification failed" });
+//   }
+// };
+
+// // 2. Create Stripe Session
+// const createStripeSession = async (req, res) => {
+//   const { amount, orderId, medicineName, customerEmail } = req.body;
+//   try {
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ["card"],
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: "npr",
+//             product_data: { name: medicineName || "Pharmacy Order" },
+//             unit_amount: amount,
+//           },
+//           quantity: 1,
+//         },
+//       ],
+//       mode: "payment",
+//       success_url: `${
+//         process.env.CLIENT_URL || "http://localhost:3000"
+//       }/payment-success?id=${orderId || "new"}&method=Stripe`,
+//       cancel_url: `${
+//         process.env.CLIENT_URL || "http://localhost:3000"
+//       }/payment`,
+//       customer_email: customerEmail,
+//     });
+//     res.json({ sessionId: session.id });
+//   } catch (error) {
+//     console.error("Stripe Error:", error);
+//     res.status(500).json({ message: "Stripe session creation failed" });
+//   }
+// };
+
+// // 3. Set COD Method
+// const setCodMethod = async (req, res) => {
+//   const { orderId } = req.body;
+//   try {
+//     const order = await Order.findById(orderId);
+//     if (order) {
+//       order.paymentMethod = "COD";
+//       order.isPaid = false;
+//       order.paymentResult = { status: "pending_cod" };
+//       await order.save();
+//       res.json({ success: true, message: "Order updated to COD" });
+//     } else {
+//       res.status(404).json({ message: "Order not found" });
+//     }
+//   } catch (error) {
+//     console.error("COD Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// // ✅ IMPORTANT: Ensure all 3 functions are exported here
+// module.exports = { verifyKhalti, createStripeSession, setCodMethod };
+
 const Order = require("../models/Order");
 const axios = require("axios");
-// Ensure STRIPE_SECRET_KEY is in your .env file
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require("nodemailer");
+const { getEmailTemplate } = require("../utils/emailTemplates"); // ✅ Import Template
 
-// 1. Verify Khalti
+// ----------------------
+// Email Transport Setup
+// ----------------------
+const transporter = nodemailer.createTransport({
+  service: "gmail", // or your SMTP provider
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Helper to send order emails
+async function sendOrderEmail(to, subject, htmlContent) {
+  try {
+    await transporter.sendMail({
+      from: `"Smart Pharmacy" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html: htmlContent,
+    });
+    console.log(`📧 Order email sent to ${to}`);
+  } catch (error) {
+    console.error("❌ Email send failed:", error.message);
+  }
+}
+
+// ----------------------
+// 1. Verify Khalti Payment
+// ----------------------
 const verifyKhalti = async (req, res) => {
   const { token, amount, orderId } = req.body;
   try {
     const khaltiConfig = {
       headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
     };
+
+    // Verify with Khalti API
     const khaltiRes = await axios.post(
       "https://khalti.com/api/v2/payment/verify/",
       { token, amount },
@@ -362,8 +499,13 @@ const verifyKhalti = async (req, res) => {
     );
 
     if (khaltiRes.data) {
+      // Update Database if Order ID exists
       if (orderId && orderId !== "new") {
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId).populate(
+          "user",
+          "name email"
+        );
+
         if (order) {
           order.isPaid = true;
           order.paidAt = Date.now();
@@ -372,17 +514,41 @@ const verifyKhalti = async (req, res) => {
             id: khaltiRes.data.idx,
             status: "completed",
             update_time: Date.now(),
-            email_address: req.user.email,
+            email_address: req.user?.email || order.user.email,
           };
+
           await order.save();
-          return res.json({ success: true, message: "Payment verified" });
+
+          // ✅ Send Professional Payment Confirmation Email
+          const emailHtml = getEmailTemplate(
+            order.user.name,
+            `✅ <strong>Payment Successful!</strong><br><br>
+             We have received your payment of <strong>NPR ${(
+               amount / 100
+             ).toFixed(2)}</strong> via Khalti.<br>
+             Your order <strong>#${orderId
+               .slice(-6)
+               .toUpperCase()}</strong> is now being processed.`
+          );
+
+          await sendOrderEmail(
+            order.user.email,
+            "Payment Receipt - Smart Pharmacy",
+            emailHtml
+          );
+
+          return res.json({
+            success: true,
+            message: "Payment verified & Email sent",
+          });
         }
       }
       return res.json({
         success: true,
-        message: "Payment verified (New Order)",
+        message: "Payment verified (New Order flow)",
       });
     }
+
     res
       .status(400)
       .json({ success: false, message: "Invalid Khalti response" });
@@ -394,7 +560,9 @@ const verifyKhalti = async (req, res) => {
   }
 };
 
+// ----------------------
 // 2. Create Stripe Session
+// ----------------------
 const createStripeSession = async (req, res) => {
   const { amount, orderId, medicineName, customerEmail } = req.body;
   try {
@@ -426,17 +594,38 @@ const createStripeSession = async (req, res) => {
   }
 };
 
+// ----------------------
 // 3. Set COD Method
+// ----------------------
 const setCodMethod = async (req, res) => {
   const { orderId } = req.body;
   try {
-    const order = await Order.findById(orderId);
+    // Populate user to get name/email for notification
+    const order = await Order.findById(orderId).populate("user", "name email");
+
     if (order) {
       order.paymentMethod = "COD";
       order.isPaid = false;
       order.paymentResult = { status: "pending_cod" };
       await order.save();
-      res.json({ success: true, message: "Order updated to COD" });
+
+      // ✅ Send Professional Order Confirmation Email
+      const emailHtml = getEmailTemplate(
+        order.user.name,
+        `📦 <strong>Order Confirmed!</strong><br><br>
+         Your order <strong>#${orderId
+           .slice(-6)
+           .toUpperCase()}</strong> has been placed successfully using <strong>Cash on Delivery</strong>.<br>
+         Please keep the exact amount ready upon delivery.`
+      );
+
+      await sendOrderEmail(
+        order.user.email,
+        "Order Confirmation - Smart Pharmacy",
+        emailHtml
+      );
+
+      res.json({ success: true, message: "Order updated to COD & Email sent" });
     } else {
       res.status(404).json({ message: "Order not found" });
     }
@@ -446,5 +635,4 @@ const setCodMethod = async (req, res) => {
   }
 };
 
-// ✅ IMPORTANT: Ensure all 3 functions are exported here
 module.exports = { verifyKhalti, createStripeSession, setCodMethod };

@@ -96,13 +96,68 @@
 
 // export default api;
 
+// // src/services/api.js
+// const BASE_URL = "http://localhost:5000/api";
+
+// async function request(path, method = "GET", body, token) {
+//   const headers = {
+//     "Content-Type": "application/json",
+//   };
+
+//   if (token) {
+//     headers.Authorization = `Bearer ${token}`;
+//   }
+
+//   const res = await fetch(`${BASE_URL}${path}`, {
+//     method,
+//     headers,
+//     credentials: "include",
+//     body: body ? JSON.stringify(body) : undefined,
+//   });
+
+//   const data = await res.json().catch(() => null);
+
+//   if (!res.ok) {
+//     const message = data?.message || `Request failed with ${res.status}`;
+//     const error = new Error(message);
+//     error.response = { status: res.status, data };
+//     throw error;
+//   }
+
+//   return data;
+// }
+
+// const api = {
+//   get: (path, config = {}) => request(path, "GET", null, config.token || null),
+//   post: (path, body, config = {}) =>
+//     request(path, "POST", body, config.token || null),
+//   put: (path, body, config = {}) =>
+//     request(path, "PUT", body, config.token || null),
+//   del: (path, config = {}) =>
+//     request(path, "DELETE", null, config.token || null),
+// };
+
+// export default api;
+
 // src/services/api.js
 const BASE_URL = "http://localhost:5000/api";
 
-async function request(path, method = "GET", body, token) {
+/**
+ * Enhanced request helper using Fetch API
+ * Now handles token extraction from localStorage automatically
+ */
+async function request(path, method = "GET", body, options = {}) {
+  // ✅ Automatically get token from localStorage for convenience
+  const token = localStorage.getItem("token");
+
   const headers = {
-    "Content-Type": "application/json",
+    ...options.headers,
   };
+
+  // ✅ Add JSON header only if we aren't sending FormData (Multipart)
+  if (!(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -111,13 +166,30 @@ async function request(path, method = "GET", body, token) {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
-    credentials: "include",
-    body: body ? JSON.stringify(body) : undefined,
+    // Note: Use 'include' only if your backend uses session cookies
+    // For JWT based systems, 'omit' or 'same-origin' is standard
+    credentials: options.credentials || "include",
+    body:
+      body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
   });
+
+  // Handle No Content (204) responses
+  if (res.status === 204) return null;
 
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    // ✅ GLOBAL ERROR HANDLING: Auto-logout on 401 Unauthorized (Expired Token)
+    if (res.status === 401) {
+      console.error("Session expired. Logging out...");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
+      // Prevent infinite redirect loops if already on login
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login?expired=true";
+      }
+    }
+
     const message = data?.message || `Request failed with ${res.status}`;
     const error = new Error(message);
     error.response = { status: res.status, data };
@@ -128,13 +200,11 @@ async function request(path, method = "GET", body, token) {
 }
 
 const api = {
-  get: (path, config = {}) => request(path, "GET", null, config.token || null),
-  post: (path, body, config = {}) =>
-    request(path, "POST", body, config.token || null),
-  put: (path, body, config = {}) =>
-    request(path, "PUT", body, config.token || null),
-  del: (path, config = {}) =>
-    request(path, "DELETE", null, config.token || null),
+  get: (path, config = {}) => request(path, "GET", null, config),
+  post: (path, body, config = {}) => request(path, "POST", body, config),
+  put: (path, body, config = {}) => request(path, "PUT", body, config),
+  // renamed to 'delete' to match standard naming conventions
+  delete: (path, config = {}) => request(path, "DELETE", null, config),
 };
 
 export default api;

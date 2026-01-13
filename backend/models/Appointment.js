@@ -2,54 +2,36 @@
 
 // const appointmentSchema = new mongoose.Schema(
 //   {
+//     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 //     doctor: {
 //       type: mongoose.Schema.Types.ObjectId,
 //       ref: "Doctor",
 //       required: true,
 //     },
-//     customer: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//       required: true,
-//     },
-//     date: {
-//       type: Date,
-//       required: true,
-//     },
-//     timeSlot: {
-//       type: String,
-//       enum: [
-//         "09:00-10:00",
-//         "10:00-11:00",
-//         "11:00-12:00",
-//         "14:00-15:00",
-//         "15:00-16:00",
-//         "16:00-17:00",
-//       ],
-//       required: true,
-//     },
+//     day: { type: String, required: true, uppercase: true }, // e.g., MONDAY
+//     date: { type: Date, required: true }, // The specific calendar date
+//     timeSlot: { type: String, required: true }, // e.g., "09:00 - 10:00"
 //     status: {
 //       type: String,
 //       enum: ["pending", "confirmed", "completed", "cancelled"],
 //       default: "pending",
 //     },
-//     notes: {
-//       type: String,
-//       trim: true,
-//     },
-//     prescriptionId: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Prescription",
+//     bookingReference: { type: String, unique: true },
+//     notes: String,
+//     customerDetails: {
+//       name: String,
+//       phone: String,
+//       email: String,
 //     },
 //   },
-//   {
-//     timestamps: true,
-//   }
+//   { timestamps: true }
 // );
 
-// // Index for efficient queries
-// appointmentSchema.index({ doctor: 1, date: 1, timeSlot: 1 });
-// appointmentSchema.index({ customer: 1, date: -1 });
+// // ✅ Prevent a single customer from booking the same slot twice
+// appointmentSchema.index(
+//   { user: 1, doctor: 1, date: 1, timeSlot: 1 },
+//   { unique: true }
+// );
 
 // module.exports = mongoose.model("Appointment", appointmentSchema);
 
@@ -57,88 +39,105 @@ const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       required: true,
     },
-    customer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    day: {
+      type: String,
       required: true,
-    },
+      uppercase: true,
+    }, // e.g., MONDAY
     date: {
       type: Date,
       required: true,
-    },
+    }, // The specific calendar date
     timeSlot: {
       type: String,
       required: true,
-      // ✅ REMOVED hardcoded enum - now accepts ANY valid doctor time slot
-      match: /^(\d{2}:\d{2})-(\d{2}:\d{2})$/, // Validates "HH:MM-HH:MM" format
-    },
+    }, // e.g., "09:00 - 10:00"
     status: {
       type: String,
       enum: ["pending", "confirmed", "completed", "cancelled"],
       default: "pending",
     },
+    bookingReference: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows legacy data without references to coexist
+    },
     notes: {
       type: String,
       trim: true,
-      maxlength: 500,
-    },
-    prescriptionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Prescription",
+      maxLength: 500,
     },
     customerDetails: {
       name: String,
       phone: String,
-      age: String,
-      address: String,
-      province: String,
-    }, // ✅ Added for customer booking form data
+      email: String,
+    },
+    // ✅ Added: Track who cancelled or completed the appointment
+    actionBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// ✅ COMPOUND INDEXES for efficient double-booking prevention
+// -------------------------------------------------------------------
+// 🛠️ INDEXES & LOGIC
+// -------------------------------------------------------------------
+
+// ✅ Prevent a single customer from booking the same slot twice
+// This is the primary guard against double-bookings in the database
 appointmentSchema.index(
-  {
-    doctor: 1,
-    date: 1,
-    timeSlot: 1,
-  },
+  { user: 1, doctor: 1, date: 1, timeSlot: 1 },
   { unique: true }
-); // Prevents double booking same doctor + date + slot
+);
 
-appointmentSchema.index({ customer: 1, date: -1 });
-appointmentSchema.index({ doctor: 1, status: 1 });
-appointmentSchema.index({ date: 1, status: 1 }); // For upcoming appointments
+// ✅ Performance Index: Helps the Admin Dashboard load "Today's" list faster
+appointmentSchema.index({ date: 1, status: 1 });
 
-// ✅ Pre-save middleware to normalize date (remove time portion)
+/**
+ * ✅ Pre-save Middleware
+ * Ensures the 'day' string matches the actual calendar 'date' day name
+ */
 appointmentSchema.pre("save", function (next) {
-  if (this.date) {
-    // Ensure date is date-only (no time)
-    this.date = new Date(this.date.setHours(0, 0, 0, 0));
+  if (this.isModified("date")) {
+    const days = [
+      "SUNDAY",
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+    ];
+    const dayName = days[this.date.getDay()];
+    this.day = dayName;
   }
   next();
 });
 
-// ✅ Query helper: Find conflicting appointments
-appointmentSchema.statics.findConflict = async function (
-  doctor,
-  date,
-  timeSlot
-) {
-  return this.findOne({
-    doctor,
-    date: new Date(date.setHours(0, 0, 0, 0)),
-    timeSlot,
-    status: { $ne: "cancelled" },
-  });
-};
+/**
+ * ✅ Virtual Field: isExpired
+ * Automatically tells the frontend if an appointment date has already passed
+ */
+appointmentSchema.virtual("isExpired").get(function () {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return this.date < today && this.status === "pending";
+});
 
 module.exports = mongoose.model("Appointment", appointmentSchema);
