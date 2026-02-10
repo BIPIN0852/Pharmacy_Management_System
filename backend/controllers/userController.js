@@ -957,8 +957,292 @@
 //   updateUser,
 // };
 
+// const asyncHandler = require("express-async-handler");
+// const User = require("../models/User");
+// const generateToken = require("../utils/generateToken");
+// const sendEmail = require("../utils/sendEmail"); // ✅ Use shared utility
+
+// // -------------------------------------------------------------------
+// // 🔐 AUTHENTICATION
+// // -------------------------------------------------------------------
+
+// // @desc    Auth user & get token
+// // @route   POST /api/users/login
+// // @access  Public
+// const authUser = asyncHandler(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   const user = await User.findOne({ email });
+
+//   if (user && (await user.matchPassword(password))) {
+//     res.json({
+//       _id: user._id,
+//       name: user.name,
+//       email: user.email,
+//       phone: user.phone,
+//       role: user.role,
+//       isAdmin: user.role === "admin",
+//       token: generateToken(user._id),
+//     });
+//   } else {
+//     res.status(401);
+//     throw new Error("Invalid email or password");
+//   }
+// });
+
+// // @desc    Register a new user
+// // @route   POST /api/users
+// // @access  Public (Customer) / Private (Admin Create)
+// const registerUser = asyncHandler(async (req, res) => {
+//   const { name, email, password, role, phone } = req.body;
+
+//   // 1. Validation
+//   if (!name || !email || !password || !phone) {
+//     res.status(400);
+//     throw new Error("All fields (Name, Email, Password, Phone) are required");
+//   }
+
+//   // 2. Check existence
+//   const userExists = await User.findOne({ email });
+//   if (userExists) {
+//     res.status(400);
+//     throw new Error("User already exists");
+//   }
+
+//   // 3. Create User
+//   const user = await User.create({
+//     name,
+//     email,
+//     password,
+//     phone,
+//     role: role || "customer",
+//   });
+
+//   if (user) {
+//     // 4. Send Welcome Email (Using Shared Utility)
+//     const message = `
+//       <h3>Welcome to Smart Pharmacy!</h3>
+//       <p>Hi ${user.name},</p>
+//       <p>Your account has been created successfully.</p>
+//       <p><strong>Role:</strong> ${user.role}</p>
+//       <p>You can now log in to manage prescriptions and appointments.</p>
+//     `;
+
+//     try {
+//       await sendEmail({
+//         email: user.email,
+//         subject: "Welcome to Smart Pharmacy",
+//         message,
+//       });
+//     } catch (error) {
+//       console.error("Welcome email failed:", error);
+//     }
+
+//     res.status(201).json({
+//       _id: user._id,
+//       name: user.name,
+//       email: user.email,
+//       phone: user.phone,
+//       role: user.role,
+//       token: generateToken(user._id),
+//     });
+//   } else {
+//     res.status(400);
+//     throw new Error("Invalid user data");
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // 👤 PROFILE MANAGEMENT
+// // -------------------------------------------------------------------
+
+// // @desc    Get user profile
+// // @route   GET /api/users/profile
+// // @access  Private
+// const getUserProfile = asyncHandler(async (req, res) => {
+//   const user = await User.findById(req.user._id);
+
+//   if (user) {
+//     res.json({
+//       _id: user._id,
+//       name: user.name,
+//       email: user.email,
+//       phone: user.phone || "",
+//       role: user.role,
+//       address: user.address || "",
+//       allergies: user.allergies || "",
+//       loyaltyPoints: user.loyaltyPoints || 0,
+//       totalSpent: user.totalSpent || 0,
+//     });
+//   } else {
+//     res.status(404);
+//     throw new Error("User not found");
+//   }
+// });
+
+// // @desc    Update user profile
+// // @route   PUT /api/users/profile
+// // @access  Private
+// const updateUserProfile = asyncHandler(async (req, res) => {
+//   const user = await User.findById(req.user._id);
+
+//   if (user) {
+//     user.name = req.body.name || user.name;
+//     user.email = req.body.email || user.email;
+//     user.phone = req.body.phone || user.phone;
+//     user.address = req.body.address || user.address;
+//     user.allergies = req.body.allergies || user.allergies;
+
+//     if (req.body.password) {
+//       user.password = req.body.password;
+//     }
+
+//     const updatedUser = await user.save();
+
+//     // Security Notification
+//     try {
+//       await sendEmail({
+//         email: updatedUser.email,
+//         subject: "Security Alert: Profile Updated",
+//         message: `<p>Your profile information was updated on ${new Date().toLocaleString()}.</p>`,
+//       });
+//     } catch (e) {
+//       console.error("Profile update email failed");
+//     }
+
+//     res.json({
+//       _id: updatedUser._id,
+//       name: updatedUser.name,
+//       email: updatedUser.email,
+//       phone: updatedUser.phone,
+//       role: updatedUser.role,
+//       address: updatedUser.address,
+//       allergies: updatedUser.allergies,
+//       token: generateToken(updatedUser._id),
+//     });
+//   } else {
+//     res.status(404);
+//     throw new Error("User not found");
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // 🛠️ ADMIN MANAGEMENT
+// // -------------------------------------------------------------------
+
+// // @desc    Get all users (Search + Pagination)
+// // @route   GET /api/users
+// // @access  Private/Admin
+// const getUsers = asyncHandler(async (req, res) => {
+//   const pageSize = 15;
+//   const page = Number(req.query.page) || 1;
+
+//   // Search Logic
+//   const keyword = req.query.search
+//     ? {
+//         $or: [
+//           { name: { $regex: req.query.search, $options: "i" } },
+//           { email: { $regex: req.query.search, $options: "i" } },
+//           { phone: { $regex: req.query.search, $options: "i" } },
+//         ],
+//       }
+//     : {};
+
+//   const roleFilter = req.query.role ? { role: req.query.role } : {};
+
+//   const count = await User.countDocuments({ ...keyword, ...roleFilter });
+//   const users = await User.find({ ...keyword, ...roleFilter })
+//     .select("-password")
+//     .sort({ createdAt: -1 })
+//     .limit(pageSize)
+//     .skip(pageSize * (page - 1));
+
+//   // ✅ Returns structure expected by AdminCustomers.jsx
+//   res.json({
+//     users,
+//     pagination: {
+//       page,
+//       pages: Math.ceil(count / pageSize),
+//       total: count,
+//     },
+//   });
+// });
+
+// // @desc    Delete user
+// // @route   DELETE /api/users/:id
+// // @access  Private/Admin
+// const deleteUser = asyncHandler(async (req, res) => {
+//   const user = await User.findById(req.params.id);
+//   if (user) {
+//     await user.deleteOne();
+//     res.json({ message: "User removed" });
+//   } else {
+//     res.status(404);
+//     throw new Error("User not found");
+//   }
+// });
+
+// // @desc    Get user by ID
+// // @route   GET /api/users/:id
+// // @access  Private/Admin
+// const getUserById = asyncHandler(async (req, res) => {
+//   const user = await User.findById(req.params.id).select("-password");
+//   if (user) {
+//     res.json(user);
+//   } else {
+//     res.status(404);
+//     throw new Error("User not found");
+//   }
+// });
+
+// // @desc    Update user (Admin Override)
+// // @route   PUT /api/users/:id
+// // @access  Private/Admin
+// const updateUser = asyncHandler(async (req, res) => {
+//   const user = await User.findById(req.params.id);
+
+//   if (user) {
+//     user.name = req.body.name || user.name;
+//     user.email = req.body.email || user.email;
+//     user.phone = req.body.phone || user.phone;
+//     user.role = req.body.role || user.role;
+
+//     // Admin specific fields
+//     if (req.body.loyaltyPoints !== undefined)
+//       user.loyaltyPoints = req.body.loyaltyPoints;
+//     if (req.body.notes !== undefined) user.notes = req.body.notes;
+//     if (req.body.allergies !== undefined) user.allergies = req.body.allergies;
+
+//     const updatedUser = await user.save();
+
+//     res.json({
+//       _id: updatedUser._id,
+//       name: updatedUser.name,
+//       email: updatedUser.email,
+//       phone: updatedUser.phone,
+//       role: updatedUser.role,
+//       loyaltyPoints: updatedUser.loyaltyPoints,
+//     });
+//   } else {
+//     res.status(404);
+//     throw new Error("User not found");
+//   }
+// });
+
+// module.exports = {
+//   authUser,
+//   registerUser,
+//   getUserProfile,
+//   updateUserProfile,
+//   getUsers,
+//   deleteUser,
+//   getUserById,
+//   updateUser,
+// };
+
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
+const Medicine = require("../models/Medicine"); // ✅ Ensure Medicine model is imported
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail"); // ✅ Use shared utility
 
@@ -1127,6 +1411,33 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 });
 
 // -------------------------------------------------------------------
+// ❤️ WISHLIST MANAGEMENT (Fixed 500 Error)
+// -------------------------------------------------------------------
+
+// @desc    Get user saved medicines (Wishlist)
+// @route   GET /api/users/saved-medicines
+// @access  Private
+const getSavedMedicines = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Populate the 'savedMedicines' array with actual Medicine details
+  const userData = await User.findById(req.user._id).populate({
+    path: "savedMedicines",
+    select: "name image price manufacturer category countInStock description",
+    model: "Medicine",
+  });
+
+  // Return empty array if null, otherwise the list
+  const savedList = userData.savedMedicines || [];
+  res.json(savedList);
+});
+
+// -------------------------------------------------------------------
 // 🛠️ ADMIN MANAGEMENT
 // -------------------------------------------------------------------
 
@@ -1234,6 +1545,7 @@ module.exports = {
   registerUser,
   getUserProfile,
   updateUserProfile,
+  getSavedMedicines, // ✅ Exported new function
   getUsers,
   deleteUser,
   getUserById,

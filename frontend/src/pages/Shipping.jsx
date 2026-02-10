@@ -1,9 +1,8 @@
 // import React, { useState } from "react";
-// import { Form, Button, Container, Card } from "react-bootstrap";
+// import { Form, Button, Container, Card, ProgressBar } from "react-bootstrap";
 // import { useDispatch, useSelector } from "react-redux";
 // import { useNavigate } from "react-router-dom";
-// import { saveShippingAddress } from "../redux/actions/cartActions";
-// import CheckoutSteps from "../components/CheckoutSteps"; // You can create a simple breadcrumb component
+// import { saveShippingAddress } from "../redux/actions/cartActions"; // This import works now
 
 // const Shipping = () => {
 //   const cart = useSelector((state) => state.cart);
@@ -14,24 +13,26 @@
 //   const [postalCode, setPostalCode] = useState(
 //     shippingAddress.postalCode || ""
 //   );
-//   const [country, setCountry] = useState(shippingAddress.country || "Nepal");
+//   const [phone, setPhone] = useState(shippingAddress.phone || ""); // Added Phone for delivery
 
 //   const dispatch = useDispatch();
 //   const navigate = useNavigate();
 
 //   const submitHandler = (e) => {
 //     e.preventDefault();
-//     dispatch(saveShippingAddress({ address, city, postalCode, country }));
-//     navigate("/placeorder"); // Go to next step
+//     dispatch(saveShippingAddress({ address, city, postalCode, phone }));
+//     navigate("/payment"); // Proceed to Payment Method
 //   };
 
 //   return (
 //     <Container className="py-5" style={{ maxWidth: "600px" }}>
-//       {/* <CheckoutSteps step1 step2 /> */}
-//       <Card className="shadow-sm border-0 rounded-4 p-4">
-//         <h2 className="mb-4 fw-bold">Shipping Address</h2>
+//       {/* Progress Bar: Cart -> Shipping(Active) -> Payment -> Order */}
+//       <ProgressBar now={50} label="Shipping" className="mb-4" variant="info" />
+
+//       <Card className="shadow-sm border-0 p-4">
+//         <h2 className="mb-4 fw-bold text-primary">Shipping Details</h2>
 //         <Form onSubmit={submitHandler}>
-//           <Form.Group className="mb-3">
+//           <Form.Group controlId="address" className="mb-3">
 //             <Form.Label>Address</Form.Label>
 //             <Form.Control
 //               type="text"
@@ -42,7 +43,7 @@
 //             />
 //           </Form.Group>
 
-//           <Form.Group className="mb-3">
+//           <Form.Group controlId="city" className="mb-3">
 //             <Form.Label>City</Form.Label>
 //             <Form.Control
 //               type="text"
@@ -53,7 +54,7 @@
 //             />
 //           </Form.Group>
 
-//           <Form.Group className="mb-3">
+//           <Form.Group controlId="postalCode" className="mb-3">
 //             <Form.Label>Postal Code</Form.Label>
 //             <Form.Control
 //               type="text"
@@ -64,23 +65,19 @@
 //             />
 //           </Form.Group>
 
-//           <Form.Group className="mb-4">
-//             <Form.Label>Country</Form.Label>
+//           <Form.Group controlId="phone" className="mb-4">
+//             <Form.Label>Phone Number</Form.Label>
 //             <Form.Control
 //               type="text"
-//               placeholder="Enter country"
-//               value={country}
+//               placeholder="For delivery contact"
+//               value={phone}
 //               required
-//               onChange={(e) => setCountry(e.target.value)}
+//               onChange={(e) => setPhone(e.target.value)}
 //             />
 //           </Form.Group>
 
-//           <Button
-//             type="submit"
-//             variant="primary"
-//             className="w-100 py-3 rounded-pill fw-bold"
-//           >
-//             Continue to Order Review
+//           <Button type="submit" variant="primary" className="w-100 py-2">
+//             Continue to Payment
 //           </Button>
 //         </Form>
 //       </Card>
@@ -90,13 +87,290 @@
 
 // export default Shipping;
 
+// import React, { useState } from "react";
+// import {
+//   Form,
+//   Button,
+//   Container,
+//   Card,
+//   Row,
+//   Col,
+//   InputGroup,
+// } from "react-bootstrap";
+// import { useDispatch, useSelector } from "react-redux";
+// import { useNavigate } from "react-router-dom";
+// import { saveShippingAddress } from "../redux/actions/cartActions";
+// import {
+//   MapPin,
+//   Building,
+//   Phone,
+//   Truck,
+//   CreditCard,
+//   CheckCircle,
+//   ChevronRight,
+//   Globe,
+// } from "lucide-react";
+
+// const Shipping = () => {
+//   const cart = useSelector((state) => state.cart);
+//   const { shippingAddress } = cart;
+
+//   const [address, setAddress] = useState(shippingAddress.address || "");
+//   const [city, setCity] = useState(shippingAddress.city || "");
+//   const [postalCode, setPostalCode] = useState(
+//     shippingAddress.postalCode || ""
+//   );
+//   const [phone, setPhone] = useState(shippingAddress.phone || "");
+
+//   const dispatch = useDispatch();
+//   const navigate = useNavigate();
+
+//   const submitHandler = (e) => {
+//     e.preventDefault();
+//     dispatch(saveShippingAddress({ address, city, postalCode, phone }));
+//     navigate("/payment");
+//   };
+
+//   // --- Custom Step Component ---
+//   const CheckoutSteps = ({ step1, step2, step3 }) => {
+//     return (
+//       <div className="d-flex justify-content-center align-items-center mb-5">
+//         {/* Step 1: Shipping */}
+//         <div className="text-center position-relative">
+//           <div
+//             className={`rounded-circle d-flex align-items-center justify-content-center mx-auto ${
+//               step1 ? "bg-primary text-white" : "bg-light text-muted"
+//             }`}
+//             style={{ width: "50px", height: "50px", transition: "0.3s" }}
+//           >
+//             <Truck size={24} />
+//           </div>
+//           <small
+//             className={`fw-bold mt-2 d-block ${
+//               step1 ? "text-primary" : "text-muted"
+//             }`}
+//           >
+//             Shipping
+//           </small>
+//         </div>
+
+//         {/* Connector Line */}
+//         <div
+//           className={`mx-3 border-top flex-grow-1 ${
+//             step2 ? "border-primary" : "border-muted"
+//           }`}
+//           style={{ width: "60px", borderTopWidth: "2px" }}
+//         ></div>
+
+//         {/* Step 2: Payment */}
+//         <div className="text-center position-relative">
+//           <div
+//             className={`rounded-circle d-flex align-items-center justify-content-center mx-auto ${
+//               step2 ? "bg-primary text-white" : "bg-light text-muted"
+//             }`}
+//             style={{ width: "50px", height: "50px", transition: "0.3s" }}
+//           >
+//             <CreditCard size={24} />
+//           </div>
+//           <small
+//             className={`fw-bold mt-2 d-block ${
+//               step2 ? "text-primary" : "text-muted"
+//             }`}
+//           >
+//             Payment
+//           </small>
+//         </div>
+
+//         {/* Connector Line */}
+//         <div
+//           className={`mx-3 border-top flex-grow-1 ${
+//             step3 ? "border-primary" : "border-muted"
+//           }`}
+//           style={{ width: "60px", borderTopWidth: "2px" }}
+//         ></div>
+
+//         {/* Step 3: Confirm */}
+//         <div className="text-center position-relative">
+//           <div
+//             className={`rounded-circle d-flex align-items-center justify-content-center mx-auto ${
+//               step3 ? "bg-primary text-white" : "bg-light text-muted"
+//             }`}
+//             style={{ width: "50px", height: "50px", transition: "0.3s" }}
+//           >
+//             <CheckCircle size={24} />
+//           </div>
+//           <small
+//             className={`fw-bold mt-2 d-block ${
+//               step3 ? "text-primary" : "text-muted"
+//             }`}
+//           >
+//             Confirm
+//           </small>
+//         </div>
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <Container className="py-5 animate-fade-in" style={{ maxWidth: "700px" }}>
+//       {/* 1. Checkout Steps Visual */}
+//       <CheckoutSteps step1 />
+
+//       <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
+//         <div className="bg-primary p-4 text-white text-center position-relative">
+//           <div
+//             className="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10"
+//             style={{
+//               backgroundImage:
+//                 "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+//               backgroundSize: "10px 10px",
+//             }}
+//           ></div>
+//           <h3 className="fw-bold mb-0 position-relative">
+//             Where should we deliver?
+//           </h3>
+//           <p className="mb-0 small opacity-75 position-relative">
+//             Please enter your shipping details below.
+//           </p>
+//         </div>
+
+//         <div className="p-4 p-md-5">
+//           <Form onSubmit={submitHandler}>
+//             {/* Address */}
+//             <Form.Group controlId="address" className="mb-4">
+//               <Form.Label className="fw-bold small text-uppercase text-muted">
+//                 Street Address
+//               </Form.Label>
+//               <InputGroup>
+//                 <InputGroup.Text className="bg-light border-end-0 text-muted">
+//                   <MapPin size={18} />
+//                 </InputGroup.Text>
+//                 <Form.Control
+//                   type="text"
+//                   placeholder="e.g. 123 Main Street, Apt 4B"
+//                   value={address}
+//                   required
+//                   className="border-start-0 bg-light py-2"
+//                   onChange={(e) => setAddress(e.target.value)}
+//                 />
+//               </InputGroup>
+//             </Form.Group>
+
+//             <Row>
+//               <Col md={6}>
+//                 {/* City */}
+//                 <Form.Group controlId="city" className="mb-4">
+//                   <Form.Label className="fw-bold small text-uppercase text-muted">
+//                     City
+//                   </Form.Label>
+//                   <InputGroup>
+//                     <InputGroup.Text className="bg-light border-end-0 text-muted">
+//                       <Building size={18} />
+//                     </InputGroup.Text>
+//                     <Form.Control
+//                       type="text"
+//                       placeholder="City"
+//                       value={city}
+//                       required
+//                       className="border-start-0 bg-light py-2"
+//                       onChange={(e) => setCity(e.target.value)}
+//                     />
+//                   </InputGroup>
+//                 </Form.Group>
+//               </Col>
+//               <Col md={6}>
+//                 {/* Postal Code */}
+//                 <Form.Group controlId="postalCode" className="mb-4">
+//                   <Form.Label className="fw-bold small text-uppercase text-muted">
+//                     Postal Code
+//                   </Form.Label>
+//                   <InputGroup>
+//                     <InputGroup.Text className="bg-light border-end-0 text-muted">
+//                       <Globe size={18} />
+//                     </InputGroup.Text>
+//                     <Form.Control
+//                       type="text"
+//                       placeholder="Postal Code"
+//                       value={postalCode}
+//                       required
+//                       className="border-start-0 bg-light py-2"
+//                       onChange={(e) => setPostalCode(e.target.value)}
+//                     />
+//                   </InputGroup>
+//                 </Form.Group>
+//               </Col>
+//             </Row>
+
+//             {/* Phone */}
+//             <Form.Group controlId="phone" className="mb-5">
+//               <Form.Label className="fw-bold small text-uppercase text-muted">
+//                 Phone Number
+//               </Form.Label>
+//               <InputGroup>
+//                 <InputGroup.Text className="bg-light border-end-0 text-muted">
+//                   <Phone size={18} />
+//                 </InputGroup.Text>
+//                 <Form.Control
+//                   type="text"
+//                   placeholder="For delivery updates"
+//                   value={phone}
+//                   required
+//                   className="border-start-0 bg-light py-2"
+//                   onChange={(e) => setPhone(e.target.value)}
+//                 />
+//               </InputGroup>
+//             </Form.Group>
+
+//             {/* Submit Button */}
+//             <Button
+//               type="submit"
+//               variant="primary"
+//               size="lg"
+//               className="w-100 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center"
+//             >
+//               Continue to Payment <ChevronRight size={20} className="ms-2" />
+//             </Button>
+//           </Form>
+//         </div>
+//       </Card>
+
+//       <style>{`
+//         .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//         .form-control:focus { box-shadow: none; border-color: var(--bs-primary); background-color: #fff !important; }
+//         .input-group-text { border-color: #dee2e6; }
+//         .form-control:focus + .input-group-text, .input-group:focus-within .input-group-text { border-color: var(--bs-primary); background-color: #fff !important; color: var(--bs-primary) !important; }
+//       `}</style>
+//     </Container>
+//   );
+// };
+
+// export default Shipping;
+
 import React, { useState } from "react";
-import { Form, Button, Container, Card, Breadcrumb } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Container,
+  Card,
+  Row,
+  Col,
+  InputGroup,
+} from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
-import { MapPin, Globe, Signpost, Building, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { saveShippingAddress } from "../redux/actions/cartActions";
-import CheckoutSteps from "../components/CheckoutSteps";
+import {
+  MapPin,
+  Building,
+  Phone,
+  Truck,
+  CreditCard,
+  CheckCircle,
+  ChevronRight,
+  Globe,
+  ArrowLeft, // ✅ Imported ArrowLeft
+} from "lucide-react";
 
 const Shipping = () => {
   const cart = useSelector((state) => state.cart);
@@ -107,143 +381,243 @@ const Shipping = () => {
   const [postalCode, setPostalCode] = useState(
     shippingAddress.postalCode || ""
   );
-  const [country, setCountry] = useState(shippingAddress.country || "Nepal");
+  const [phone, setPhone] = useState(shippingAddress.phone || "");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(saveShippingAddress({ address, city, postalCode, country }));
-    navigate("/placeorder");
+    dispatch(saveShippingAddress({ address, city, postalCode, phone }));
+    navigate("/payment");
+  };
+
+  // --- Custom Step Component ---
+  const CheckoutSteps = ({ step1, step2, step3 }) => {
+    return (
+      <div className="d-flex justify-content-center align-items-center mb-5">
+        {/* Step 1: Shipping */}
+        <div className="text-center position-relative">
+          <div
+            className={`rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm ${
+              step1 ? "bg-primary text-white" : "bg-light text-muted"
+            }`}
+            style={{ width: "50px", height: "50px", transition: "0.3s" }}
+          >
+            <Truck size={24} />
+          </div>
+          <small
+            className={`fw-bold mt-2 d-block ${
+              step1 ? "text-primary" : "text-muted"
+            }`}
+          >
+            Shipping
+          </small>
+        </div>
+
+        {/* Connector Line */}
+        <div
+          className={`mx-3 border-top flex-grow-1 ${
+            step2 ? "border-primary" : "border-muted opacity-25"
+          }`}
+          style={{ width: "60px", borderTopWidth: "3px" }}
+        ></div>
+
+        {/* Step 2: Payment */}
+        <div className="text-center position-relative">
+          <div
+            className={`rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm ${
+              step2 ? "bg-primary text-white" : "bg-light text-muted"
+            }`}
+            style={{ width: "50px", height: "50px", transition: "0.3s" }}
+          >
+            <CreditCard size={24} />
+          </div>
+          <small
+            className={`fw-bold mt-2 d-block ${
+              step2 ? "text-primary" : "text-muted"
+            }`}
+          >
+            Payment
+          </small>
+        </div>
+
+        {/* Connector Line */}
+        <div
+          className={`mx-3 border-top flex-grow-1 ${
+            step3 ? "border-primary" : "border-muted opacity-25"
+          }`}
+          style={{ width: "60px", borderTopWidth: "3px" }}
+        ></div>
+
+        {/* Step 3: Confirm */}
+        <div className="text-center position-relative">
+          <div
+            className={`rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm ${
+              step3 ? "bg-primary text-white" : "bg-light text-muted"
+            }`}
+            style={{ width: "50px", height: "50px", transition: "0.3s" }}
+          >
+            <CheckCircle size={24} />
+          </div>
+          <small
+            className={`fw-bold mt-2 d-block ${
+              step3 ? "text-primary" : "text-muted"
+            }`}
+          >
+            Confirm
+          </small>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <Container className="py-5 animate-fade-in" style={{ minHeight: "85vh" }}>
-      {/* Navigation Breadcrumbs */}
-      <div className="mb-4">
-        <Link
-          to="/cart"
-          className="text-decoration-none text-muted small d-flex align-items-center gap-1 mb-2 hover-primary"
-        >
-          <ArrowLeft size={14} /> Back to Cart
-        </Link>
-        <CheckoutSteps step1 step2 />
-      </div>
+    <Container className="py-5 animate-fade-in" style={{ maxWidth: "700px" }}>
+      {/* 1. Checkout Steps Visual */}
+      <CheckoutSteps step1 />
 
-      <div className="d-flex justify-content-center">
-        <Card
-          className="shadow-lg border-0 rounded-4 overflow-hidden w-100"
-          style={{ maxWidth: "600px" }}
-        >
-          {/* Decorative Top Bar */}
-          <div className="bg-primary" style={{ height: "6px" }}></div>
+      <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
+        {/* 2. Attractive Header Section */}
+        <div className="bg-primary p-4 text-white text-center position-relative overflow-hidden">
+          <div
+            className="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #ffffff 2px, transparent 2px)",
+              backgroundSize: "20px 20px",
+              opacity: 0.1,
+            }}
+          ></div>
+          <h3 className="fw-bold mb-1 position-relative">
+            Where should we deliver?
+          </h3>
+          <p className="mb-0 small opacity-75 position-relative">
+            Enter your shipping details below.
+          </p>
+        </div>
 
-          <Card.Body className="p-4 p-md-5">
-            <div className="text-center mb-5">
-              <div className="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3 text-primary shadow-sm">
-                <MapPin size={32} />
-              </div>
-              <h2 className="fw-bold text-dark">Delivery Address</h2>
-              <p className="text-muted small">
-                Please provide your precise location for faster delivery
-              </p>
-            </div>
+        <div className="p-4 p-md-5 bg-white">
+          <Form onSubmit={submitHandler}>
+            {/* Address */}
+            <Form.Group controlId="address" className="mb-4">
+              <Form.Label className="fw-bold small text-uppercase text-muted">
+                Street Address
+              </Form.Label>
+              <InputGroup className="shadow-sm rounded-3 overflow-hidden">
+                <InputGroup.Text className="bg-light border-0 text-primary ps-3">
+                  <MapPin size={20} />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="e.g. 123 Main Street, Apt 4B"
+                  value={address}
+                  required
+                  className="border-0 bg-light py-3 ps-2"
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
 
-            <Form onSubmit={submitHandler}>
-              {/* Street Address */}
-              <Form.Group className="mb-4" controlId="address">
-                <Form.Label className="fw-bold small text-muted text-uppercase mb-2">
-                  Street Address
-                </Form.Label>
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <Signpost size={18} className="text-muted" />
-                  </span>
-                  <Form.Control
-                    type="text"
-                    placeholder="Area, Street Name, House No."
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="border-start-0 shadow-none py-2 px-3"
-                    required
-                  />
-                </div>
-              </Form.Group>
-
-              {/* City */}
-              <Form.Group className="mb-4" controlId="city">
-                <Form.Label className="fw-bold small text-muted text-uppercase mb-2">
-                  City / Town
-                </Form.Label>
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <Building size={18} className="text-muted" />
-                  </span>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="border-start-0 shadow-none py-2 px-3"
-                    required
-                  />
-                </div>
-              </Form.Group>
-
-              <Row className="g-3 mb-5">
-                {/* Postal Code */}
-                <Col md={6}>
-                  <Form.Group controlId="postalCode">
-                    <Form.Label className="fw-bold small text-muted text-uppercase mb-2">
-                      Postal Code
-                    </Form.Label>
+            <Row>
+              <Col md={6}>
+                {/* City */}
+                <Form.Group controlId="city" className="mb-4">
+                  <Form.Label className="fw-bold small text-uppercase text-muted">
+                    City
+                  </Form.Label>
+                  <InputGroup className="shadow-sm rounded-3 overflow-hidden">
+                    <InputGroup.Text className="bg-light border-0 text-primary ps-3">
+                      <Building size={20} />
+                    </InputGroup.Text>
                     <Form.Control
                       type="text"
-                      placeholder="e.g. 44600"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      className="shadow-none py-2 px-3 bg-light border-0"
+                      placeholder="Kathmandu"
+                      value={city}
                       required
+                      className="border-0 bg-light py-3 ps-2"
+                      onChange={(e) => setCity(e.target.value)}
                     />
-                  </Form.Group>
-                </Col>
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                {/* Postal Code */}
+                <Form.Group controlId="postalCode" className="mb-4">
+                  <Form.Label className="fw-bold small text-uppercase text-muted">
+                    Postal Code
+                  </Form.Label>
+                  <InputGroup className="shadow-sm rounded-3 overflow-hidden">
+                    <InputGroup.Text className="bg-light border-0 text-primary ps-3">
+                      <Globe size={20} />
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      placeholder="44600"
+                      value={postalCode}
+                      required
+                      className="border-0 bg-light py-3 ps-2"
+                      onChange={(e) => setPostalCode(e.target.value)}
+                    />
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+            </Row>
 
-                {/* Country */}
-                <Col md={6}>
-                  <Form.Group controlId="country">
-                    <Form.Label className="fw-bold small text-muted text-uppercase mb-2">
-                      Country
-                    </Form.Label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-white border-end-0 border-0 bg-light">
-                        <Globe size={18} className="text-muted" />
-                      </span>
-                      <Form.Control
-                        type="text"
-                        placeholder="Country"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className="border-start-0 shadow-none py-2 px-3 bg-light border-0"
-                        required
-                      />
-                    </div>
-                  </Form.Group>
-                </Col>
-              </Row>
+            {/* Phone */}
+            <Form.Group controlId="phone" className="mb-5">
+              <Form.Label className="fw-bold small text-uppercase text-muted">
+                Phone Number
+              </Form.Label>
+              <InputGroup className="shadow-sm rounded-3 overflow-hidden">
+                <InputGroup.Text className="bg-light border-0 text-primary ps-3">
+                  <Phone size={20} />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="98XXXXXXXX"
+                  value={phone}
+                  required
+                  className="border-0 bg-light py-3 ps-2"
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
 
+            {/* Action Buttons */}
+            <div className="d-flex gap-3">
+              {/* ✅ BACK BUTTON */}
+              <Button
+                variant="light"
+                className="flex-grow-1 py-3 fw-bold text-muted border"
+                onClick={() => navigate("/cart")}
+              >
+                <ArrowLeft size={20} className="me-2" /> Back
+              </Button>
+
+              {/* CONTINUE BUTTON */}
               <Button
                 type="submit"
                 variant="primary"
-                className="w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
-                style={{ fontSize: "1.1rem" }}
+                className="flex-[2] w-100 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center py-3"
+                style={{ letterSpacing: "0.5px" }}
               >
-                Continue to Review Order
+                Continue <ChevronRight size={20} className="ms-2" />
               </Button>
-            </Form>
-          </Card.Body>
-        </Card>
-      </div>
+            </div>
+          </Form>
+        </div>
+      </Card>
+
+      <style>{`
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Input Focus Styles */
+        .form-control:focus { box-shadow: none; background-color: #fff !important; }
+        .input-group:focus-within { box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25) !important; transition: box-shadow 0.2s; }
+        .input-group:focus-within .input-group-text { background-color: #fff !important; }
+      `}</style>
     </Container>
   );
 };

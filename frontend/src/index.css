@@ -21,12 +21,19 @@
 
 /* Global Transitions & Reset */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 body {
   margin: 0;
-  font-family: "Poppins", "Inter", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Poppins",
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--neutral-bg);
@@ -59,12 +66,15 @@ body {
   background: var(--neutral-light);
   border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .hover-lift:hover {
@@ -137,4 +147,84 @@ body {
   .main-content {
     padding-left: 0 !important;
   }
+}
+
+/* =========================================
+   DARK MODE OVERRIDES
+   ========================================= */
+
+/* 1. Base Dark Mode Colors */
+body.bg-dark {
+  background-color: #121212 !important; /* Deep dark background */
+  color: #e0e0e0 !important;
+}
+
+/* 2. Cards & Containers */
+body.bg-dark .card,
+body.bg-dark .modal-content,
+body.bg-dark .dropdown-menu {
+  background-color: #1e1e1e !important; /* Slightly lighter dark for cards */
+  color: #e0e0e0 !important;
+  border-color: #333 !important;
+}
+
+/* 3. Inputs & Forms */
+body.bg-dark .form-control,
+body.bg-dark .form-select {
+  background-color: #2d2d2d !important;
+  border-color: #444 !important;
+  color: #fff !important;
+}
+
+body.bg-dark .form-control::placeholder {
+  color: #888 !important;
+}
+
+/* 4. Tables */
+body.bg-dark .table {
+  color: #e0e0e0 !important;
+  border-color: #333 !important;
+}
+
+body.bg-dark .table-hover tbody tr:hover {
+  color: #fff !important;
+  background-color: #333 !important;
+}
+
+body.bg-dark .table-light {
+  background-color: #2d2d2d !important; /* Invert table header color */
+  color: #fff !important;
+  border-color: #444 !important;
+}
+
+/* 5. Utility Overrides (Force bg-white/light to be dark) */
+body.bg-dark .bg-white {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+body.bg-dark .bg-light {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+body.bg-dark .text-dark {
+  color: #e0e0e0 !important;
+}
+
+body.bg-dark .text-muted {
+  color: #a0a0a0 !important;
+}
+
+body.bg-dark .border,
+body.bg-dark .border-top,
+body.bg-dark .border-bottom {
+  border-color: #333 !important;
+}
+
+/* 6. List Groups */
+body.bg-dark .list-group-item {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border-color: #333 !important;
 }

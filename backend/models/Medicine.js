@@ -538,4 +538,4 @@ MedicineSchema.pre("save", function (next) {
   next();
 });
 
-module.exports = mongoose.model("Medicine", MedicineSchema);
+module.exports = mongoose.model("medicine", MedicineSchema);

@@ -1181,6 +1181,293 @@
 
 // export default PharmacistDashboard;
 
+// import React, { useState, useEffect } from "react";
+// import {
+//   Row,
+//   Col,
+//   Card,
+//   Table,
+//   Badge,
+//   Spinner,
+//   Alert,
+//   Button,
+// } from "react-bootstrap";
+// import {
+//   ClipboardList,
+//   ShoppingBag,
+//   AlertTriangle,
+//   TrendingUp,
+//   Package,
+//   Clock,
+//   FileText,
+//   ChevronRight,
+// } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+// import api from "../services/api";
+
+// const PharmacistDashboard = () => {
+//   const navigate = useNavigate();
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+
+//   const [stats, setStats] = useState({
+//     pendingRx: 0,
+//     pendingOrders: 0,
+//     lowStock: 0,
+//     totalMedicines: 0,
+//     todaysOrdersCount: 0,
+//   });
+
+//   const [lowStockItems, setLowStockItems] = useState([]);
+
+//   useEffect(() => {
+//     fetchDashboardData();
+//   }, []);
+
+//   const fetchDashboardData = async () => {
+//     try {
+//       setLoading(true);
+
+//       // 1. Fetch Stats
+//       // Handles both raw Axios response and Interceptor response
+//       const statsRes = await api.get("/pharmacist/dashboard");
+//       const dashboardStats = statsRes.data || statsRes;
+
+//       // 2. Fetch Low Stock Items (✅ FIXED LOGIC)
+//       const medRes = await api.get("/medicines");
+
+//       // Determine if we have the array directly or if it's wrapped in an object
+//       const medPayload = medRes.data || medRes;
+
+//       // If the payload is NOT an array, try to find the '.medicines' property
+//       const allMedicines = Array.isArray(medPayload)
+//         ? medPayload
+//         : medPayload.medicines || [];
+
+//       // Now .filter() will work because we are sure it's an array
+//       const lowStockList = allMedicines
+//         .filter((m) => (m.countInStock || 0) < 15)
+//         .slice(0, 5);
+
+//       // 3. Update State
+//       setStats({
+//         pendingRx: dashboardStats.pendingPrescriptionsCount || 0,
+//         pendingOrders: dashboardStats.pendingOrdersCount || 0,
+//         lowStock: dashboardStats.lowStockCount || 0,
+//         totalMedicines: dashboardStats.totalMedicines || 0,
+//         todaysOrdersCount: dashboardStats.todaysOrdersCount || 0,
+//       });
+
+//       setLowStockItems(lowStockList);
+//       setError("");
+//     } catch (err) {
+//       console.error("Dashboard fetch error:", err);
+//       setError(
+//         err.response?.data?.message || "Failed to load dashboard statistics."
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="d-flex justify-content-center align-items-center vh-100">
+//         <Spinner animation="border" variant="success" />
+//       </div>
+//     );
+
+//   const statCards = [
+//     {
+//       label: "Pending Orders",
+//       value: stats.pendingOrders,
+//       icon: Clock,
+//       color: "warning",
+//       link: "/pharmacist/orders",
+//     },
+//     {
+//       label: "New Prescriptions",
+//       value: stats.pendingRx,
+//       icon: FileText,
+//       color: "info",
+//       link: "/pharmacist/prescriptions",
+//     },
+//     {
+//       label: "Inventory Alerts",
+//       value: stats.lowStock,
+//       icon: AlertTriangle,
+//       color: "danger",
+//       link: "/pharmacist/inventory",
+//     },
+//     {
+//       label: "Stock Medicines",
+//       value: stats.totalMedicines,
+//       icon: Package,
+//       color: "success",
+//       link: "/pharmacist/inventory",
+//     },
+//   ];
+
+//   return (
+//     <div className="animate-fade-in px-2">
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <div>
+//           <h3 className="fw-bold text-dark mb-1">Pharmacist Portal</h3>
+//           <p className="text-muted small">
+//             Real-time overview of store operations and inventory
+//           </p>
+//         </div>
+//         <Button
+//           variant="outline-success"
+//           className="rounded-pill btn-sm px-3"
+//           onClick={fetchDashboardData}
+//         >
+//           Update Data
+//         </Button>
+//       </div>
+
+//       {error && (
+//         <Alert variant="danger" className="rounded-4 border-0 shadow-sm mb-4">
+//           {error}
+//         </Alert>
+//       )}
+
+//       {/* --- Quick Stats Section --- */}
+//       <Row className="g-3 mb-4">
+//         {statCards.map((item, idx) => (
+//           <Col md={3} sm={6} key={idx}>
+//             <Card
+//               className="border-0 shadow-sm h-100 card-modern hover-lift cursor-pointer"
+//               onClick={() => navigate(item.link)}
+//             >
+//               <Card.Body className="d-flex align-items-center justify-content-between p-4">
+//                 <div>
+//                   <p className="text-muted small mb-1 fw-bold text-uppercase tracking-wider">
+//                     {item.label}
+//                   </p>
+//                   <h2 className="fw-bold mb-0">{item.value}</h2>
+//                 </div>
+//                 <div
+//                   className={`bg-${item.color} bg-opacity-10 p-3 rounded-4 text-${item.color}`}
+//                 >
+//                   <item.icon size={28} />
+//                 </div>
+//               </Card.Body>
+//             </Card>
+//           </Col>
+//         ))}
+//       </Row>
+
+//       <Row className="g-4">
+//         {/* --- Low Stock Table Preview --- */}
+//         <Col lg={7}>
+//           <Card className="border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+//             <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+//               <span className="fw-bold">Critical Inventory Alerts</span>
+//               <Badge
+//                 bg="danger-subtle"
+//                 className="text-danger border border-danger-subtle"
+//               >
+//                 Requires Attention
+//               </Badge>
+//             </Card.Header>
+//             <div className="table-responsive">
+//               <Table hover className="mb-0 align-middle">
+//                 <thead className="bg-light small text-uppercase text-muted">
+//                   <tr>
+//                     <th className="ps-4 py-3">Medicine</th>
+//                     <th className="py-3 text-center">Current Stock</th>
+//                     <th className="py-3 pe-4 text-end">Action</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {lowStockItems.length === 0 ? (
+//                     <tr>
+//                       <td colSpan="3" className="text-center py-5 text-muted">
+//                         All medicines are currently well-stocked.
+//                       </td>
+//                     </tr>
+//                   ) : (
+//                     lowStockItems.map((m) => (
+//                       <tr key={m._id}>
+//                         <td className="ps-4">
+//                           <div className="fw-bold">{m.name}</div>
+//                           <small className="text-muted">{m.category}</small>
+//                         </td>
+//                         <td className="text-center">
+//                           <Badge
+//                             bg="danger-subtle"
+//                             className="text-danger rounded-pill px-3"
+//                           >
+//                             {m.countInStock} {m.baseUnit || "Left"}
+//                           </Badge>
+//                         </td>
+//                         <td className="text-end pe-4">
+//                           <Button
+//                             variant="light"
+//                             size="sm"
+//                             className="rounded-circle border"
+//                             onClick={() => navigate("/pharmacist/inventory")}
+//                           >
+//                             <ChevronRight size={16} />
+//                           </Button>
+//                         </td>
+//                       </tr>
+//                     ))
+//                   )}
+//                 </tbody>
+//               </Table>
+//             </div>
+//             <Card.Footer className="bg-white border-0 py-3 text-center">
+//               <Button
+//                 variant="link"
+//                 className="text-decoration-none small p-0"
+//                 onClick={() => navigate("/pharmacist/inventory")}
+//               >
+//                 View Full Inventory Report
+//               </Button>
+//             </Card.Footer>
+//           </Card>
+//         </Col>
+
+//         {/* --- Quick Navigation Hub --- */}
+//         <Col lg={5}>
+//           <Card className="border-0 shadow-sm h-100 rounded-4 overflow-hidden bg-primary bg-opacity-10 border-primary border-opacity-10">
+//             <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center p-5">
+//               <div className="bg-white p-4 rounded-circle shadow-sm mb-4">
+//                 <TrendingUp size={48} className="text-primary" />
+//               </div>
+//               <h4 className="fw-bold text-dark">Management Hub</h4>
+//               <p className="text-muted mb-4 px-3">
+//                 Monitor prescriptions, orders, and customer data from one
+//                 central location.
+//               </p>
+//               <div className="d-grid gap-3 w-100 px-4">
+//                 <Button
+//                   variant="primary"
+//                   className="py-2 rounded-pill fw-bold"
+//                   onClick={() => navigate("/pharmacist/orders")}
+//                 >
+//                   Manage Orders
+//                 </Button>
+//                 <Button
+//                   variant="outline-primary"
+//                   className="py-2 rounded-pill fw-bold"
+//                   onClick={() => navigate("/pharmacist/prescriptions")}
+//                 >
+//                   Verify Prescriptions
+//                 </Button>
+//               </div>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+//       </Row>
+//     </div>
+//   );
+// };
+
+// export default PharmacistDashboard;
+
 import React, { useState, useEffect } from "react";
 import {
   Row,
@@ -1193,8 +1480,6 @@ import {
   Button,
 } from "react-bootstrap";
 import {
-  ClipboardList,
-  ShoppingBag,
   AlertTriangle,
   TrendingUp,
   Package,
@@ -1203,7 +1488,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import api from "../services/api"; // ✅ Ensure correct path to global api
 
 const PharmacistDashboard = () => {
   const navigate = useNavigate();
@@ -1228,28 +1513,27 @@ const PharmacistDashboard = () => {
     try {
       setLoading(true);
 
-      // 1. Fetch Stats
-      // Handles both raw Axios response and Interceptor response
+      // 1. Fetch Stats from consolidated pharmacist dashboard route
+      // We use the specific dashboard endpoint for aggregated counts
       const statsRes = await api.get("/pharmacist/dashboard");
       const dashboardStats = statsRes.data || statsRes;
 
-      // 2. Fetch Low Stock Items (✅ FIXED LOGIC)
+      // 2. Fetch Low Stock Items for the preview table
       const medRes = await api.get("/medicines");
 
-      // Determine if we have the array directly or if it's wrapped in an object
+      // ✅ ROBUST DATA EXTRACTION:
+      // This handles if the backend returns an array directly OR an object like { medicines: [...] }
       const medPayload = medRes.data || medRes;
-
-      // If the payload is NOT an array, try to find the '.medicines' property
       const allMedicines = Array.isArray(medPayload)
         ? medPayload
         : medPayload.medicines || [];
 
-      // Now .filter() will work because we are sure it's an array
+      // Filter for low stock (Threshold < 15) and take top 5 for preview
       const lowStockList = allMedicines
         .filter((m) => (m.countInStock || 0) < 15)
         .slice(0, 5);
 
-      // 3. Update State
+      // 3. Update State with Real DB Data
       setStats({
         pendingRx: dashboardStats.pendingPrescriptionsCount || 0,
         pendingOrders: dashboardStats.pendingOrdersCount || 0,

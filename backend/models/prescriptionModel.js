@@ -437,6 +437,118 @@
 //   mongoose.models.Prescription ||
 //   mongoose.model("Prescription", PrescriptionSchema);
 
+// const mongoose = require("mongoose");
+
+// const PrescriptionSchema = new mongoose.Schema(
+//   {
+//     // ✅ Patient Reference
+//     user: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: true,
+//       index: true,
+//     },
+
+//     // Snapshot fields (Useful for easy display without extra queries)
+//     customerName: { type: String, trim: true },
+//     customerEmail: {
+//       type: String,
+//       trim: true,
+//       lowercase: true,
+//     },
+
+//     // ✅ Doctor Integration (Optional)
+//     // If created via "Doctor Appointment" flow
+//     doctor: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Doctor",
+//       default: null,
+//     },
+
+//     appointment: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Appointment",
+//       default: null,
+//     },
+
+//     // ✅ Digital Prescription Items
+//     // (Populated if a doctor creates it digitally, empty if user uploads an image)
+//     items: [
+//       {
+//         medicine: {
+//           type: mongoose.Schema.Types.ObjectId,
+//           ref: "Medicine",
+//         },
+//         customName: { type: String, trim: true }, // e.g. "Paracetamol" if ID not linked
+//         dosageInstructions: { type: String, trim: true }, // "1-0-1 after food"
+//         durationDays: { type: Number, min: 1 },
+//         quantity: { type: Number, min: 1 },
+//       },
+//     ],
+
+//     // ✅ Prescription Image URL
+//     // Required for customer uploads, optional for digital prescriptions
+//     imageUrl: {
+//       type: String,
+//       trim: true,
+//       // Custom validator: Image is required ONLY if items array is empty
+//       validate: {
+//         validator: function (v) {
+//           if (this.items && this.items.length > 0) return true; // Has digital items, image optional
+//           return v && v.length > 0; // No items, so must have image
+//         },
+//         message: "Prescription must have either an image or medicine items.",
+//       },
+//     },
+
+//     // ✅ Standardized Status (Title Case)
+//     status: {
+//       type: String,
+//       enum: ["Pending", "Reviewed", "Approved", "Rejected", "Dispensed"],
+//       default: "Pending",
+//       index: true,
+//     },
+
+//     // Pharmacist/Doctor comments
+//     notes: { type: String, trim: true },
+//   },
+//   {
+//     timestamps: true,
+//   }
+// );
+
+// // -------------------------------------------------------------------
+// // ✅ INDEXES
+// // -------------------------------------------------------------------
+
+// // 1. Pharmacist Dashboard: Filter by status (e.g., Show all 'Pending')
+// PrescriptionSchema.index({ status: 1, createdAt: -1 });
+
+// // 2. Doctor Dashboard: Find prescriptions by doctor
+// PrescriptionSchema.index({ doctor: 1 });
+
+// // -------------------------------------------------------------------
+// // ✅ VIRTUALS
+// // -------------------------------------------------------------------
+
+// // Helper to check if this is a digital prescription or scanned image
+// PrescriptionSchema.virtual("type").get(function () {
+//   return this.items && this.items.length > 0 ? "Digital" : "Scanned";
+// });
+
+// // Alias 'image' to 'imageUrl' for backward compatibility with frontend
+// PrescriptionSchema.virtual("image").get(function () {
+//   return this.imageUrl;
+// });
+
+// // Ensure virtuals are included in JSON output
+// PrescriptionSchema.set("toJSON", { virtuals: true });
+// PrescriptionSchema.set("toObject", { virtuals: true });
+
+// module.exports =
+//   mongoose.models.Prescription ||
+//   mongoose.model("Prescription", prescriptionSchema, "prescriptions");
+
 const mongoose = require("mongoose");
 
 const PrescriptionSchema = new mongoose.Schema(
@@ -545,6 +657,8 @@ PrescriptionSchema.virtual("image").get(function () {
 PrescriptionSchema.set("toJSON", { virtuals: true });
 PrescriptionSchema.set("toObject", { virtuals: true });
 
+// ✅ FIXED: Added 3rd argument "prescriptions" to force collection name
+// ✅ FIXED: Corrected variable name from 'prescriptionSchema' to 'PrescriptionSchema'
 module.exports =
   mongoose.models.Prescription ||
-  mongoose.model("Prescription", PrescriptionSchema);
+  mongoose.model("Prescription", PrescriptionSchema, "prescriptions");

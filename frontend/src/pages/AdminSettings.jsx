@@ -1,50 +1,293 @@
-// import React from "react";
+// // import React from "react";
 
-// const AdminSettings = () => {
-//   return (
-//     <div className="container-fluid">
-//       <h3 className="mb-3 fw-bold">Settings</h3>
-//       <p className="text-muted">
-//         Admin configuration and system settings go here.
-//       </p>
-//     </div>
-//   );
-// };
+// // const AdminSettings = () => {
+// //   return (
+// //     <div className="container-fluid">
+// //       <h3 className="mb-3 fw-bold">Settings</h3>
+// //       <p className="text-muted">
+// //         Admin configuration and system settings go here.
+// //       </p>
+// //     </div>
+// //   );
+// // };
 
-// export default AdminSettings;
+// // export default AdminSettings;
+
+// // import React, { useEffect, useState } from "react";
+
+// // const AdminSettings = () => {
+// //   const [darkMode, setDarkMode] = useState(false);
+// //   const [savingTheme, setSavingTheme] = useState(false);
+// //   const [message, setMessage] = useState("");
+// //   const [error, setError] = useState("");
+
+// //   // Profile/password local state (UI only – connect to backend later)
+// //   const [profile, setProfile] = useState({
+// //     name: "",
+// //     email: "",
+// //   });
+// //   const [passwords, setPasswords] = useState({
+// //     currentPassword: "",
+// //     newPassword: "",
+// //     confirmPassword: "",
+// //   });
+
+// //   useEffect(() => {
+// //     const storedTheme = localStorage.getItem("dashboard-dark");
+// //     if (storedTheme === "true") {
+// //       setDarkMode(true);
+// //       document.body.classList.add("bg-dark", "text-light");
+// //     }
+// //   }, []);
+
+// //   const handleThemeToggle = async () => {
+// //     try {
+// //       setSavingTheme(true);
+// //       setError("");
+// //       setMessage("");
+// //       const next = !darkMode;
+// //       setDarkMode(next);
+// //       localStorage.setItem("dashboard-dark", String(next));
+
+// //       if (next) {
+// //         document.body.classList.add("bg-dark", "text-light");
+// //       } else {
+// //         document.body.classList.remove("bg-dark", "text-light");
+// //       }
+// //       setMessage("Theme preference saved.");
+// //     } catch (err) {
+// //       setError("Could not save theme preference.");
+// //     } finally {
+// //       setSavingTheme(false);
+// //     }
+// //   };
+
+// //   const handleProfileChange = (e) => {
+// //     const { name, value } = e.target;
+// //     setProfile((p) => ({ ...p, [name]: value }));
+// //   };
+
+// //   const handlePasswordChange = (e) => {
+// //     const { name, value } = e.target;
+// //     setPasswords((p) => ({ ...p, [name]: value }));
+// //   };
+
+// //   const handleProfileSubmit = (e) => {
+// //     e.preventDefault();
+// //     setMessage("Profile update API not wired yet. Add backend endpoint later.");
+// //     setError("");
+// //   };
+
+// //   const handlePasswordSubmit = (e) => {
+// //     e.preventDefault();
+// //     if (passwords.newPassword !== passwords.confirmPassword) {
+// //       setError("New password and confirmation do not match.");
+// //       setMessage("");
+// //       return;
+// //     }
+// //     setMessage(
+// //       "Password update API not wired yet. Add backend endpoint later."
+// //     );
+// //     setError("");
+// //   };
+
+// //   return (
+// //     <div className="container-fluid">
+// //       <h3 className="mb-3 fw-bold">Settings</h3>
+// //       <p className="text-muted mb-3">
+// //         Admin configuration, appearance and account preferences.
+// //       </p>
+
+// //       {error && (
+// //         <div className="alert alert-danger py-2" role="alert">
+// //           {error}
+// //         </div>
+// //       )}
+// //       {message && (
+// //         <div className="alert alert-success py-2" role="alert">
+// //           {message}
+// //         </div>
+// //       )}
+
+// //       <div className="row g-4">
+// //         {/* Appearance / Theme */}
+// //         <div className="col-lg-4">
+// //           <div className="card shadow-sm border-0 h-100">
+// //             <div className="card-body">
+// //               <h5 className="card-title fw-semibold mb-2">Appearance</h5>
+// //               <p className="text-muted small mb-3">
+// //                 Toggle between light and dark theme for the admin dashboard.
+// //               </p>
+// //               <div className="form-check form-switch">
+// //                 <input
+// //                   className="form-check-input"
+// //                   type="checkbox"
+// //                   id="darkModeSwitch"
+// //                   checked={darkMode}
+// //                   onChange={handleThemeToggle}
+// //                   disabled={savingTheme}
+// //                 />
+// //                 <label className="form-check-label" htmlFor="darkModeSwitch">
+// //                   {darkMode ? "Dark mode enabled" : "Light mode enabled"}
+// //                 </label>
+// //               </div>
+// //               {savingTheme && (
+// //                 <p className="text-muted small mt-2 mb-0">Saving theme...</p>
+// //               )}
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Profile */}
+// //         <div className="col-lg-4">
+// //           <div className="card shadow-sm border-0 h-100">
+// //             <div className="card-body">
+// //               <h5 className="card-title fw-semibold mb-2">Admin Profile</h5>
+// //               <p className="text-muted small mb-3">
+// //                 Update your display name and contact email.
+// //               </p>
+// //               <form onSubmit={handleProfileSubmit}>
+// //                 <div className="mb-2">
+// //                   <label className="form-label">Name</label>
+// //                   <input
+// //                     type="text"
+// //                     name="name"
+// //                     className="form-control form-control-sm"
+// //                     value={profile.name}
+// //                     onChange={handleProfileChange}
+// //                     placeholder="Admin Name"
+// //                   />
+// //                 </div>
+// //                 <div className="mb-3">
+// //                   <label className="form-label">Email</label>
+// //                   <input
+// //                     type="email"
+// //                     name="email"
+// //                     className="form-control form-control-sm"
+// //                     value={profile.email}
+// //                     onChange={handleProfileChange}
+// //                     placeholder="admin@example.com"
+// //                   />
+// //                 </div>
+// //                 <button type="submit" className="btn btn-primary btn-sm">
+// //                   Save Profile
+// //                 </button>
+// //               </form>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Password */}
+// //         <div className="col-lg-4">
+// //           <div className="card shadow-sm border-0 h-100">
+// //             <div className="card-body">
+// //               <h5 className="card-title fw-semibold mb-2">Change Password</h5>
+// //               <p className="text-muted small mb-3">
+// //                 Set a strong password to secure admin access.
+// //               </p>
+// //               <form onSubmit={handlePasswordSubmit}>
+// //                 <div className="mb-2">
+// //                   <label className="form-label">Current Password</label>
+// //                   <input
+// //                     type="password"
+// //                     name="currentPassword"
+// //                     className="form-control form-control-sm"
+// //                     value={passwords.currentPassword}
+// //                     onChange={handlePasswordChange}
+// //                   />
+// //                 </div>
+// //                 <div className="mb-2">
+// //                   <label className="form-label">New Password</label>
+// //                   <input
+// //                     type="password"
+// //                     name="newPassword"
+// //                     className="form-control form-control-sm"
+// //                     value={passwords.newPassword}
+// //                     onChange={handlePasswordChange}
+// //                   />
+// //                 </div>
+// //                 <div className="mb-3">
+// //                   <label className="form-label">Confirm New Password</label>
+// //                   <input
+// //                     type="password"
+// //                     name="confirmPassword"
+// //                     className="form-control form-control-sm"
+// //                     value={passwords.confirmPassword}
+// //                     onChange={handlePasswordChange}
+// //                   />
+// //                 </div>
+// //                 <button type="submit" className="btn btn-warning btn-sm">
+// //                   Update Password
+// //                 </button>
+// //               </form>
+// //             </div>
+// //           </div>
+// //         </div>
+// //       </div>
+// //     </div>
+// //   );
+// // };
+
+// // export default AdminSettings;
 
 // import React, { useEffect, useState } from "react";
+// import api from "../services/api"; // ✅ Use interceptor for API calls
 
 // const AdminSettings = () => {
+//   const [loading, setLoading] = useState(true);
 //   const [darkMode, setDarkMode] = useState(false);
 //   const [savingTheme, setSavingTheme] = useState(false);
 //   const [message, setMessage] = useState("");
 //   const [error, setError] = useState("");
 
-//   // Profile/password local state (UI only – connect to backend later)
+//   // Profile Data
 //   const [profile, setProfile] = useState({
 //     name: "",
 //     email: "",
 //   });
+
+//   // Password Data
 //   const [passwords, setPasswords] = useState({
 //     currentPassword: "",
 //     newPassword: "",
 //     confirmPassword: "",
 //   });
 
+//   // 1. Initial Load (Theme + User Data)
 //   useEffect(() => {
-//     const storedTheme = localStorage.getItem("dashboard-dark");
-//     if (storedTheme === "true") {
-//       setDarkMode(true);
-//       document.body.classList.add("bg-dark", "text-light");
-//     }
+//     const initSettings = async () => {
+//       try {
+//         setLoading(true);
+//         // Load Theme
+//         const storedTheme = localStorage.getItem("dashboard-dark");
+//         if (storedTheme === "true") {
+//           setDarkMode(true);
+//           document.body.classList.add("bg-dark", "text-light");
+//         }
+
+//         // Load User Profile
+//         const res = await api.get("/users/profile"); // ✅ Fetch actual user data
+//         if (res.data) {
+//           setProfile({
+//             name: res.data.name || "",
+//             email: res.data.email || "",
+//           });
+//         }
+//       } catch (err) {
+//         console.error("Settings load error:", err);
+//         // Don't block UI if profile fetch fails, just log it
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     initSettings();
 //   }, []);
 
+//   // 2. Handle Theme Toggle
 //   const handleThemeToggle = async () => {
 //     try {
 //       setSavingTheme(true);
-//       setError("");
-//       setMessage("");
 //       const next = !darkMode;
 //       setDarkMode(next);
 //       localStorage.setItem("dashboard-dark", String(next));
@@ -54,9 +297,8 @@
 //       } else {
 //         document.body.classList.remove("bg-dark", "text-light");
 //       }
-//       setMessage("Theme preference saved.");
 //     } catch (err) {
-//       setError("Could not save theme preference.");
+//       console.error("Theme toggle error", err);
 //     } finally {
 //       setSavingTheme(false);
 //     }
@@ -72,39 +314,91 @@
 //     setPasswords((p) => ({ ...p, [name]: value }));
 //   };
 
-//   const handleProfileSubmit = (e) => {
+//   // 3. Submit Profile Updates
+//   const handleProfileSubmit = async (e) => {
 //     e.preventDefault();
-//     setMessage("Profile update API not wired yet. Add backend endpoint later.");
+//     setMessage("");
 //     setError("");
+
+//     try {
+//       // ✅ Call API to update name/email
+//       const res = await api.put("/users/profile", {
+//         name: profile.name,
+//         email: profile.email,
+//       });
+
+//       // Update local storage user info if needed
+//       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+//       localStorage.setItem(
+//         "userInfo",
+//         JSON.stringify({ ...userInfo, ...res.data })
+//       );
+
+//       setMessage("Profile updated successfully.");
+//       setTimeout(() => setMessage(""), 3000);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to update profile.");
+//     }
 //   };
 
-//   const handlePasswordSubmit = (e) => {
+//   // 4. Submit Password Updates
+//   const handlePasswordSubmit = async (e) => {
 //     e.preventDefault();
+//     setMessage("");
+//     setError("");
+
 //     if (passwords.newPassword !== passwords.confirmPassword) {
 //       setError("New password and confirmation do not match.");
-//       setMessage("");
 //       return;
 //     }
-//     setMessage(
-//       "Password update API not wired yet. Add backend endpoint later."
-//     );
-//     setError("");
+//     if (passwords.newPassword.length < 6) {
+//       setError("Password must be at least 6 characters.");
+//       return;
+//     }
+
+//     try {
+//       // ✅ Call API to update password
+//       await api.put("/users/profile", {
+//         password: passwords.newPassword,
+//         // Include old password if your backend requires verification
+//         // oldPassword: passwords.currentPassword
+//       });
+
+//       setMessage("Password updated successfully.");
+//       setPasswords({
+//         currentPassword: "",
+//         newPassword: "",
+//         confirmPassword: "",
+//       });
+//       setTimeout(() => setMessage(""), 3000);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to update password.");
+//     }
 //   };
+
+//   if (loading) {
+//     return (
+//       <div className="d-flex justify-content-center align-items-center py-5">
+//         <div className="spinner-border text-primary me-2" />
+//         <span>Loading settings...</span>
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className="container-fluid">
 //       <h3 className="mb-3 fw-bold">Settings</h3>
-//       <p className="text-muted mb-3">
-//         Admin configuration, appearance and account preferences.
+//       <p className="text-muted mb-4">
+//         Admin configuration, appearance, and account preferences.
 //       </p>
 
 //       {error && (
-//         <div className="alert alert-danger py-2" role="alert">
+//         <div className="alert alert-danger py-2 mb-3" role="alert">
 //           {error}
 //         </div>
 //       )}
 //       {message && (
-//         <div className="alert alert-success py-2" role="alert">
+//         <div className="alert alert-success py-2 mb-3" role="alert">
 //           {message}
 //         </div>
 //       )}
@@ -116,7 +410,7 @@
 //             <div className="card-body">
 //               <h5 className="card-title fw-semibold mb-2">Appearance</h5>
 //               <p className="text-muted small mb-3">
-//                 Toggle between light and dark theme for the admin dashboard.
+//                 Toggle between light and dark theme for the dashboard.
 //               </p>
 //               <div className="form-check form-switch">
 //                 <input
@@ -126,14 +420,15 @@
 //                   checked={darkMode}
 //                   onChange={handleThemeToggle}
 //                   disabled={savingTheme}
+//                   style={{ cursor: "pointer" }}
 //                 />
-//                 <label className="form-check-label" htmlFor="darkModeSwitch">
-//                   {darkMode ? "Dark mode enabled" : "Light mode enabled"}
+//                 <label
+//                   className="form-check-label ms-2"
+//                   htmlFor="darkModeSwitch"
+//                 >
+//                   {darkMode ? "Dark Mode Active" : "Light Mode Active"}
 //                 </label>
 //               </div>
-//               {savingTheme && (
-//                 <p className="text-muted small mt-2 mb-0">Saving theme...</p>
-//               )}
 //             </div>
 //           </div>
 //         </div>
@@ -147,29 +442,29 @@
 //                 Update your display name and contact email.
 //               </p>
 //               <form onSubmit={handleProfileSubmit}>
-//                 <div className="mb-2">
-//                   <label className="form-label">Name</label>
+//                 <div className="mb-3">
+//                   <label className="form-label small fw-bold">Name</label>
 //                   <input
 //                     type="text"
 //                     name="name"
 //                     className="form-control form-control-sm"
 //                     value={profile.name}
 //                     onChange={handleProfileChange}
-//                     placeholder="Admin Name"
+//                     required
 //                   />
 //                 </div>
 //                 <div className="mb-3">
-//                   <label className="form-label">Email</label>
+//                   <label className="form-label small fw-bold">Email</label>
 //                   <input
 //                     type="email"
 //                     name="email"
 //                     className="form-control form-control-sm"
 //                     value={profile.email}
 //                     onChange={handleProfileChange}
-//                     placeholder="admin@example.com"
+//                     required
 //                   />
 //                 </div>
-//                 <button type="submit" className="btn btn-primary btn-sm">
+//                 <button type="submit" className="btn btn-primary btn-sm w-100">
 //                   Save Profile
 //                 </button>
 //               </form>
@@ -187,36 +482,48 @@
 //               </p>
 //               <form onSubmit={handlePasswordSubmit}>
 //                 <div className="mb-2">
-//                   <label className="form-label">Current Password</label>
+//                   <label className="form-label small fw-bold">
+//                     Current Password
+//                   </label>
 //                   <input
 //                     type="password"
 //                     name="currentPassword"
 //                     className="form-control form-control-sm"
 //                     value={passwords.currentPassword}
 //                     onChange={handlePasswordChange}
+//                     placeholder="Enter current password"
 //                   />
 //                 </div>
 //                 <div className="mb-2">
-//                   <label className="form-label">New Password</label>
+//                   <label className="form-label small fw-bold">
+//                     New Password
+//                   </label>
 //                   <input
 //                     type="password"
 //                     name="newPassword"
 //                     className="form-control form-control-sm"
 //                     value={passwords.newPassword}
 //                     onChange={handlePasswordChange}
+//                     placeholder="Min 6 chars"
 //                   />
 //                 </div>
 //                 <div className="mb-3">
-//                   <label className="form-label">Confirm New Password</label>
+//                   <label className="form-label small fw-bold">
+//                     Confirm New Password
+//                   </label>
 //                   <input
 //                     type="password"
 //                     name="confirmPassword"
 //                     className="form-control form-control-sm"
 //                     value={passwords.confirmPassword}
 //                     onChange={handlePasswordChange}
+//                     placeholder="Re-enter new password"
 //                   />
 //                 </div>
-//                 <button type="submit" className="btn btn-warning btn-sm">
+//                 <button
+//                   type="submit"
+//                   className="btn btn-warning btn-sm w-100 text-dark"
+//                 >
 //                   Update Password
 //                 </button>
 //               </form>
@@ -231,7 +538,18 @@
 // export default AdminSettings;
 
 import React, { useEffect, useState } from "react";
-import api from "../services/api"; // ✅ Use interceptor for API calls
+import api from "../services/api";
+import {
+  User,
+  Lock,
+  Moon,
+  Sun,
+  Save,
+  Shield,
+  Settings,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
 const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
@@ -266,7 +584,7 @@ const AdminSettings = () => {
         }
 
         // Load User Profile
-        const res = await api.get("/users/profile"); // ✅ Fetch actual user data
+        const res = await api.get("/users/profile");
         if (res.data) {
           setProfile({
             name: res.data.name || "",
@@ -275,7 +593,7 @@ const AdminSettings = () => {
         }
       } catch (err) {
         console.error("Settings load error:", err);
-        // Don't block UI if profile fetch fails, just log it
+        setError("Could not load user profile data.");
       } finally {
         setLoading(false);
       }
@@ -285,7 +603,7 @@ const AdminSettings = () => {
   }, []);
 
   // 2. Handle Theme Toggle
-  const handleThemeToggle = async () => {
+  const handleThemeToggle = () => {
     try {
       setSavingTheme(true);
       const next = !darkMode;
@@ -321,20 +639,19 @@ const AdminSettings = () => {
     setError("");
 
     try {
-      // ✅ Call API to update name/email
       const res = await api.put("/users/profile", {
         name: profile.name,
         email: profile.email,
       });
 
-      // Update local storage user info if needed
+      // Update local storage user info
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       localStorage.setItem(
         "userInfo",
-        JSON.stringify({ ...userInfo, ...res.data })
+        JSON.stringify({ ...userInfo, ...res.data }),
       );
 
-      setMessage("Profile updated successfully.");
+      setMessage("Profile details updated successfully.");
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update profile.");
@@ -357,14 +674,13 @@ const AdminSettings = () => {
     }
 
     try {
-      // ✅ Call API to update password
       await api.put("/users/profile", {
         password: passwords.newPassword,
-        // Include old password if your backend requires verification
+        // Uncomment if backend requires old password
         // oldPassword: passwords.currentPassword
       });
 
-      setMessage("Password updated successfully.");
+      setMessage("Security credentials updated successfully.");
       setPasswords({
         currentPassword: "",
         newPassword: "",
@@ -378,151 +694,196 @@ const AdminSettings = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center py-5">
+      <div
+        className="d-flex justify-content-center align-items-center py-5"
+        style={{ minHeight: "60vh" }}
+      >
         <div className="spinner-border text-primary me-2" />
-        <span>Loading settings...</span>
+        <span className="text-muted">Loading configuration...</span>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <h3 className="mb-3 fw-bold">Settings</h3>
-      <p className="text-muted mb-4">
-        Admin configuration, appearance, and account preferences.
-      </p>
+    <div className="container-fluid p-0 animate-fade-in">
+      <div className="mb-4">
+        <h3 className="fw-bold mb-1 d-flex align-items-center gap-2">
+          <Settings className="text-primary" /> Settings & Preferences
+        </h3>
+        <p className="text-muted small mb-0">
+          Manage your account security and dashboard appearance.
+        </p>
+      </div>
 
+      {/* Notifications */}
       {error && (
-        <div className="alert alert-danger py-2 mb-3" role="alert">
-          {error}
+        <div className="alert alert-danger d-flex align-items-center gap-2 py-2 mb-4 border-0 shadow-sm">
+          <AlertCircle size={18} /> {error}
         </div>
       )}
       {message && (
-        <div className="alert alert-success py-2 mb-3" role="alert">
-          {message}
+        <div className="alert alert-success d-flex align-items-center gap-2 py-2 mb-4 border-0 shadow-sm">
+          <CheckCircle size={18} /> {message}
         </div>
       )}
 
       <div className="row g-4">
-        {/* Appearance / Theme */}
+        {/* 1. Appearance Settings */}
         <div className="col-lg-4">
-          <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
-              <h5 className="card-title fw-semibold mb-2">Appearance</h5>
-              <p className="text-muted small mb-3">
-                Toggle between light and dark theme for the dashboard.
+          <div className="card shadow-sm border-0 h-100 rounded-4">
+            <div className="card-header bg-white border-0 pt-4 px-4">
+              <h5 className="card-title fw-bold d-flex align-items-center gap-2">
+                {darkMode ? (
+                  <Moon size={20} className="text-info" />
+                ) : (
+                  <Sun size={20} className="text-warning" />
+                )}
+                Appearance
+              </h5>
+            </div>
+            <div className="card-body px-4 pb-4">
+              <p className="text-muted small mb-4">
+                Customize how the admin dashboard looks on your device.
               </p>
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="darkModeSwitch"
-                  checked={darkMode}
-                  onChange={handleThemeToggle}
-                  disabled={savingTheme}
-                  style={{ cursor: "pointer" }}
-                />
-                <label
-                  className="form-check-label ms-2"
-                  htmlFor="darkModeSwitch"
-                >
-                  {darkMode ? "Dark Mode Active" : "Light Mode Active"}
-                </label>
+
+              <div className="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light border">
+                <span className="fw-medium">Dark Mode</span>
+                <div className="form-check form-switch">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="darkModeSwitch"
+                    checked={darkMode}
+                    onChange={handleThemeToggle}
+                    disabled={savingTheme}
+                    style={{ width: "3em", height: "1.5em", cursor: "pointer" }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Profile */}
+        {/* 2. Profile Information */}
         <div className="col-lg-4">
-          <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
-              <h5 className="card-title fw-semibold mb-2">Admin Profile</h5>
-              <p className="text-muted small mb-3">
-                Update your display name and contact email.
-              </p>
+          <div className="card shadow-sm border-0 h-100 rounded-4">
+            <div className="card-header bg-white border-0 pt-4 px-4">
+              <h5 className="card-title fw-bold d-flex align-items-center gap-2">
+                <User size={20} className="text-primary" /> My Profile
+              </h5>
+            </div>
+            <div className="card-body px-4 pb-4">
               <form onSubmit={handleProfileSubmit}>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">Name</label>
+                  <label className="form-label small fw-bold text-muted">
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     name="name"
-                    className="form-control form-control-sm"
+                    className="form-control"
                     value={profile.name}
                     onChange={handleProfileChange}
                     required
                   />
                 </div>
-                <div className="mb-3">
-                  <label className="form-label small fw-bold">Email</label>
+                <div className="mb-4">
+                  <label className="form-label small fw-bold text-muted">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     name="email"
-                    className="form-control form-control-sm"
+                    className="form-control"
                     value={profile.email}
                     onChange={handleProfileChange}
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-primary btn-sm w-100">
-                  Save Profile
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 rounded-pill shadow-sm"
+                >
+                  <Save size={16} className="me-2" /> Save Changes
                 </button>
               </form>
             </div>
           </div>
         </div>
 
-        {/* Password */}
+        {/* 3. Security & Password */}
         <div className="col-lg-4">
-          <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
-              <h5 className="card-title fw-semibold mb-2">Change Password</h5>
+          <div className="card shadow-sm border-0 h-100 rounded-4">
+            <div className="card-header bg-white border-0 pt-4 px-4">
+              <h5 className="card-title fw-bold d-flex align-items-center gap-2">
+                <Shield size={20} className="text-danger" /> Security
+              </h5>
+            </div>
+            <div className="card-body px-4 pb-4">
               <p className="text-muted small mb-3">
-                Set a strong password to secure admin access.
+                Ensure your account is secure by using a strong password.
               </p>
               <form onSubmit={handlePasswordSubmit}>
-                <div className="mb-2">
-                  <label className="form-label small fw-bold">
+                <div className="mb-3">
+                  <label className="form-label small fw-bold text-muted">
                     Current Password
                   </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    className="form-control form-control-sm"
-                    value={passwords.currentPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Enter current password"
-                  />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label small fw-bold">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    className="form-control form-control-sm"
-                    value={passwords.newPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Min 6 chars"
-                  />
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <Lock size={16} />
+                    </span>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      className="form-control border-start-0 ps-0"
+                      value={passwords.currentPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="••••••"
+                      autoComplete="current-password"
+                    />
+                  </div>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">
-                    Confirm New Password
+                  <label className="form-label small fw-bold text-muted">
+                    New Password
                   </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    className="form-control form-control-sm"
-                    value={passwords.confirmPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Re-enter new password"
-                  />
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <Lock size={16} />
+                    </span>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      className="form-control border-start-0 ps-0"
+                      value={passwords.newPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Min 6 chars"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="form-label small fw-bold text-muted">
+                    Confirm Password
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-end-0">
+                      <Lock size={16} />
+                    </span>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      className="form-control border-start-0 ps-0"
+                      value={passwords.confirmPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Repeat password"
+                      autoComplete="new-password"
+                    />
+                  </div>
                 </div>
                 <button
                   type="submit"
-                  className="btn btn-warning btn-sm w-100 text-dark"
+                  className="btn btn-outline-danger w-100 rounded-pill"
                 >
                   Update Password
                 </button>
@@ -531,6 +892,11 @@ const AdminSettings = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 };

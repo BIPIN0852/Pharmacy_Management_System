@@ -4,43 +4,46 @@
 //   {
 //     name: {
 //       type: String,
-//       required: true,
+//       required: [true, "Supplier company name is required"],
 //       trim: true,
+//       unique: true,
+//       index: true,
 //     },
-//     contactPerson: {
-//       type: String,
-//       trim: true,
-//     },
-//     phone: {
-//       type: String,
-//       trim: true,
-//     },
+//     contactPerson: { type: String, trim: true },
+//     phone: { type: String, required: true, trim: true },
 //     email: {
 //       type: String,
 //       trim: true,
 //       lowercase: true,
+//       match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Invalid email"],
 //     },
-//     address: {
-//       type: String,
-//       trim: true,
-//     },
-//     gstOrPan: {
-//       type: String,
-//       trim: true,
-//     },
-//     notes: {
-//       type: String,
-//       trim: true,
-//     },
-//     isActive: {
-//       type: Boolean,
-//       default: true,
-//     },
+//     address: { type: String, trim: true },
+//     gstOrPan: { type: String, trim: true, default: "N/A" },
+//     paymentTerms: { type: String, default: "Cash", trim: true },
+//     notes: { type: String, trim: true },
+
+//     // ✅ UPDATED: Stores Medicine Reference AND Quantity
+//     suppliedMedicines: [
+//       {
+//         medicine: {
+//           type: mongoose.Schema.Types.ObjectId,
+//           ref: "Medicine",
+//           required: true,
+//         },
+//         quantity: {
+//           type: Number,
+//           required: true,
+//           default: 1,
+//         },
+//       },
+//     ],
+
+//     isActive: { type: Boolean, default: true, index: true },
 //   },
-//   {
-//     timestamps: true, // createdAt, updatedAt
-//   }
+//   { timestamps: true },
 // );
+
+// supplierSchema.index({ name: "text", contactPerson: "text" });
 
 // module.exports = mongoose.model("Supplier", supplierSchema);
 
@@ -48,7 +51,6 @@ const mongoose = require("mongoose");
 
 const supplierSchema = new mongoose.Schema(
   {
-    // Company Name (Must be unique to prevent duplicates)
     name: {
       type: String,
       required: [true, "Supplier company name is required"],
@@ -56,82 +58,47 @@ const supplierSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-
-    contactPerson: {
-      type: String,
-      trim: true,
-    },
-
-    phone: {
-      type: String,
-      required: [true, "Contact number is essential for communication"],
-      trim: true,
-    },
-
+    contactPerson: { type: String, trim: true },
+    phone: { type: String, required: true, trim: true },
     email: {
       type: String,
       trim: true,
       lowercase: true,
-      // ✅ Added basic regex validation for email
-      match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please fill a valid email address",
-      ],
+      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Invalid email"],
     },
+    address: { type: String, trim: true },
+    gstOrPan: { type: String, trim: true, default: "N/A" },
+    paymentTerms: { type: String, default: "Cash", trim: true },
+    notes: { type: String, trim: true },
 
-    address: {
-      type: String,
-      trim: true,
-    },
-
-    // Tax/Business Identification (PAN, VAT, GST)
-    gstOrPan: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "N/A",
-    },
-
-    // Optional: Payment Terms (e.g., "Net 30", "Cash", "Credit")
-    paymentTerms: {
-      type: String,
-      default: "Cash",
-      trim: true,
-    },
-
-    // ✅ List of medicines provided by this specific supplier
+    // ✅ UPDATED: Stores Medicine Reference AND Quantity
     suppliedMedicines: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Medicine",
+        // _id: false, // Uncomment this if you don't want unique IDs for each list item
+        medicine: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Medicine",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+          min: [1, "Quantity must be at least 1"], // ✅ Prevents negative/zero values
+        },
       },
     ],
 
-    notes: {
-      type: String,
-      trim: true,
-    },
-
-    // Soft Delete Flag
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true, // Optimizes "Show Active Suppliers" query
-    },
+    isActive: { type: Boolean, default: true, index: true },
   },
-  {
-    timestamps: true, // Auto-manages createdAt and updatedAt
-  }
+  { timestamps: true },
 );
 
-// -------------------------------------------------------------------
 // ✅ INDEXES
-// -------------------------------------------------------------------
-
-/**
- * Text Index: Allows advanced searching by "Name" or "Contact Person"
- * This powers the search bar in your AdminSuppliers.jsx frontend
- */
+// 1. Text Search Index (for Search Bar)
 supplierSchema.index({ name: "text", contactPerson: "text" });
+
+// 2. Relationship Index (Optimizes "Find all suppliers who sell Medicine X")
+supplierSchema.index({ "suppliedMedicines.medicine": 1 });
 
 module.exports = mongoose.model("Supplier", supplierSchema);

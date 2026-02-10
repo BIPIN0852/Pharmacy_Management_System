@@ -700,13 +700,18 @@ const PrescriptionsPage = () => {
 
     setUploading(true);
     const formData = new FormData();
-    formData.append("image", uploadFile); // Key matches backend multer config
+    formData.append("image", uploadFile);
     formData.append("notes", notes);
 
     try {
-      // ✅ Axios handles Content-Type for FormData automatically
-      await api.post("/prescriptions", formData);
+      // ✅ FIX: Explicitly set Content-Type to match multipart/form-data
+      await api.post("/prescriptions", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
+      // Success Logic
       setShowModal(false);
       setUploadFile(null);
       setNotes("");
@@ -714,7 +719,10 @@ const PrescriptionsPage = () => {
       alert("Prescription uploaded successfully!");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Upload failed.");
+      // ✅ Show the specific error message from the backend
+      const serverMessage =
+        err.response?.data?.message || "Upload failed on server.";
+      alert(`Upload Error: ${serverMessage}`);
     } finally {
       setUploading(false);
     }

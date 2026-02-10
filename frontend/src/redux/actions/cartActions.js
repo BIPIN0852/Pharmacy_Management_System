@@ -279,3 +279,34 @@ export const savePaymentMethod = (paymentMethod) => (dispatch) => {
 
   localStorage.setItem("paymentMethod", paymentMethod);
 };
+
+// import axios from "axios";
+// import { CART_ADD_ITEM, CART_REMOVE_ITEM } from "../constants/cartConstants";
+
+// export const addToCart = (id, qty, unit) => async (dispatch, getState) => {
+//   // 1. Fetch latest medicine data
+//   const { data } = await axios.get(`/api/medicines/${id}`);
+
+//   // 2. Validate Stock
+//   if (data.countInStock < qty) {
+//     alert("Insufficient stock available!");
+//     return;
+//   }
+
+//   // 3. Dispatch to State
+//   dispatch({
+//     type: CART_ADD_ITEM,
+//     payload: {
+//       medicine: data._id,
+//       name: data.name,
+//       image: data.image,
+//       price: data.price,
+//       countInStock: data.countInStock,
+//       qty,
+//       unit,
+//     },
+//   });
+
+//   // 4. Persist to LocalStorage (or call Backend API to sync)
+//   localStorage.setItem("cartItems", JSON.stringify(getState().cart.cartItems));
+// };

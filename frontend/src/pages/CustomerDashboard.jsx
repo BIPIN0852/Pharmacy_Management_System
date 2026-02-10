@@ -1148,51 +1148,616 @@
 
 // export default CustomerDashboard;
 
+// import React, { useState, useEffect } from "react";
+// import {
+//   Bell,
+//   ShoppingCart,
+//   User,
+//   Search,
+//   Package,
+//   HeartPulse,
+//   MessageCircle,
+//   X,
+//   Sun,
+//   Moon,
+//   Calendar,
+//   Stethoscope,
+//   LogOut,
+//   Menu,
+//   Upload,
+//   History,
+//   FileText,
+//   CreditCard,
+//   Heart,
+//   Mail,
+//   Phone,
+//   MapPin,
+//   Droplet,
+//   AlertCircle,
+//   Shield,
+//   Edit2,
+//   Camera,
+//   Activity,
+//   ArrowRight,
+//   ChevronRight,
+//   Plus,
+//   Clock, // ✅ Added Clock icon
+//   Ticket, // ✅ Added Ticket icon for Ref ID
+// } from "lucide-react";
+// import {
+//   Button,
+//   ProgressBar,
+//   Badge,
+//   Form,
+//   Row,
+//   Col,
+//   Tab,
+//   Tabs,
+//   Card,
+//   Table,
+//   Modal,
+//   Spinner,
+// } from "react-bootstrap";
+// import { useNavigate } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { useAuth } from "../context/AuthContext";
+// import { addToCart } from "../redux/actions/cartActions";
+
+// const API_BASE_URL = "http://localhost:5000/api";
+
+// const CustomerDashboard = () => {
+//   const { user } = useAuth();
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch();
+
+//   // --- UI State ---
+//   const [activeTab, setActiveTab] = useState("overview");
+//   const [showUploadModal, setShowUploadModal] = useState(false);
+
+//   // --- Data State ---
+//   const [loading, setLoading] = useState(true);
+//   const [profile, setProfile] = useState(null);
+//   const [orders, setOrders] = useState([]);
+//   const [myAppointments, setMyAppointments] = useState([]);
+//   const [myPrescriptions, setMyPrescriptions] = useState([]);
+//   const [recommended, setRecommended] = useState([]);
+//   const [savedMedicines, setSavedMedicines] = useState([]);
+//   const [doctors, setDoctors] = useState([]);
+
+//   // --- Interaction State ---
+//   const [prescriptionFile, setPrescriptionFile] = useState(null);
+//   const [prescriptionPreview, setPrescriptionPreview] = useState(null);
+//   const [notes, setNotes] = useState("");
+//   const [uploadMessage, setUploadMessage] = useState("");
+//   const [uploadLoading, setUploadLoading] = useState(false);
+
+//   // --- Profile Editing State ---
+//   const [profileFormData, setProfileFormData] = useState({});
+
+//   // --- Effects ---
+//   useEffect(() => {
+//     fetchAllData();
+//   }, []);
+
+//   useEffect(() => {
+//     if (profile) {
+//       setProfileFormData({
+//         name: profile.name || "",
+//         phone: profile.phone || "",
+//         gender: profile.gender || "",
+//         address:
+//           typeof profile.address === "object"
+//             ? profile.address.city
+//             : profile.address || "",
+//         bloodGroup: profile.bloodGroup || "",
+//         allergies: profile.allergies || "",
+//       });
+//     }
+//   }, [profile]);
+
+//   // Helper
+//   const safelyGetArray = (data, key) => {
+//     if (Array.isArray(data)) return data;
+//     if (data && Array.isArray(data[key])) return data[key];
+//     return [];
+//   };
+
+//   const fetchAllData = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       if (!token) return navigate("/login");
+//       const headers = { Authorization: `Bearer ${token}` };
+
+//       // Parallel Fetch
+//       const results = await Promise.allSettled([
+//         fetch(`${API_BASE_URL}/auth/profile`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/orders`, { headers }),
+//         fetch(`${API_BASE_URL}/medicines`, { headers }),
+//         fetch(`${API_BASE_URL}/doctors`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/appointments`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/prescriptions`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/saved-medicines`, { headers }),
+//       ]);
+
+//       // Process Results
+//       const [
+//         profileRes,
+//         ordersRes,
+//         recRes,
+//         docRes,
+//         apptRes,
+//         presRes,
+//         savedRes,
+//       ] = results;
+
+//       if (profileRes.status === "fulfilled" && profileRes.value.ok)
+//         setProfile(await profileRes.value.json());
+
+//       if (ordersRes.status === "fulfilled" && ordersRes.value.ok)
+//         setOrders(safelyGetArray(await ordersRes.value.json(), "orders"));
+
+//       if (recRes.status === "fulfilled" && recRes.value.ok)
+//         setRecommended(await recRes.value.json());
+
+//       if (docRes.status === "fulfilled" && docRes.value.ok)
+//         setDoctors(await docRes.value.json());
+
+//       if (apptRes.status === "fulfilled" && apptRes.value.ok)
+//         setMyAppointments(
+//           safelyGetArray(await apptRes.value.json(), "appointments")
+//         );
+
+//       if (presRes.status === "fulfilled" && presRes.value.ok)
+//         setMyPrescriptions(
+//           safelyGetArray(await presRes.value.json(), "prescriptions")
+//         );
+
+//       if (savedRes.status === "fulfilled" && savedRes.value.ok)
+//         setSavedMedicines(await savedRes.value.json());
+//     } catch (error) {
+//       console.error("Failed to fetch dashboard data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- Logic: Find Next Appointment (New Feature) ---
+//   const upcomingAppt = myAppointments
+//     .filter(
+//       (a) =>
+//         new Date(a.date) >= new Date().setHours(0, 0, 0, 0) &&
+//         a.status !== "cancelled"
+//     )
+//     .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+//   // --- Handlers ---
+//   const handleAddToCart = (med) => {
+//     dispatch(addToCart(med._id, 1));
+//     alert(`${med.name} added to cart!`);
+//   };
+
+//   const handlePrescriptionChange = (e) => {
+//     const file = e.target.files?.[0];
+//     setPrescriptionFile(file || null);
+//     setPrescriptionPreview(file ? URL.createObjectURL(file) : null);
+//   };
+
+//   const handleUploadPrescription = async (e) => {
+//     e.preventDefault();
+//     if (!prescriptionFile) return;
+
+//     try {
+//       setUploadLoading(true);
+//       const token = localStorage.getItem("token");
+//       const formData = new FormData();
+//       formData.append("image", prescriptionFile);
+//       formData.append("notes", notes);
+
+//       let res = await fetch(`${API_BASE_URL}/prescriptions`, {
+//         method: "POST",
+//         headers: { Authorization: `Bearer ${token}` },
+//         body: formData,
+//       });
+
+//       if (!res.ok) {
+//         res = await fetch(`${API_BASE_URL}/customer/prescriptions`, {
+//           method: "POST",
+//           headers: { Authorization: `Bearer ${token}` },
+//           body: formData,
+//         });
+//       }
+
+//       if (res.ok) {
+//         setUploadMessage("Prescription uploaded successfully!");
+//         setPrescriptionFile(null);
+//         setPrescriptionPreview(null);
+//         setNotes("");
+//         setShowUploadModal(false);
+//         fetchAllData();
+//         alert("Upload Successful");
+//       } else {
+//         setUploadMessage("Failed to upload.");
+//       }
+//     } catch (err) {
+//       setUploadMessage("Error uploading prescription.");
+//     } finally {
+//       setUploadLoading(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div
+//         className="d-flex justify-content-center align-items-center"
+//         style={{ minHeight: "60vh" }}
+//       >
+//         <Spinner animation="border" variant="primary" />
+//       </div>
+//     );
+//   }
+
+//   // --- STATS DATA ---
+//   const statsCards = [
+//     {
+//       label: "Active Orders",
+//       value: orders.filter((o) => !o.isDelivered).length,
+//       icon: Package,
+//       color: "primary",
+//       link: "/orders",
+//     },
+//     {
+//       label: "Appointments",
+//       value: myAppointments.length,
+//       icon: Calendar,
+//       color: "warning",
+//       link: "/appointments",
+//     },
+//     {
+//       label: "Prescriptions",
+//       value: myPrescriptions.length,
+//       icon: FileText,
+//       color: "info",
+//       link: "/prescriptions",
+//     },
+//     {
+//       label: "Wallet",
+//       value: "Rs. " + (profile?.loyaltyPoints || 0), // Updated to show points
+//       icon: CreditCard,
+//       color: "success",
+//       link: "/profile",
+//     },
+//   ];
+
+//   return (
+//     <div className="fade-in">
+//       {/* 1. Stats Row */}
+//       <h5 className="fw-bold mb-3 text-dark">Dashboard Overview</h5>
+//       <Row className="g-3 mb-4">
+//         {statsCards.map((item, idx) => (
+//           <Col md={3} key={idx}>
+//             <Card
+//               className="border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-scale"
+//               onClick={() => navigate(item.link)}
+//             >
+//               <Card.Body className="d-flex align-items-center justify-content-between">
+//                 <div>
+//                   <p className="text-muted small mb-1 fw-bold text-uppercase">
+//                     {item.label}
+//                   </p>
+//                   <h3 className="fw-bold mb-0 text-dark">{item.value}</h3>
+//                 </div>
+//                 <div
+//                   className={`bg-${item.color} bg-opacity-10 p-3 rounded-circle text-${item.color}`}
+//                 >
+//                   <item.icon size={24} />
+//                 </div>
+//               </Card.Body>
+//             </Card>
+//           </Col>
+//         ))}
+//       </Row>
+
+//       <Row className="g-4">
+//         {/* 2. Recent Orders */}
+//         <Col lg={8}>
+//           <Card className="border-0 shadow-sm rounded-4 h-100">
+//             <Card.Header className="bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+//               <h5 className="mb-0 fw-bold">Recent Orders</h5>
+//               <Button
+//                 variant="light"
+//                 size="sm"
+//                 onClick={() => navigate("/orders")}
+//               >
+//                 View All
+//               </Button>
+//             </Card.Header>
+//             <Card.Body className="p-0 table-responsive">
+//               <Table hover className="mb-0 align-middle">
+//                 <thead className="bg-light">
+//                   <tr>
+//                     <th className="ps-4 border-0 text-muted small text-uppercase">
+//                       Order ID
+//                     </th>
+//                     <th className="border-0 text-muted small text-uppercase">
+//                       Date
+//                     </th>
+//                     <th className="border-0 text-muted small text-uppercase">
+//                       Total
+//                     </th>
+//                     <th className="border-0 text-muted small text-uppercase">
+//                       Status
+//                     </th>
+//                     <th className="border-0"></th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {orders.slice(0, 5).map((order) => (
+//                     <tr key={order._id}>
+//                       <td className="ps-4 fw-bold text-primary">
+//                         #{order._id.substring(0, 8)}
+//                       </td>
+//                       <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+//                       <td className="fw-bold">Rs. {order.totalPrice}</td>
+//                       <td>
+//                         <Badge
+//                           bg={order.isPaid ? "success" : "warning"}
+//                           className="px-3 py-2 rounded-pill fw-normal"
+//                         >
+//                           {order.isPaid ? "Paid" : "Pending"}
+//                         </Badge>
+//                       </td>
+//                       <td className="text-end pe-4">
+//                         <Button
+//                           variant="light"
+//                           size="sm"
+//                           className="rounded-circle"
+//                           onClick={() => navigate(`/orders`)}
+//                         >
+//                           <ChevronRight size={16} />
+//                         </Button>
+//                       </td>
+//                     </tr>
+//                   ))}
+//                   {orders.length === 0 && (
+//                     <tr>
+//                       <td colSpan="5" className="text-center py-4 text-muted">
+//                         No recent orders found.
+//                       </td>
+//                     </tr>
+//                   )}
+//                 </tbody>
+//               </Table>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+
+//         {/* 3. Right Sidebar: Next Appointment & Quick Actions */}
+//         <Col lg={4}>
+//           {/* ✅ NEW: Next Appointment Card */}
+//           <Card
+//             className="border-0 shadow-sm rounded-4 mb-3 text-white overflow-hidden"
+//             style={{
+//               background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
+//             }}
+//           >
+//             <Card.Body className="p-4 position-relative">
+//               <div className="d-flex justify-content-between mb-4">
+//                 <div className="bg-white bg-opacity-25 p-2 rounded-3">
+//                   <Calendar size={20} className="text-white" />
+//                 </div>
+//                 <Badge bg="light" text="primary" className="rounded-pill px-3">
+//                   Next Visit
+//                 </Badge>
+//               </div>
+
+//               {upcomingAppt ? (
+//                 <>
+//                   <h5 className="fw-bold mb-1">
+//                     Dr. {upcomingAppt.doctor?.name}
+//                   </h5>
+//                   <p className="text-white text-opacity-75 mb-3 small">
+//                     {upcomingAppt.doctor?.speciality}
+//                   </p>
+
+//                   <div className="bg-white bg-opacity-10 p-3 rounded-3 mb-3">
+//                     <div className="d-flex align-items-center gap-2 mb-2">
+//                       <Clock size={16} className="text-white text-opacity-75" />
+//                       <span className="fw-bold small">
+//                         {new Date(upcomingAppt.date).toDateString()}
+//                       </span>
+//                     </div>
+//                     <div className="d-flex align-items-center gap-2">
+//                       <Ticket
+//                         size={16}
+//                         className="text-white text-opacity-75"
+//                       />
+//                       <span className="fw-bold small font-monospace">
+//                         Ref: {upcomingAppt.bookingReference || "N/A"}
+//                       </span>
+//                     </div>
+//                   </div>
+
+//                   <Button
+//                     variant="light"
+//                     className="w-100 text-primary fw-bold rounded-pill"
+//                     onClick={() => navigate("/appointments")}
+//                   >
+//                     View Details
+//                   </Button>
+//                 </>
+//               ) : (
+//                 <div className="text-center py-2">
+//                   <p className="opacity-75 small mb-3">
+//                     No upcoming visits scheduled.
+//                   </p>
+//                   <Button
+//                     variant="light"
+//                     className="w-100 text-primary fw-bold rounded-pill"
+//                     onClick={() => navigate("/appointments")}
+//                   >
+//                     Book Now
+//                   </Button>
+//                 </div>
+//               )}
+//               {/* Decoration */}
+//               <div
+//                 className="position-absolute top-0 end-0 bg-white opacity-10 rounded-circle"
+//                 style={{
+//                   width: 100,
+//                   height: 100,
+//                   transform: "translate(30%, -30%)",
+//                 }}
+//               ></div>
+//             </Card.Body>
+//           </Card>
+
+//           {/* Quick Upload Prescription */}
+//           <Card className="border-0 shadow-sm rounded-4 mb-3 bg-white">
+//             <Card.Body className="p-4">
+//               <div className="d-flex align-items-center gap-3 mb-3">
+//                 <div className="bg-info bg-opacity-10 p-3 rounded-circle text-info">
+//                   <Upload size={24} />
+//                 </div>
+//                 <div>
+//                   <h6 className="fw-bold mb-0">Quick Upload</h6>
+//                   <small className="text-muted">Prescription</small>
+//                 </div>
+//               </div>
+//               <Button
+//                 variant="info"
+//                 className="w-100 text-white fw-bold rounded-pill"
+//                 onClick={() => setShowUploadModal(true)}
+//               >
+//                 <Plus size={18} className="me-1" /> Upload Now
+//               </Button>
+//             </Card.Body>
+//           </Card>
+
+//           {/* Shop Now Promo */}
+//           <Card
+//             className="border-0 shadow-sm rounded-4 text-white"
+//             style={{
+//               background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+//             }}
+//           >
+//             <Card.Body className="p-4">
+//               <div className="d-flex justify-content-between mb-3">
+//                 <Package size={28} className="opacity-75" />
+//                 <Badge bg="warning" text="dark" className="rounded-pill">
+//                   Store
+//                 </Badge>
+//               </div>
+//               <h5 className="fw-bold">Order Medicines</h5>
+//               <p className="opacity-75 small mb-3">Browse our inventory.</p>
+//               <Button
+//                 variant="light"
+//                 className="w-100 text-success fw-bold rounded-pill"
+//                 onClick={() => navigate("/medicines")}
+//               >
+//                 Go to Store
+//               </Button>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+//       </Row>
+
+//       {/* --- Upload Modal --- */}
+//       <Modal
+//         show={showUploadModal}
+//         onHide={() => setShowUploadModal(false)}
+//         centered
+//       >
+//         <Modal.Header closeButton className="border-0">
+//           <Modal.Title className="fw-bold">Upload Prescription</Modal.Title>
+//         </Modal.Header>
+//         <Modal.Body>
+//           {uploadMessage && (
+//             <div
+//               className={`alert ${
+//                 uploadMessage.includes("Success")
+//                   ? "alert-success"
+//                   : "alert-danger"
+//               }`}
+//             >
+//               {uploadMessage}
+//             </div>
+//           )}
+//           <Form onSubmit={handleUploadPrescription}>
+//             <Form.Group className="mb-3">
+//               <Form.Label>Prescription Image</Form.Label>
+//               <Form.Control
+//                 type="file"
+//                 onChange={handlePrescriptionChange}
+//                 accept="image/*,application/pdf"
+//               />
+//               {prescriptionPreview && (
+//                 <div className="mt-2 text-center bg-light p-2 rounded">
+//                   <img
+//                     src={prescriptionPreview}
+//                     alt="Preview"
+//                     style={{ maxHeight: "150px" }}
+//                   />
+//                 </div>
+//               )}
+//             </Form.Group>
+//             <Form.Group className="mb-3">
+//               <Form.Label>Notes</Form.Label>
+//               <Form.Control
+//                 as="textarea"
+//                 rows={3}
+//                 value={notes}
+//                 onChange={(e) => setNotes(e.target.value)}
+//                 placeholder="E.g. I need 2 strips of..."
+//               />
+//             </Form.Group>
+//             <Button
+//               type="submit"
+//               variant="primary"
+//               className="w-100 rounded-pill"
+//               disabled={uploadLoading}
+//             >
+//               {uploadLoading ? (
+//                 <Spinner size="sm" animation="border" />
+//               ) : (
+//                 "Submit"
+//               )}
+//             </Button>
+//           </Form>
+//         </Modal.Body>
+//       </Modal>
+
+//       <style>{`
+//         .hover-scale:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
+//         .cursor-pointer { cursor: pointer; }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default CustomerDashboard;
+
 import React, { useState, useEffect } from "react";
 import {
-  Bell,
-  ShoppingCart,
-  User,
-  Search,
   Package,
-  HeartPulse,
-  MessageCircle,
-  X,
-  Sun,
-  Moon,
   Calendar,
-  Stethoscope,
-  LogOut,
-  Menu,
-  Upload,
-  History,
   FileText,
   CreditCard,
-  Heart,
-  Mail,
-  Phone,
-  MapPin,
-  Droplet,
-  AlertCircle,
-  Shield,
-  Edit2,
-  Camera,
-  Activity,
-  ArrowRight,
-  ChevronRight,
+  Upload,
   Plus,
-  Clock, // ✅ Added Clock icon
-  Ticket, // ✅ Added Ticket icon for Ref ID
+  Clock,
+  Ticket,
+  ChevronRight,
+  Heart, // ✅ Used for Saved Items
+  ShoppingCart,
+  ArrowRight,
 } from "lucide-react";
 import {
   Button,
-  ProgressBar,
   Badge,
   Form,
   Row,
   Col,
-  Tab,
-  Tabs,
   Card,
   Table,
   Modal,
@@ -1211,7 +1776,6 @@ const CustomerDashboard = () => {
   const dispatch = useDispatch();
 
   // --- UI State ---
-  const [activeTab, setActiveTab] = useState("overview");
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   // --- Data State ---
@@ -1220,8 +1784,10 @@ const CustomerDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [myAppointments, setMyAppointments] = useState([]);
   const [myPrescriptions, setMyPrescriptions] = useState([]);
+  const [savedMedicines, setSavedMedicines] = useState([]); // ✅ Using this state
+
+  // Unused but kept to match your logic structure
   const [recommended, setRecommended] = useState([]);
-  const [savedMedicines, setSavedMedicines] = useState([]);
   const [doctors, setDoctors] = useState([]);
 
   // --- Interaction State ---
@@ -1231,35 +1797,22 @@ const CustomerDashboard = () => {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadLoading, setUploadLoading] = useState(false);
 
-  // --- Profile Editing State ---
-  const [profileFormData, setProfileFormData] = useState({});
-
   // --- Effects ---
   useEffect(() => {
     fetchAllData();
   }, []);
-
-  useEffect(() => {
-    if (profile) {
-      setProfileFormData({
-        name: profile.name || "",
-        phone: profile.phone || "",
-        gender: profile.gender || "",
-        address:
-          typeof profile.address === "object"
-            ? profile.address.city
-            : profile.address || "",
-        bloodGroup: profile.bloodGroup || "",
-        allergies: profile.allergies || "",
-      });
-    }
-  }, [profile]);
 
   // Helper
   const safelyGetArray = (data, key) => {
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data[key])) return data[key];
     return [];
+  };
+
+  // ✅ Image Helper (Handles local vs remote paths)
+  const getImageUrl = (path) => {
+    if (!path) return "https://via.placeholder.com/150";
+    return path.startsWith("http") ? path : `http://localhost:5000${path}`;
   };
 
   const fetchAllData = async () => {
@@ -1322,7 +1875,7 @@ const CustomerDashboard = () => {
     }
   };
 
-  // --- Logic: Find Next Appointment (New Feature) ---
+  // --- Logic: Find Next Appointment ---
   const upcomingAppt = myAppointments
     .filter(
       (a) =>
@@ -1333,8 +1886,13 @@ const CustomerDashboard = () => {
 
   // --- Handlers ---
   const handleAddToCart = (med) => {
-    dispatch(addToCart(med._id, 1));
-    alert(`${med.name} added to cart!`);
+    // If med structure is nested (from savedItems: item.medicine) or direct
+    const itemToAdd = med.medicine || med;
+
+    if (!itemToAdd || itemToAdd.countInStock === 0) return;
+
+    dispatch(addToCart(itemToAdd._id, 1));
+    alert(`${itemToAdd.name} added to cart!`);
   };
 
   const handlePrescriptionChange = (e) => {
@@ -1361,6 +1919,7 @@ const CustomerDashboard = () => {
       });
 
       if (!res.ok) {
+        // Fallback route check
         res = await fetch(`${API_BASE_URL}/customer/prescriptions`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -1421,8 +1980,8 @@ const CustomerDashboard = () => {
       link: "/prescriptions",
     },
     {
-      label: "Wallet",
-      value: "Rs. " + (profile?.loyaltyPoints || 0), // Updated to show points
+      label: "Wallet Points",
+      value: profile?.loyaltyPoints || 0,
       icon: CreditCard,
       color: "success",
       link: "/profile",
@@ -1430,19 +1989,22 @@ const CustomerDashboard = () => {
   ];
 
   return (
-    <div className="fade-in">
-      {/* 1. Stats Row */}
+    <div className="fade-in container-fluid p-0">
+      {/* 1. Stats Row (Responsive: 2 per row on mobile, 4 on desktop) */}
       <h5 className="fw-bold mb-3 text-dark">Dashboard Overview</h5>
       <Row className="g-3 mb-4">
         {statsCards.map((item, idx) => (
-          <Col md={3} key={idx}>
+          <Col xs={6} md={6} xl={3} key={idx}>
             <Card
               className="border-0 shadow-sm rounded-4 h-100 cursor-pointer hover-scale"
               onClick={() => navigate(item.link)}
             >
-              <Card.Body className="d-flex align-items-center justify-content-between">
+              <Card.Body className="d-flex align-items-center justify-content-between p-3">
                 <div>
-                  <p className="text-muted small mb-1 fw-bold text-uppercase">
+                  <p
+                    className="text-muted small mb-1 fw-bold text-uppercase"
+                    style={{ fontSize: "0.75rem" }}
+                  >
                     {item.label}
                   </p>
                   <h3 className="fw-bold mb-0 text-dark">{item.value}</h3>
@@ -1459,9 +2021,10 @@ const CustomerDashboard = () => {
       </Row>
 
       <Row className="g-4">
-        {/* 2. Recent Orders */}
+        {/* LEFT COLUMN */}
         <Col lg={8}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
+          {/* 2. Recent Orders */}
+          <Card className="border-0 shadow-sm rounded-4 mb-4">
             <Card.Header className="bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold">Recent Orders</h5>
               <Button
@@ -1530,11 +2093,75 @@ const CustomerDashboard = () => {
               </Table>
             </Card.Body>
           </Card>
+
+          {/* 3. ✅ NEW: Saved Items Section */}
+          <Card className="border-0 shadow-sm rounded-4">
+            <Card.Header className="bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+              <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
+                <Heart size={18} className="text-danger" /> Saved Medicines
+              </h5>
+              <Button
+                variant="light"
+                size="sm"
+                onClick={() => navigate("/customer/saved")}
+              >
+                View All
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {savedMedicines.length > 0 ? (
+                <Row className="g-3">
+                  {/* Show only top 3 items to save space */}
+                  {savedMedicines.slice(0, 3).map((item) => {
+                    const med = item.medicine;
+                    if (!med) return null;
+                    return (
+                      <Col xs={12} sm={6} md={4} key={item._id}>
+                        <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-3 h-100 border hover-scale cursor-pointer">
+                          <img
+                            src={getImageUrl(med.image)}
+                            alt={med.name}
+                            className="rounded-3 object-fit-cover"
+                            style={{ width: "50px", height: "50px" }}
+                          />
+                          <div className="flex-grow-1 overflow-hidden">
+                            <h6
+                              className="mb-0 fw-bold text-truncate"
+                              title={med.name}
+                            >
+                              {med.name}
+                            </h6>
+                            <small className="text-primary fw-bold">
+                              Rs. {med.price}
+                            </small>
+                          </div>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="rounded-circle p-2"
+                            onClick={() => handleAddToCart(item)}
+                            title="Add to Cart"
+                          >
+                            <ShoppingCart size={14} />
+                          </Button>
+                        </div>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              ) : (
+                <div className="text-center py-3 text-muted">
+                  <Heart size={24} className="mb-2 opacity-25" />
+                  <p className="small mb-0">Your wishlist is empty.</p>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
         </Col>
 
-        {/* 3. Right Sidebar: Next Appointment & Quick Actions */}
+        {/* RIGHT COLUMN */}
         <Col lg={4}>
-          {/* ✅ NEW: Next Appointment Card */}
+          {/* 4. Next Appointment Card */}
           <Card
             className="border-0 shadow-sm rounded-4 mb-3 text-white overflow-hidden"
             style={{
@@ -1612,7 +2239,7 @@ const CustomerDashboard = () => {
             </Card.Body>
           </Card>
 
-          {/* Quick Upload Prescription */}
+          {/* 5. Quick Upload Prescription */}
           <Card className="border-0 shadow-sm rounded-4 mb-3 bg-white">
             <Card.Body className="p-4">
               <div className="d-flex align-items-center gap-3 mb-3">
@@ -1634,7 +2261,7 @@ const CustomerDashboard = () => {
             </Card.Body>
           </Card>
 
-          {/* Shop Now Promo */}
+          {/* 6. Shop Now Promo */}
           <Card
             className="border-0 shadow-sm rounded-4 text-white"
             style={{

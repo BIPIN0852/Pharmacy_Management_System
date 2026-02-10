@@ -253,6 +253,92 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const router = express.Router();
+
+// // -------------------------------------------------------------------
+// // 1. CONTROLLERS
+// // -------------------------------------------------------------------
+// const {
+//   authUser,
+//   registerUser,
+//   getUserProfile,
+//   updateUserProfile,
+//   getUsers,
+//   deleteUser,
+//   getUserById,
+//   updateUser,
+// } = require("../controllers/userController");
+
+// // -------------------------------------------------------------------
+// // 2. MIDDLEWARE
+// // -------------------------------------------------------------------
+// const { protect } = require("../middleware/authMiddleware");
+// const authorizeRoles = require("../middleware/role"); // ✅ Consistent RBAC
+
+// // -------------------------------------------------------------------
+// // 3. PUBLIC ROUTES (Authentication)
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Register a new user (Self-registration for Customers)
+//  * @route   POST /api/users
+//  */
+// router.post("/", registerUser);
+
+// /**
+//  * @desc    Auth user & get token (Login)
+//  * @route   POST /api/users/login
+//  */
+// router.post("/login", authUser);
+
+// // -------------------------------------------------------------------
+// // 4. PROTECTED PROFILE ROUTES (All Roles: Customer, Doctor, Admin)
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Get & Update Personal Profile Info
+//  * @route   GET /api/users/profile
+//  * @route   PUT /api/users/profile
+//  * ✅ FIX: Used by CustomerProfile.jsx to fetch personal data (Address, Allergies)
+//  */
+// router
+//   .route("/profile")
+//   .get(protect, getUserProfile)
+//   .put(protect, updateUserProfile);
+
+// // -------------------------------------------------------------------
+// // 5. ADMINISTRATIVE ROUTES (Admin Only)
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Get all users (Search & Pagination enabled)
+//  * @route   GET /api/users
+//  * ✅ Used by AdminCustomers.jsx and Staff Registry
+//  */
+// router.get("/", protect, authorizeRoles("admin"), getUsers);
+
+// /**
+//  * @desc    Admin creating a staff/pharmacist user manually
+//  * @route   POST /api/users/admin-create
+//  * ✅ Resolves "Unable to create user" in Staff Management
+//  */
+// router.post("/admin-create", protect, authorizeRoles("admin"), registerUser);
+
+// /**
+//  * @desc    Manage specific user records by ID
+//  * @route   GET /api/users/:id
+//  * @route   PUT /api/users/:id
+//  * @route   DELETE /api/users/:id
+//  */
+// router
+//   .route("/:id")
+//   .get(protect, authorizeRoles("admin"), getUserById)
+//   .put(protect, authorizeRoles("admin"), updateUser)
+//   .delete(protect, authorizeRoles("admin"), deleteUser);
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
 
@@ -264,6 +350,7 @@ const {
   registerUser,
   getUserProfile,
   updateUserProfile,
+  getSavedMedicines, // ✅ Added: Import the new controller function
   getUsers,
   deleteUser,
   getUserById,
@@ -306,6 +393,13 @@ router
   .route("/profile")
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
+
+/**
+ * @desc    Get User Saved Medicines (Wishlist)
+ * @route   GET /api/users/saved-medicines
+ * ✅ FIX: Resolves 500 error on MedicineShop/Dashboard
+ */
+router.get("/saved-medicines", protect, getSavedMedicines);
 
 // -------------------------------------------------------------------
 // 5. ADMINISTRATIVE ROUTES (Admin Only)

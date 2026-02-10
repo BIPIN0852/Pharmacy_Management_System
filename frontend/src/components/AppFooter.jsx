@@ -106,10 +106,150 @@
 
 // export default AppFooter;
 
+// import React from "react";
+// import Lottie from "lottie-react";
+// // Ensure this file exists in src/assets/health.json
+// // If you don't have it yet, the code below handles the crash gracefully.
+// import footerAnimation from "../assets/health.json";
+
+// const AppFooter = ({ context }) => {
+//   const year = new Date().getFullYear();
+
+//   return (
+//     <footer
+//       className="border-top py-5 text-white"
+//       style={{
+//         // Modern Blue Gradient matching the Medical Theme
+//         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+//         boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
+//       }}
+//     >
+//       <div className="container">
+//         <div className="row gy-4">
+//           {/* 1. Brand & Description */}
+//           <div className="col-lg-4 col-md-6">
+//             <h5 className="fw-bold mb-3 d-flex align-items-center">
+//               <i className="bi bi-capsule-pill me-2"></i> Smart Pharmacy
+//             </h5>
+//             <p className="text-white-50 small mb-3">
+//               A secure digital platform for managing prescriptions, inventory,
+//               orders, and appointments efficiently.
+//             </p>
+//             {context && (
+//               <span className="badge bg-white text-primary rounded-pill px-3 py-2 shadow-sm">
+//                 <i className="bi bi-person-badge me-1"></i> {context} Portal
+//               </span>
+//             )}
+//           </div>
+
+//           {/* 2. Navigation Links */}
+//           <div className="col-lg-2 col-md-3 col-6">
+//             <h6 className="fw-bold mb-3">Company</h6>
+//             <ul className="list-unstyled small">
+//               <li className="mb-2">
+//                 <a
+//                   href="/about"
+//                   className="text-white-50 text-decoration-none hover-white"
+//                 >
+//                   About Us
+//                 </a>
+//               </li>
+//               <li className="mb-2">
+//                 <a
+//                   href="/contact"
+//                   className="text-white-50 text-decoration-none hover-white"
+//                 >
+//                   Contact
+//                 </a>
+//               </li>
+//               <li className="mb-2">
+//                 <a
+//                   href="/faq"
+//                   className="text-white-50 text-decoration-none hover-white"
+//                 >
+//                   FAQs
+//                 </a>
+//               </li>
+//             </ul>
+//           </div>
+
+//           <div className="col-lg-2 col-md-3 col-6">
+//             <h6 className="fw-bold mb-3">Legal</h6>
+//             <ul className="list-unstyled small">
+//               <li className="mb-2">
+//                 <a
+//                   href="/privacy"
+//                   className="text-white-50 text-decoration-none hover-white"
+//                 >
+//                   Privacy Policy
+//                 </a>
+//               </li>
+//               <li className="mb-2">
+//                 <a
+//                   href="/terms"
+//                   className="text-white-50 text-decoration-none hover-white"
+//                 >
+//                   Terms of Service
+//                 </a>
+//               </li>
+//             </ul>
+//           </div>
+
+//           {/* 3. Contact & Animation */}
+//           <div className="col-lg-4 col-md-12 d-flex flex-column align-items-md-start align-items-lg-end">
+//             <div className="d-flex align-items-center mb-3 bg-white bg-opacity-10 p-3 rounded-3">
+//               {/* Animation Icon */}
+//               <div
+//                 style={{ width: 50, height: 50 }}
+//                 className="me-3 bg-white rounded-circle p-1 shadow-sm"
+//               >
+//                 {/* Check if animation file exists, else show icon */}
+//                 {footerAnimation ? (
+//                   <Lottie
+//                     animationData={footerAnimation}
+//                     loop
+//                     autoplay
+//                     style={{ width: "100%", height: "100%" }}
+//                   />
+//                 ) : (
+//                   <i className="bi bi-heart-pulse-fill text-danger fs-3 d-flex justify-content-center align-items-center h-100"></i>
+//                 )}
+//               </div>
+
+//               {/* Contact Text */}
+//               <div>
+//                 <h6 className="fw-bold mb-1">Need Support?</h6>
+//                 <a
+//                   href="mailto:support@smartpharmacy.local"
+//                   className="text-white text-decoration-none small d-block"
+//                 >
+//                   support@smartpharmacy.local
+//                 </a>
+//                 <a
+//                   href="tel:+9779800000000"
+//                   className="text-white text-decoration-none small"
+//                 >
+//                   +977-9800000000
+//                 </a>
+//               </div>
+//             </div>
+
+//             <div className="small text-white-50 mt-auto text-lg-end">
+//               &copy; {year} Pharmacy Management System. <br /> All rights
+//               reserved.
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </footer>
+//   );
+// };
+
+// export default AppFooter;
+
 import React from "react";
 import Lottie from "lottie-react";
 // Ensure this file exists in src/assets/health.json
-// If you don't have it yet, the code below handles the crash gracefully.
 import footerAnimation from "../assets/health.json";
 
 const AppFooter = ({ context }) => {
@@ -117,93 +257,99 @@ const AppFooter = ({ context }) => {
 
   return (
     <footer
-      className="border-top py-5 text-white"
+      className="border-top py-3 text-white" // Reduced padding from py-5 to py-3
       style={{
-        // Modern Blue Gradient matching the Medical Theme
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
         boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
       }}
     >
       <div className="container">
-        <div className="row gy-4">
+        <div className="row gy-2 align-items-center">
+          {" "}
+          {/* Reduced gutter */}
           {/* 1. Brand & Description */}
           <div className="col-lg-4 col-md-6">
-            <h5 className="fw-bold mb-3 d-flex align-items-center">
+            <h6 className="fw-bold mb-1 d-flex align-items-center">
               <i className="bi bi-capsule-pill me-2"></i> Smart Pharmacy
-            </h5>
-            <p className="text-white-50 small mb-3">
-              A secure digital platform for managing prescriptions, inventory,
-              orders, and appointments efficiently.
+            </h6>
+            <p
+              className="text-white-50 small mb-2"
+              style={{ fontSize: "0.8rem", lineHeight: "1.2" }}
+            >
+              Secure digital platform for prescriptions, inventory, and orders.
             </p>
             {context && (
-              <span className="badge bg-white text-primary rounded-pill px-3 py-2 shadow-sm">
+              <span
+                className="badge bg-white text-primary rounded-pill px-2 py-1 shadow-sm"
+                style={{ fontSize: "0.7rem" }}
+              >
                 <i className="bi bi-person-badge me-1"></i> {context} Portal
               </span>
             )}
           </div>
-
-          {/* 2. Navigation Links */}
-          <div className="col-lg-2 col-md-3 col-6">
-            <h6 className="fw-bold mb-3">Company</h6>
-            <ul className="list-unstyled small">
-              <li className="mb-2">
-                <a
-                  href="/about"
-                  className="text-white-50 text-decoration-none hover-white"
-                >
-                  About Us
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="/contact"
-                  className="text-white-50 text-decoration-none hover-white"
-                >
-                  Contact
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="/faq"
-                  className="text-white-50 text-decoration-none hover-white"
-                >
-                  FAQs
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="col-lg-2 col-md-3 col-6">
-            <h6 className="fw-bold mb-3">Legal</h6>
-            <ul className="list-unstyled small">
-              <li className="mb-2">
-                <a
-                  href="/privacy"
-                  className="text-white-50 text-decoration-none hover-white"
-                >
-                  Privacy Policy
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href="/terms"
-                  className="text-white-50 text-decoration-none hover-white"
-                >
-                  Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* 3. Contact & Animation */}
-          <div className="col-lg-4 col-md-12 d-flex flex-column align-items-md-start align-items-lg-end">
-            <div className="d-flex align-items-center mb-3 bg-white bg-opacity-10 p-3 rounded-3">
-              {/* Animation Icon */}
-              <div
-                style={{ width: 50, height: 50 }}
-                className="me-3 bg-white rounded-circle p-1 shadow-sm"
+          {/* 2. Navigation Links (Combined into one compact column for space) */}
+          <div className="col-lg-4 col-md-6 d-flex justify-content-lg-center justify-content-start gap-4">
+            <div>
+              <h6 className="fw-bold mb-1" style={{ fontSize: "0.9rem" }}>
+                Company
+              </h6>
+              <ul
+                className="list-unstyled small mb-0"
+                style={{ fontSize: "0.8rem" }}
               >
-                {/* Check if animation file exists, else show icon */}
+                <li>
+                  <a
+                    href="/about"
+                    className="text-white-50 text-decoration-none hover-white"
+                  >
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/contact"
+                    className="text-white-50 text-decoration-none hover-white"
+                  >
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h6 className="fw-bold mb-1" style={{ fontSize: "0.9rem" }}>
+                Legal
+              </h6>
+              <ul
+                className="list-unstyled small mb-0"
+                style={{ fontSize: "0.8rem" }}
+              >
+                <li>
+                  <a
+                    href="/privacy"
+                    className="text-white-50 text-decoration-none hover-white"
+                  >
+                    Privacy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/terms"
+                    className="text-white-50 text-decoration-none hover-white"
+                  >
+                    Terms
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          {/* 3. Contact & Copyright */}
+          <div className="col-lg-4 col-md-12 d-flex flex-row align-items-center justify-content-lg-end justify-content-start mt-3 mt-lg-0">
+            <div className="d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-3 me-3">
+              {/* Animation Icon (Smaller) */}
+              <div
+                style={{ width: 35, height: 35 }}
+                className="me-2 bg-white rounded-circle p-1 shadow-sm d-flex align-items-center justify-content-center"
+              >
                 {footerAnimation ? (
                   <Lottie
                     animationData={footerAnimation}
@@ -212,31 +358,28 @@ const AppFooter = ({ context }) => {
                     style={{ width: "100%", height: "100%" }}
                   />
                 ) : (
-                  <i className="bi bi-heart-pulse-fill text-danger fs-3 d-flex justify-content-center align-items-center h-100"></i>
+                  <i className="bi bi-heart-pulse-fill text-danger fs-6"></i>
                 )}
               </div>
 
-              {/* Contact Text */}
               <div>
-                <h6 className="fw-bold mb-1">Need Support?</h6>
-                <a
-                  href="mailto:support@smartpharmacy.local"
-                  className="text-white text-decoration-none small d-block"
-                >
-                  support@smartpharmacy.local
-                </a>
                 <a
                   href="tel:+9779800000000"
-                  className="text-white text-decoration-none small"
+                  className="text-white text-decoration-none fw-bold small d-block"
+                  style={{ fontSize: "0.85rem" }}
                 >
                   +977-9800000000
                 </a>
               </div>
             </div>
 
-            <div className="small text-white-50 mt-auto text-lg-end">
-              &copy; {year} Pharmacy Management System. <br /> All rights
-              reserved.
+            <div
+              className="small text-white-50 text-end"
+              style={{ fontSize: "0.75rem", lineHeight: "1.1" }}
+            >
+              &copy; {year} PMS.
+              <br />
+              All rights reserved.
             </div>
           </div>
         </div>
