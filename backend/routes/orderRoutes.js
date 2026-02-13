@@ -1,23 +1,77 @@
+// const express = require("express");
+// const router = express.Router();
+// const { protect } = require("../middleware/authMiddleware");
+// const {
+//   createOrder,
+//   getMyOrders,
+//   getOrderById,
+//   updateOrderToPaid,
+// } = require("../controllers/orderController");
+
+// // Route for creating an order
+// router.route("/").post(protect, createOrder);
+
+// // Route for getting user's specific orders
+// router.route("/myorders").get(protect, getMyOrders);
+
+// // Route for getting a single order by ID
+// router.route("/:id").get(protect, getOrderById);
+
+// // Route for payment update
+// router.route("/:id/pay").put(protect, updateOrderToPaid);
+
+// module.exports = router;
+
+// const express = require("express");
+// const router = express.Router();
+// const {
+//   addOrderItems,
+//   getOrderById,
+//   updateOrderToPaid,
+//   getMyOrders,
+//   getOrders,
+// } = require("../controllers/orderController");
+// const { protect } = require("../middleware/authMiddleware");
+// const authorizeRoles = require("../middleware/role");
+
+// // Root routes
+// router
+//   .route("/")
+//   .post(protect, addOrderItems)
+//   .get(protect, authorizeRoles("admin"), getOrders);
+
+// // User specific routes
+// router.route("/myorders").get(protect, getMyOrders);
+
+// // ID specific routes
+// router.route("/:id").get(protect, getOrderById);
+// router.route("/:id/pay").put(protect, updateOrderToPaid);
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
 const {
-  createOrder,
-  getMyOrders,
+  addOrderItems,
   getOrderById,
   updateOrderToPaid,
+  getMyOrders,
+  getOrders,
 } = require("../controllers/orderController");
+const { protect } = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/role");
 
-// Route for creating an order
-router.route("/").post(protect, createOrder);
+// ✅ FIX: Add 'pharmacist' to the allowed roles list
+router
+  .route("/")
+  .post(protect, addOrderItems)
+  .get(protect, authorizeRoles("admin", "pharmacist"), getOrders);
 
-// Route for getting user's specific orders
+// User specific routes
 router.route("/myorders").get(protect, getMyOrders);
 
-// Route for getting a single order by ID
+// ID specific routes
 router.route("/:id").get(protect, getOrderById);
-
-// Route for payment update
 router.route("/:id/pay").put(protect, updateOrderToPaid);
 
 module.exports = router;

@@ -1972,7 +1972,10 @@ import PharmacistDashboard from "./pages/PharmacistDashboard";
 import PharmacistPrescriptions from "./pages/PharmacistPrescriptions";
 import PharmacistInventory from "./pages/PharmacistInventory";
 import PharmacistOrders from "./pages/PharmacistOrders";
-
+import PharmacistAlerts from "./pages/PharmacistAlerts";
+import PharmacistCustomers from "./pages/PharmacistCustomers";
+import PharmacistReports from "./pages/PharmacistReports";
+import PharmacistProfile from "./pages/PharmacistProfile";
 // --- Private Route Component ---
 const PrivateRoute = ({ children, allowedRoles }) => {
   const { user, initLoading } = useAuth();
@@ -2158,11 +2161,19 @@ function App() {
                 element={<PharmacistInventory />}
               />
               <Route path="/pharmacist/orders" element={<PharmacistOrders />} />
+              <Route path="/pharmacist/alerts" element={<PharmacistAlerts />} />
               <Route
-                path="/pharmacist/alerts"
-                element={<PharmacistInventory />}
+                path="/pharmacist/customers"
+                element={<PharmacistCustomers />}
               />
-              <Route path="/pharmacist/profile" element={<ProfilePage />} />
+              <Route
+                path="/pharmacist/reports"
+                element={<PharmacistReports />}
+              />
+              <Route
+                path="/pharmacist/profile"
+                element={<PharmacistProfile />}
+              />
             </Route>
 
             {/* ================= FALLBACK ================= */}
