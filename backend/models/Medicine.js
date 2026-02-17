@@ -390,7 +390,7 @@ const BatchSchema = new mongoose.Schema(
     costPrice: { type: Number, min: 0 }, // Optional: for profit calculation
     addedAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const MedicineSchema = new mongoose.Schema(
@@ -494,7 +494,7 @@ const MedicineSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // -------------------------------------------------------------------
@@ -538,4 +538,4 @@ MedicineSchema.pre("save", function (next) {
   next();
 });
 
-module.exports = mongoose.model("medicine", MedicineSchema);
+module.exports = mongoose.model("Medicine", MedicineSchema);

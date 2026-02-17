@@ -13,7 +13,8 @@
   "dependencies": {
     "@popperjs/core": "^2.11.8",
     "@redux-devtools/extension": "^3.3.0",
-    "@stripe/stripe-js": "^8.3.0",
+    "@stripe/react-stripe-js": "^5.6.0",
+    "@stripe/stripe-js": "^8.7.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "framer-motion": "^12.23.24",

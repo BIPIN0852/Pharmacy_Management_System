@@ -468,6 +468,438 @@
 
 // export default AdminReports;
 
+// import React, { useEffect, useState } from "react";
+// import api from "../services/api";
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   Legend,
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell,
+// } from "recharts";
+// import {
+//   FileText,
+//   Download,
+//   DollarSign,
+//   TrendingUp,
+//   AlertCircle,
+//   Package,
+//   Users,
+// } from "lucide-react";
+
+// const AdminReports = () => {
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const [dateRange, setDateRange] = useState("30"); // Default 30 days
+
+//   // Stats State
+//   const [stats, setStats] = useState({
+//     users: 0,
+//     medicines: 0,
+//     doctors: 0,
+//     orders: 0,
+//     revenue: 0,
+//     salesData: [], // Format from backend: [{ _id: '2023-01-01', sales: 100 }]
+//   });
+
+//   const [lowStock, setLowStock] = useState([]);
+//   const [categoryData, setCategoryData] = useState([]);
+
+//   // Colors for Charts
+//   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+
+//   useEffect(() => {
+//     fetchReportData();
+//   }, [dateRange]);
+
+//   const fetchReportData = async () => {
+//     try {
+//       setLoading(true);
+//       setError("");
+
+//       // 1. Fetch Core Stats (existing endpoint)
+//       const statsRes = await api.get("/admin/stats");
+
+//       // 2. Fetch Low Stock (existing endpoint)
+//       const lowStockRes = await api.get(
+//         "/medicines/admin/low-stock?threshold=10",
+//       );
+
+//       // 3. Fetch Medicines for Category Analysis (for Pie Chart)
+//       const medicinesRes = await api.get("/medicines?all=true");
+//       const allMedicines = medicinesRes.data.medicines || [];
+
+//       // Process Category Data for Pie Chart
+//       const catMap = {};
+//       allMedicines.forEach((m) => {
+//         const cat = m.category || "Uncategorized";
+//         catMap[cat] = (catMap[cat] || 0) + 1;
+//       });
+//       const processedCatData = Object.keys(catMap).map((key) => ({
+//         name: key,
+//         value: catMap[key],
+//       }));
+
+//       setStats(statsRes.data || {});
+//       setLowStock(lowStockRes.data || []);
+//       setCategoryData(processedCatData);
+//     } catch (err) {
+//       console.error("Report fetch error:", err);
+//       setError("Failed to load report data. Please check server connection.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- Calculations for Trends ---
+//   const calculateTrend = () => {
+//     const data = stats.salesData || [];
+//     if (data.length < 2)
+//       return { text: "Insufficient data", color: "text-muted" };
+
+//     const last = data[data.length - 1]?.sales || 0;
+//     const prev = data[data.length - 2]?.sales || 0;
+//     const diff = last - prev;
+
+//     if (diff > 0)
+//       return { text: `+${diff} vs prev period`, color: "text-success" };
+//     if (diff < 0)
+//       return { text: `${diff} vs prev period`, color: "text-danger" };
+//     return { text: "Stable", color: "text-muted" };
+//   };
+
+//   const trend = calculateTrend();
+
+//   const handleDownloadCSV = () => {
+//     // CSV Export Logic
+//     const rows = [
+//       ["Report Type", "Admin Summary"],
+//       ["Generated On", new Date().toLocaleString()],
+//       [],
+//       ["Metric", "Value"],
+//       ["Total Revenue", stats.revenue],
+//       ["Total Orders", stats.orders],
+//       ["Total Users", stats.users],
+//       [],
+//       ["Low Stock Items"],
+//       ["Name", "Stock", "Category"],
+//       ...lowStock.map((m) => [m.name, m.countInStock, m.category]),
+//     ];
+
+//     const csvContent =
+//       "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+
+//     const encodedUri = encodeURI(csvContent);
+//     const link = document.createElement("a");
+//     link.setAttribute("href", encodedUri);
+//     link.setAttribute(
+//       "download",
+//       `admin_report_${new Date().toISOString().slice(0, 10)}.csv`,
+//     );
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   if (loading) {
+//     return (
+//       <div
+//         className="d-flex flex-column justify-content-center align-items-center py-5"
+//         style={{ minHeight: "60vh" }}
+//       >
+//         <div className="spinner-border text-primary mb-2" role="status" />
+//         <span className="text-muted">Analyzing system data...</span>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="container-fluid p-0 animate-fade-in">
+//       {/* Header */}
+//       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+//         <div>
+//           <h3 className="fw-bold mb-1 d-flex align-items-center gap-2">
+//             <FileText className="text-primary" /> System Reports
+//           </h3>
+//           <p className="text-muted small mb-0">
+//             Comprehensive analytics for pharmacy performance
+//           </p>
+//         </div>
+//         <div className="d-flex gap-2">
+//           <select
+//             className="form-select form-select-sm rounded-pill shadow-sm"
+//             style={{ width: "150px" }}
+//             value={dateRange}
+//             onChange={(e) => setDateRange(e.target.value)}
+//           >
+//             <option value="7">Last 7 Days</option>
+//             <option value="30">Last 30 Days</option>
+//             <option value="90">Last Quarter</option>
+//           </select>
+//           <button
+//             className="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2"
+//             onClick={handleDownloadCSV}
+//           >
+//             <Download size={16} /> Export
+//           </button>
+//         </div>
+//       </div>
+
+//       {error && (
+//         <div className="alert alert-danger py-2 d-flex align-items-center gap-2 mb-4">
+//           <AlertCircle size={18} /> {error}
+//         </div>
+//       )}
+
+//       {/* 1. KPI Cards Row */}
+//       <div className="row g-3 mb-4">
+//         {/* Revenue */}
+//         <div className="col-md-3">
+//           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-primary">
+//             <div className="card-body">
+//               <div className="d-flex justify-content-between align-items-start mb-2">
+//                 <div className="text-muted small text-uppercase fw-bold">
+//                   Total Revenue
+//                 </div>
+//                 <div className="bg-primary bg-opacity-10 p-1 rounded">
+//                   <DollarSign size={18} className="text-primary" />
+//                 </div>
+//               </div>
+//               <h3 className="fw-bold mb-1 text-dark">
+//                 Rs. {Number(stats.revenue || 0).toLocaleString()}
+//               </h3>
+//               <div
+//                 className={`small fw-medium ${trend.color} d-flex align-items-center gap-1`}
+//               >
+//                 <TrendingUp size={12} /> {trend.text}
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Orders */}
+//         <div className="col-md-3">
+//           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-success">
+//             <div className="card-body">
+//               <div className="d-flex justify-content-between align-items-start mb-2">
+//                 <div className="text-muted small text-uppercase fw-bold">
+//                   Total Orders
+//                 </div>
+//                 <div className="bg-success bg-opacity-10 p-1 rounded">
+//                   <Package size={18} className="text-success" />
+//                 </div>
+//               </div>
+//               <h3 className="fw-bold mb-1 text-dark">{stats.orders}</h3>
+//               <div className="small text-muted">
+//                 Avg Value: Rs.{" "}
+//                 {(stats.orders > 0 ? stats.revenue / stats.orders : 0).toFixed(
+//                   0,
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Medicines */}
+//         <div className="col-md-3">
+//           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-warning">
+//             <div className="card-body">
+//               <div className="d-flex justify-content-between align-items-start mb-2">
+//                 <div className="text-muted small text-uppercase fw-bold">
+//                   Medicines
+//                 </div>
+//                 <div className="bg-warning bg-opacity-10 p-1 rounded">
+//                   <FileText size={18} className="text-warning" />
+//                 </div>
+//               </div>
+//               <h3 className="fw-bold mb-1 text-dark">{stats.medicines}</h3>
+//               <div className="small text-muted">
+//                 {categoryData.length} Categories
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Users */}
+//         <div className="col-md-3">
+//           <div className="card border-0 shadow-sm rounded-4 h-100 border-start border-4 border-info">
+//             <div className="card-body">
+//               <div className="d-flex justify-content-between align-items-start mb-2">
+//                 <div className="text-muted small text-uppercase fw-bold">
+//                   Active Users
+//                 </div>
+//                 <div className="bg-info bg-opacity-10 p-1 rounded">
+//                   <Users size={18} className="text-info" />
+//                 </div>
+//               </div>
+//               <h3 className="fw-bold mb-1 text-dark">{stats.users}</h3>
+//               <div className="small text-muted">Doctors: {stats.doctors}</div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* 2. Charts Section */}
+//       <div className="row g-4 mb-4">
+//         {/* Sales Trend Chart */}
+//         <div className="col-lg-8">
+//           <div className="card border-0 shadow-sm rounded-4 h-100">
+//             <div className="card-header bg-white border-0 pt-4 px-4">
+//               <h5 className="fw-bold mb-0">Sales Performance</h5>
+//             </div>
+//             <div className="card-body px-4 pb-4">
+//               <div style={{ width: "100%", height: 300 }}>
+//                 <ResponsiveContainer>
+//                   <BarChart
+//                     data={
+//                       stats.salesData && stats.salesData.length > 0
+//                         ? stats.salesData
+//                         : [{ _id: "No Data", sales: 0 }]
+//                     }
+//                   >
+//                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
+//                     <XAxis
+//                       dataKey="_id"
+//                       axisLine={false}
+//                       tickLine={false}
+//                       tick={{ fill: "#888", fontSize: 12 }}
+//                     />
+//                     <YAxis
+//                       axisLine={false}
+//                       tickLine={false}
+//                       tick={{ fill: "#888", fontSize: 12 }}
+//                     />
+//                     <Tooltip
+//                       cursor={{ fill: "#f8f9fa" }}
+//                       contentStyle={{
+//                         borderRadius: "8px",
+//                         border: "none",
+//                         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+//                       }}
+//                     />
+//                     <Bar
+//                       dataKey="sales"
+//                       fill="#0d6efd"
+//                       radius={[4, 4, 0, 0]}
+//                       barSize={40}
+//                       name="Revenue (Rs)"
+//                     />
+//                   </BarChart>
+//                 </ResponsiveContainer>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Category Pie Chart */}
+//         <div className="col-lg-4">
+//           <div className="card border-0 shadow-sm rounded-4 h-100">
+//             <div className="card-header bg-white border-0 pt-4 px-4">
+//               <h5 className="fw-bold mb-0">Inventory by Category</h5>
+//             </div>
+//             <div className="card-body d-flex justify-content-center align-items-center">
+//               <div style={{ width: "100%", height: 300 }}>
+//                 <ResponsiveContainer>
+//                   <PieChart>
+//                     <Pie
+//                       data={categoryData}
+//                       cx="50%"
+//                       cy="50%"
+//                       innerRadius={60}
+//                       outerRadius={80}
+//                       paddingAngle={5}
+//                       dataKey="value"
+//                     >
+//                       {categoryData.map((entry, index) => (
+//                         <Cell
+//                           key={`cell-${index}`}
+//                           fill={COLORS[index % COLORS.length]}
+//                         />
+//                       ))}
+//                     </Pie>
+//                     <Tooltip />
+//                     <Legend verticalAlign="bottom" height={36} />
+//                   </PieChart>
+//                 </ResponsiveContainer>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* 3. Low Stock Alert Table */}
+//       <div className="card shadow-sm border-0 rounded-4 overflow-hidden">
+//         <div className="card-header bg-danger bg-opacity-10 px-4 py-3 border-0">
+//           <h5 className="fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+//             <AlertCircle size={20} /> Low Stock Alerts
+//           </h5>
+//         </div>
+//         <div className="table-responsive">
+//           <table className="table table-hover align-middle mb-0">
+//             <thead className="bg-white">
+//               <tr>
+//                 <th className="ps-4 py-3 text-muted small text-uppercase">
+//                   Medicine Name
+//                 </th>
+//                 <th className="py-3 text-muted small text-uppercase">
+//                   Category
+//                 </th>
+//                 <th className="py-3 text-muted small text-uppercase">
+//                   Stock Level
+//                 </th>
+//                 <th className="py-3 text-muted small text-uppercase text-end pe-4">
+//                   Status
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {lowStock.length === 0 ? (
+//                 <tr>
+//                   <td colSpan="4" className="text-center py-4 text-muted">
+//                     ✅ All inventory levels are healthy.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 lowStock.map((item) => (
+//                   <tr key={item._id}>
+//                     <td className="ps-4 fw-medium text-dark">{item.name}</td>
+//                     <td>
+//                       <span className="badge bg-light text-dark border">
+//                         {item.category}
+//                       </span>
+//                     </td>
+//                     <td>
+//                       <span className="fw-bold text-danger">
+//                         {item.countInStock} Units
+//                       </span>
+//                     </td>
+//                     <td className="text-end pe-4">
+//                       <span className="badge bg-danger">Restock Needed</span>
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <style>{`
+//         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default AdminReports;
+
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import {
@@ -505,14 +937,21 @@ const AdminReports = () => {
     doctors: 0,
     orders: 0,
     revenue: 0,
-    salesData: [], // Format from backend: [{ _id: '2023-01-01', sales: 100 }]
+    salesData: [], // Format: [{ _id: '2023-01-01', sales: 100 }]
   });
 
   const [lowStock, setLowStock] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
 
   // Colors for Charts
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#8884d8",
+    "#82ca9d",
+  ];
 
   useEffect(() => {
     fetchReportData();
@@ -523,17 +962,21 @@ const AdminReports = () => {
       setLoading(true);
       setError("");
 
-      // 1. Fetch Core Stats (existing endpoint)
-      const statsRes = await api.get("/admin/stats");
+      // ✅ FIX 1: Pass the selected dateRange to the backend
+      const statsRes = await api.get(`/admin/stats?range=${dateRange}`);
 
-      // 2. Fetch Low Stock (existing endpoint)
+      // 2. Fetch Low Stock
       const lowStockRes = await api.get(
         "/medicines/admin/low-stock?threshold=10",
       );
 
-      // 3. Fetch Medicines for Category Analysis (for Pie Chart)
+      // 3. Fetch Medicines for Category Analysis
       const medicinesRes = await api.get("/medicines?all=true");
-      const allMedicines = medicinesRes.data.medicines || [];
+
+      // Handle different response structures for medicines
+      const allMedicines = Array.isArray(medicinesRes.data)
+        ? medicinesRes.data
+        : medicinesRes.data.medicines || [];
 
       // Process Category Data for Pie Chart
       const catMap = {};
@@ -541,12 +984,23 @@ const AdminReports = () => {
         const cat = m.category || "Uncategorized";
         catMap[cat] = (catMap[cat] || 0) + 1;
       });
+
       const processedCatData = Object.keys(catMap).map((key) => ({
         name: key,
         value: catMap[key],
       }));
 
-      setStats(statsRes.data || {});
+      // ✅ FIX 2: Safely handle stats data structure
+      setStats(
+        statsRes.data || {
+          users: 0,
+          medicines: 0,
+          orders: 0,
+          revenue: 0,
+          salesData: [],
+        },
+      );
+
       setLowStock(lowStockRes.data || []);
       setCategoryData(processedCatData);
     } catch (err) {
@@ -560,26 +1014,30 @@ const AdminReports = () => {
   // --- Calculations for Trends ---
   const calculateTrend = () => {
     const data = stats.salesData || [];
-    if (data.length < 2)
-      return { text: "Insufficient data", color: "text-muted" };
+    if (data.length < 2) return { text: "No trend data", color: "text-muted" };
 
-    const last = data[data.length - 1]?.sales || 0;
-    const prev = data[data.length - 2]?.sales || 0;
+    const last = Number(data[data.length - 1]?.sales || 0);
+    const prev = Number(data[data.length - 2]?.sales || 0);
     const diff = last - prev;
 
-    if (diff > 0)
-      return { text: `+${diff} vs prev period`, color: "text-success" };
-    if (diff < 0)
-      return { text: `${diff} vs prev period`, color: "text-danger" };
+    if (diff > 0) return { text: `+${diff} vs prev`, color: "text-success" };
+    if (diff < 0) return { text: `${diff} vs prev`, color: "text-danger" };
     return { text: "Stable", color: "text-muted" };
   };
 
   const trend = calculateTrend();
 
+  // ✅ FIX 3: Date Formatter for Chart X-Axis
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
   const handleDownloadCSV = () => {
-    // CSV Export Logic
     const rows = [
       ["Report Type", "Admin Summary"],
+      ["Date Range", `Last ${dateRange} Days`],
       ["Generated On", new Date().toLocaleString()],
       [],
       ["Metric", "Value"],
@@ -594,7 +1052,6 @@ const AdminReports = () => {
 
     const csvContent =
       "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
-
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -628,7 +1085,7 @@ const AdminReports = () => {
             <FileText className="text-primary" /> System Reports
           </h3>
           <p className="text-muted small mb-0">
-            Comprehensive analytics for pharmacy performance
+            Analytics for pharmacy performance (Last {dateRange} Days)
           </p>
         </div>
         <div className="d-flex gap-2">
@@ -755,43 +1212,46 @@ const AdminReports = () => {
             </div>
             <div className="card-body px-4 pb-4">
               <div style={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer>
-                  <BarChart
-                    data={
-                      stats.salesData && stats.salesData.length > 0
-                        ? stats.salesData
-                        : [{ _id: "No Data", sales: 0 }]
-                    }
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="_id"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#888", fontSize: 12 }}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#888", fontSize: 12 }}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "#f8f9fa" }}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar
-                      dataKey="sales"
-                      fill="#0d6efd"
-                      radius={[4, 4, 0, 0]}
-                      barSize={40}
-                      name="Revenue (Rs)"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                {stats.salesData && stats.salesData.length > 0 ? (
+                  <ResponsiveContainer>
+                    <BarChart data={stats.salesData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      {/* Formatted X-Axis to show nicely readable dates */}
+                      <XAxis
+                        dataKey="_id"
+                        tickFormatter={formatDate}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#888", fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#888", fontSize: 12 }}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "#f8f9fa" }}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "none",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                        labelFormatter={formatDate}
+                      />
+                      <Bar
+                        dataKey="sales"
+                        fill="#0d6efd"
+                        radius={[4, 4, 0, 0]}
+                        barSize={40}
+                        name="Revenue (Rs)"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-100 d-flex align-items-center justify-content-center text-muted">
+                    No sales data available for this period.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -805,28 +1265,38 @@ const AdminReports = () => {
             </div>
             <div className="card-body d-flex justify-content-center align-items-center">
               <div style={{ width: "100%", height: 300 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom" height={36} />
-                  </PieChart>
-                </ResponsiveContainer>
+                {categoryData.length > 0 ? (
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        iconType="circle"
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-100 d-flex align-items-center justify-content-center text-muted">
+                    No inventory categories found.
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -311,6 +311,202 @@
 
 // export default OrderHistory;
 
+// import React, { useEffect, useState } from "react";
+// import {
+//   Table,
+//   Button,
+//   Container,
+//   Badge,
+//   Card,
+//   Spinner,
+//   Alert,
+// } from "react-bootstrap";
+// import { Link, useNavigate } from "react-router-dom";
+// import {
+//   Package,
+//   ChevronRight,
+//   ShoppingBag,
+//   Clock,
+//   CheckCircle,
+//   AlertTriangle,
+// } from "lucide-react";
+// import api from "../services/api"; // ✅ Using consolidated api service
+
+// const OrderHistory = () => {
+//   const [orders, setOrders] = useState([]); // ✅ Initialized as empty array
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     const fetchOrders = async () => {
+//       try {
+//         setLoading(true);
+//         // ✅ Fetches from consolidated backend route
+//         const response = await api.get("/orders/my");
+
+//         /**
+//          * ✅ FIX: Defensive check to prevent .map() crash
+//          * Ensures we always set an array even if backend returns null or an object
+//          */
+//         const orderData = Array.isArray(response)
+//           ? response
+//           : response.data || [];
+//         setOrders(orderData);
+//       } catch (err) {
+//         setError(err.response?.data?.message || "Failed to fetch orders.");
+//         console.error("Fetch Orders Error:", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchOrders();
+//   }, []);
+
+//   if (loading)
+//     return (
+//       <div className="d-flex justify-content-center align-items-center vh-100">
+//         <Spinner animation="border" variant="primary" />
+//       </div>
+//     );
+
+//   return (
+//     <Container className="py-5 animate-fade-in">
+//       <div className="d-flex justify-content-between align-items-center mb-4">
+//         <div>
+//           <h2 className="fw-bold text-dark mb-1">My Order History</h2>
+//           <p className="text-muted small">
+//             Track and manage your previous pharmacy purchases
+//           </p>
+//         </div>
+//         <Link
+//           to="/medicines"
+//           className="btn btn-outline-primary rounded-pill px-4 btn-sm"
+//         >
+//           <ShoppingBag size={16} className="me-2" /> New Order
+//         </Link>
+//       </div>
+
+//       {error && (
+//         <Alert variant="danger" className="d-flex align-items-center">
+//           <AlertTriangle size={20} className="me-2" />
+//           {error}
+//         </Alert>
+//       )}
+
+//       {/* ✅ FIX: Verified array length check */}
+//       {!Array.isArray(orders) || orders.length === 0 ? (
+//         <Card className="border-0 shadow-sm rounded-4 text-center py-5">
+//           <Card.Body>
+//             <div className="bg-light rounded-circle d-inline-flex p-4 mb-3">
+//               <Package size={64} className="text-muted opacity-50" />
+//             </div>
+//             <h4 className="fw-bold">No orders yet</h4>
+//             <p className="text-muted mb-4">
+//               When you buy medicines, they will appear here.
+//             </p>
+//             <Button
+//               as={Link}
+//               to="/medicines"
+//               variant="primary"
+//               className="rounded-pill px-5"
+//             >
+//               Browse Medicine Shop
+//             </Button>
+//           </Card.Body>
+//         </Card>
+//       ) : (
+//         <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+//           <div className="table-responsive">
+//             <Table hover className="align-middle mb-0">
+//               <thead className="bg-light border-bottom">
+//                 <tr className="small text-uppercase text-muted fw-bold">
+//                   <th className="py-3 ps-4">Order ID</th>
+//                   <th className="py-3">Date</th>
+//                   <th className="py-3">Total Amount</th>
+//                   <th className="py-3">Payment</th>
+//                   <th className="py-3">Status</th>
+//                   <th className="py-3 pe-4 text-end">Action</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {orders.map((order) => (
+//                   <tr key={order._id}>
+//                     <td className="ps-4">
+//                       <span className="fw-bold text-primary small">
+//                         #
+//                         {order._id
+//                           .substring(order._id.length - 8)
+//                           .toUpperCase()}
+//                       </span>
+//                     </td>
+//                     <td className="text-secondary small">
+//                       {new Date(order.createdAt).toLocaleDateString(undefined, {
+//                         year: "numeric",
+//                         month: "short",
+//                         day: "numeric",
+//                       })}
+//                     </td>
+//                     <td className="fw-bold text-dark">
+//                       Rs. {order.totalPrice?.toLocaleString() || 0}
+//                     </td>
+//                     <td>
+//                       {order.isPaid ? (
+//                         <Badge
+//                           bg="success-subtle"
+//                           className="text-success border border-success-subtle rounded-pill px-3"
+//                         >
+//                           <CheckCircle size={12} className="me-1" /> Paid
+//                         </Badge>
+//                       ) : (
+//                         <Badge
+//                           bg="warning-subtle"
+//                           className="text-warning border border-warning-subtle rounded-pill px-3"
+//                         >
+//                           <Clock size={12} className="me-1" /> Pending
+//                         </Badge>
+//                       )}
+//                     </td>
+//                     <td>
+//                       <Badge
+//                         bg={
+//                           order.isDelivered ? "info-subtle" : "secondary-subtle"
+//                         }
+//                         className={`rounded-pill px-3 border ${
+//                           order.isDelivered
+//                             ? "text-info border-info-subtle"
+//                             : "text-secondary border-secondary-subtle"
+//                         }`}
+//                       >
+//                         {order.isDelivered ? "Delivered" : "Processing"}
+//                       </Badge>
+//                     </td>
+//                     <td className="pe-4 text-end">
+//                       <Button
+//                         variant="white"
+//                         size="sm"
+//                         className="border shadow-sm rounded-circle p-2"
+//                         onClick={() =>
+//                           navigate(`/payment-success?order_id=${order._id}`)
+//                         }
+//                       >
+//                         <ChevronRight size={18} className="text-primary" />
+//                       </Button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </Table>
+//           </div>
+//         </Card>
+//       )}
+//     </Container>
+//   );
+// };
+
+// export default OrderHistory;
+
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -320,6 +516,7 @@ import {
   Card,
   Spinner,
   Alert,
+  Modal,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -329,40 +526,63 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
-import api from "../services/api"; // ✅ Using consolidated api service
+import api from "../services/api";
 
 const OrderHistory = () => {
-  const [orders, setOrders] = useState([]); // ✅ Initialized as empty array
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // State for Delete Confirmation Modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      // ✅ Updated to match your latest backend route
+      const response = await api.get("/orders/myorders");
+      const orderData = Array.isArray(response)
+        ? response
+        : response.data || [];
+      setOrders(orderData);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch orders.");
+      console.error("Fetch Orders Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        // ✅ Fetches from consolidated backend route
-        const response = await api.get("/orders/my");
-
-        /**
-         * ✅ FIX: Defensive check to prevent .map() crash
-         * Ensures we always set an array even if backend returns null or an object
-         */
-        const orderData = Array.isArray(response)
-          ? response
-          : response.data || [];
-        setOrders(orderData);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch orders.");
-        console.error("Fetch Orders Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  // ✅ Function to handle order deletion
+  const handleDeleteOrder = async () => {
+    try {
+      setDeleteLoading(true);
+      await api.delete(`/orders/${orderToDelete}`);
+
+      // Update local state to remove the order from UI instantly
+      setOrders(orders.filter((order) => order._id !== orderToDelete));
+      setShowDeleteModal(false);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete order.");
+    } finally {
+      setDeleteLoading(false);
+      setOrderToDelete(null);
+    }
+  };
+
+  const confirmDelete = (id) => {
+    setOrderToDelete(id);
+    setShowDeleteModal(true);
+  };
 
   if (loading)
     return (
@@ -395,7 +615,6 @@ const OrderHistory = () => {
         </Alert>
       )}
 
-      {/* ✅ FIX: Verified array length check */}
       {!Array.isArray(orders) || orders.length === 0 ? (
         <Card className="border-0 shadow-sm rounded-4 text-center py-5">
           <Card.Body>
@@ -442,57 +661,70 @@ const OrderHistory = () => {
                       </span>
                     </td>
                     <td className="text-secondary small">
-                      {new Date(order.createdAt).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="fw-bold text-dark">
                       Rs. {order.totalPrice?.toLocaleString() || 0}
                     </td>
                     <td>
-                      {order.isPaid ? (
-                        <Badge
-                          bg="success-subtle"
-                          className="text-success border border-success-subtle rounded-pill px-3"
+                      <div className="d-flex flex-column">
+                        <span
+                          className="x-small text-muted fw-bold mb-1"
+                          style={{ fontSize: "10px" }}
                         >
-                          <CheckCircle size={12} className="me-1" /> Paid
-                        </Badge>
-                      ) : (
-                        <Badge
-                          bg="warning-subtle"
-                          className="text-warning border border-warning-subtle rounded-pill px-3"
-                        >
-                          <Clock size={12} className="me-1" /> Pending
-                        </Badge>
-                      )}
+                          {order.paymentMethod || "COD"}
+                        </span>
+                        {order.isPaid ? (
+                          <Badge
+                            bg="success-subtle"
+                            className="text-success border border-success-subtle rounded-pill"
+                          >
+                            <CheckCircle size={10} className="me-1" /> Paid
+                          </Badge>
+                        ) : (
+                          <Badge
+                            bg="warning-subtle"
+                            className="text-warning border border-warning-subtle rounded-pill"
+                          >
+                            <Clock size={10} className="me-1" /> Pending
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <Badge
                         bg={
                           order.isDelivered ? "info-subtle" : "secondary-subtle"
                         }
-                        className={`rounded-pill px-3 border ${
-                          order.isDelivered
-                            ? "text-info border-info-subtle"
-                            : "text-secondary border-secondary-subtle"
-                        }`}
+                        className={`rounded-pill px-3 border ${order.isDelivered ? "text-info border-info-subtle" : "text-secondary border-secondary-subtle"}`}
                       >
                         {order.isDelivered ? "Delivered" : "Processing"}
                       </Badge>
                     </td>
                     <td className="pe-4 text-end">
-                      <Button
-                        variant="white"
-                        size="sm"
-                        className="border shadow-sm rounded-circle p-2"
-                        onClick={() =>
-                          navigate(`/payment-success?order_id=${order._id}`)
-                        }
-                      >
-                        <ChevronRight size={18} className="text-primary" />
-                      </Button>
+                      <div className="d-flex justify-content-end gap-2">
+                        {/* View Order Details */}
+                        <Button
+                          variant="white"
+                          size="sm"
+                          className="border shadow-sm rounded-circle p-2"
+                          onClick={() =>
+                            navigate(`/payment-success?id=${order._id}`)
+                          }
+                        >
+                          <ChevronRight size={18} className="text-primary" />
+                        </Button>
+
+                        {/* ✅ Remove Order Button */}
+                        <Button
+                          variant="white"
+                          size="sm"
+                          className="border shadow-sm rounded-circle p-2"
+                          onClick={() => confirmDelete(order._id)}
+                        >
+                          <Trash2 size={18} className="text-danger" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -501,6 +733,50 @@ const OrderHistory = () => {
           </div>
         </Card>
       )}
+
+      {/* ✅ Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold text-danger">
+            Remove Order
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to remove this order from your history? This
+          action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="light"
+            className="rounded-pill px-4"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            className="rounded-pill px-4"
+            disabled={deleteLoading}
+            onClick={handleDeleteOrder}
+          >
+            {deleteLoading ? (
+              <Spinner size="sm" animation="border" />
+            ) : (
+              "Confirm Delete"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <style>{`
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .x-small { font-size: 0.7rem; }
+      `}</style>
     </Container>
   );
 };

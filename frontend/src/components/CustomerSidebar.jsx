@@ -308,10 +308,8 @@ const CustomerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
     // ✅ FIXED: Updated path to match the route created in App.jsx
     { name: "Saved Items", path: "/customer/saved", icon: Heart },
-
     { name: "My Appointments", path: "/appointments", icon: Calendar },
     { name: "Order History", path: "/orders", icon: ShoppingBag },
-    { name: "Refill Alerts", path: "/refill-reminders", icon: BellRing },
     { name: "My Prescriptions", path: "/prescriptions", icon: FileText },
     { name: "My Profile", path: "/profile", icon: User },
   ];

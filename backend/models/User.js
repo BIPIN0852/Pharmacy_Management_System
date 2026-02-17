@@ -722,6 +722,170 @@
 
 // module.exports = mongoose.model("User", userSchema);
 
+// const mongoose = require("mongoose");
+// const bcrypt = require("bcryptjs");
+
+// const userSchema = new mongoose.Schema(
+//   {
+//     // --- Core Identity ---
+//     name: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//     },
+//     // Optional: Username (used in your authController)
+//     username: {
+//       type: String,
+//       trim: true,
+//       unique: true,
+//       sparse: true, // Allows multiple null values if user only registers with email
+//     },
+//     email: {
+//       type: String,
+//       required: true,
+//       unique: true,
+//       lowercase: true,
+//       trim: true,
+//     },
+//     password: {
+//       type: String,
+//       required: true,
+//       minlength: 6,
+//     },
+//     role: {
+//       type: String,
+//       enum: ["admin", "pharmacist", "staff", "customer"],
+//       default: "customer",
+//     },
+
+//     // ✅ Backward Compatibility for Admin Middleware
+//     isAdmin: {
+//       type: Boolean,
+//       default: false,
+//     },
+
+//     // --- Personal Information ---
+//     phone: {
+//       type: String,
+//       trim: true,
+//       // ✅ Added unique constraint to prevent duplicate phone registrations
+//       sparse: true,
+//     },
+//     gender: {
+//       type: String,
+//       enum: ["Male", "Female", "Other", ""],
+//       default: "",
+//     },
+//     dob: {
+//       type: Date,
+//     },
+//     address: {
+//       street: { type: String, default: "" },
+//       city: { type: String, default: "" },
+//       province: { type: String, default: "" },
+//       postalCode: { type: String, default: "" },
+//     },
+//     profilePhoto: {
+//       type: String,
+//       default: "", // Stores URL path
+//     },
+
+//     // --- Security & Auth (Linked to authController) ---
+//     isActive: {
+//       type: Boolean,
+//       default: true, // Used for Soft Delete
+//     },
+//     isVerified: {
+//       type: Boolean,
+//       default: false,
+//     },
+
+//     // ✅ UPDATED: Standardized OTP Fields
+//     // Replaces 'loginCode' to work with new authRoutes.js logic
+//     otp: { type: String },
+//     otpExpires: { type: Date },
+
+//     // Password Reset Codes
+//     resetPasswordCode: { type: String },
+//     resetPasswordExpires: { type: Date },
+
+//     // --- Medical Info (Profile Page) ---
+//     bloodGroup: { type: String, default: "" },
+//     allergies: { type: String, default: "" },
+//     chronicConditions: { type: String, default: "" },
+//     emergencyContact: { type: String, default: "" },
+
+//     // --- Customer Loyalty & Stats ---
+//     notes: { type: String, trim: true },
+//     loyaltyPoints: { type: Number, default: 0, min: 0 },
+
+//     preferredContact: {
+//       type: String,
+//       enum: ["email", "sms", "phone", "none"],
+//       default: "email",
+//     },
+
+//     lastPurchaseDate: { type: Date },
+//     totalSpent: { type: Number, default: 0, min: 0 },
+//     prescriptionCount: { type: Number, default: 0 },
+
+//     // --- Relations ---
+//     savedMedicines: [
+//       {
+//         type: mongoose.Schema.Types.ObjectId,
+//         ref: "Medicine",
+//       },
+//     ],
+//     // ------------------------------------------
+
+//     address: {
+//       street: { type: String },
+//       city: { type: String },
+//       province: { type: String },
+//       postalCode: { type: String },
+//     },
+//     loyaltyPoints: { type: Number, default: 0 },
+//   },
+//     toJSON: { virtuals: true },
+//     toObject: { virtuals: true },
+//   }
+// // ✅ MIDDLEWARE & METHODS
+// // -------------------------------------------------------------------
+
+// // Hash password before saving
+// userSchema.pre("save", async function (next) {
+//   // Hash password only if modified
+//   if (this.isModified("password")) {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//   }
+
+//   // ✅ Force Sync isAdmin flag with role
+//   // This ensures that if role is "admin", isAdmin is ALWAYS true
+//   if (this.isModified("role") || this.isNew) {
+//     this.isAdmin = this.role === "admin";
+//   }
+
+//   next();
+// });
+
+// // Compare password method
+// userSchema.methods.matchPassword = async function (enteredPassword) {
+//   return await bcrypt.compare(enteredPassword, this.password);
+// };
+
+// // Virtual field for "fullName" (maps to 'name' for controller compatibility)
+// userSchema
+//   .virtual("fullName")
+//   .get(function () {
+//     return this.name;
+//   })
+//   .set(function (v) {
+//     this.name = v;
+//   });
+
+// module.exports = mongoose.model("User", userSchema);
+
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -733,12 +897,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    // Optional: Username (used in your authController)
+    // Optional: Username
     username: {
       type: String,
       trim: true,
       unique: true,
-      sparse: true, // Allows multiple null values if user only registers with email
+      sparse: true, // Allows multiple null values
     },
     email: {
       type: String,
@@ -768,8 +932,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      // ✅ Added unique constraint to prevent duplicate phone registrations
-      sparse: true,
+      sparse: true, // Added unique constraint logic via sparse
     },
     gender: {
       type: String,
@@ -779,6 +942,7 @@ const userSchema = new mongoose.Schema(
     dob: {
       type: Date,
     },
+    // ✅ Consolidated Address Field
     address: {
       street: { type: String, default: "" },
       city: { type: String, default: "" },
@@ -790,7 +954,7 @@ const userSchema = new mongoose.Schema(
       default: "", // Stores URL path
     },
 
-    // --- Security & Auth (Linked to authController) ---
+    // --- Security & Auth ---
     isActive: {
       type: Boolean,
       default: true, // Used for Soft Delete
@@ -800,8 +964,7 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    // ✅ UPDATED: Standardized OTP Fields
-    // Replaces 'loginCode' to work with new authRoutes.js logic
+    // ✅ Standardized OTP Fields
     otp: { type: String },
     otpExpires: { type: Date },
 
@@ -817,6 +980,7 @@ const userSchema = new mongoose.Schema(
 
     // --- Customer Loyalty & Stats ---
     notes: { type: String, trim: true },
+    // ✅ Consolidated Loyalty Points
     loyaltyPoints: { type: Number, default: 0, min: 0 },
 
     preferredContact: {
@@ -830,6 +994,7 @@ const userSchema = new mongoose.Schema(
     prescriptionCount: { type: Number, default: 0 },
 
     // --- Relations ---
+    // ✅ CRITICAL: Used for Wishlist feature
     savedMedicines: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -837,15 +1002,14 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
+  // ✅ Correct placement of Schema Options
   {
     timestamps: true,
-    // Ensure virtuals are included in JSON output
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-// -------------------------------------------------------------------
 // ✅ MIDDLEWARE & METHODS
 // -------------------------------------------------------------------
 

@@ -1920,6 +1920,273 @@
 
 // export default App;
 
+// import {
+//   BrowserRouter as Router,
+//   Routes,
+//   Route,
+//   Navigate,
+// } from "react-router-dom";
+// import { AuthProvider, useAuth } from "./context/AuthContext";
+// import "bootstrap/dist/css/bootstrap.min.css";
+
+// // --- Layouts ---
+// import RootLayout from "./layouts/RootLayout";
+// import AdminLayout from "./pages/AdminLayout";
+// import CustomerLayout from "./layouts/CustomerLayout";
+// import PharmacistLayout from "./pages/PharmacistLayout";
+
+// // --- Auth Pages ---
+// import Login from "./pages/Login";
+// import Register from "./pages/Register";
+// import VerifyOtp from "./pages/VerifyOTP";
+// import AdminLogin from "./pages/AdminLogin";
+// import AdminResetPassword from "./pages/AdminResetPassword";
+
+// // --- Public Pages ---
+// import Home from "./pages/Home";
+// import About from "./pages/About";
+// import Contact from "./pages/Contact";
+// import FAQ from "./pages/FAQ";
+// import Support from "./pages/Support";
+// import Privacy from "./pages/Privacy";
+
+// // --- Customer Pages ---
+// import CustomerDashboard from "./pages/CustomerDashboard";
+// import ProfilePage from "./pages/ProfilePage";
+// import CartPage from "./pages/CartPage"; // ✅ Updated Import Name
+// import Shipping from "./pages/Shipping";
+// import PlaceOrder from "./pages/PlaceOrder";
+// import Payment from "./pages/Payment";
+// import OrderConfirmation from "./components/OrderConfirm";
+// import CustomerAppointments from "./pages/CustomerAppointments";
+// import OrderHistory from "./pages/OrderHistory";
+// import PrescriptionsPage from "./pages/PrescriptionsPage";
+// import SavedMedicinesPage from "./pages/SavedMedicinesPage";
+
+// // --- Medicine Shop Pages ---
+// import MedicineShop from "./pages/MedicineShop";
+// import MedicineDetails from "./pages/MedicineDetails";
+
+// // --- Pharmacist / Staff Pages ---
+// import PharmacistDashboard from "./pages/PharmacistDashboard";
+// import PharmacistPrescriptions from "./pages/PharmacistPrescriptions";
+// import PharmacistInventory from "./pages/PharmacistInventory";
+// import PharmacistOrders from "./pages/PharmacistOrders";
+// import PharmacistAlerts from "./pages/PharmacistAlerts";
+// import PharmacistCustomers from "./pages/PharmacistCustomers";
+// import PharmacistReports from "./pages/PharmacistReports";
+// import PharmacistProfile from "./pages/PharmacistProfile";
+// // --- Private Route Component ---
+// const PrivateRoute = ({ children, allowedRoles }) => {
+//   const { user, initLoading } = useAuth();
+
+//   if (initLoading) {
+//     return (
+//       <div className="d-flex justify-content-center align-items-center vh-100">
+//         <div className="spinner-border text-primary" role="status">
+//           <span className="visually-hidden">Loading...</span>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   // Normalize user role
+//   const userRole = user.role ? user.role.toLowerCase() : "";
+//   const normalizedAllowedRoles = allowedRoles
+//     ? allowedRoles.map((r) => r.toLowerCase())
+//     : [];
+
+//   if (allowedRoles && !normalizedAllowedRoles.includes(userRole)) {
+//     console.warn(`Access Denied: Role '${userRole}' not authorized.`);
+//     return <Navigate to="/dashboard" replace />;
+//   }
+
+//   return children;
+// };
+
+// // --- Dashboard Redirector ---
+// const DashboardRedirect = () => {
+//   const { user } = useAuth();
+
+//   if (!user) return <Navigate to="/login" replace />;
+
+//   const role = user.role ? user.role.toLowerCase() : "";
+
+//   switch (role) {
+//     case "admin":
+//       return <Navigate to="/admin/dashboard" replace />;
+//     case "pharmacist":
+//     case "staff":
+//       return <Navigate to="/pharmacist/dashboard" replace />;
+//     case "customer":
+//     case "user":
+//       return <Navigate to="/customer-dashboard" replace />;
+//     default:
+//       return <Navigate to="/login" replace />;
+//   }
+// };
+
+// function App() {
+//   return (
+//     <AuthProvider>
+//       <Router>
+//         <RootLayout>
+//           <Routes>
+//             {/* ================= PUBLIC ROUTES ================= */}
+//             <Route path="/" element={<Home />} />
+//             <Route path="/login" element={<Login />} />
+//             <Route path="/register" element={<Register />} />
+//             <Route path="/verify-otp" element={<VerifyOtp />} />
+//             <Route path="/admin/login" element={<AdminLogin />} />
+//             <Route
+//               path="/admin-reset-password"
+//               element={<AdminResetPassword />}
+//             />
+
+//             <Route path="/about" element={<About />} />
+//             <Route path="/contact" element={<Contact />} />
+//             <Route path="/faq" element={<FAQ />} />
+//             <Route path="/support" element={<Support />} />
+//             <Route path="/privacy" element={<Privacy />} />
+
+//             {/* ================= SHARED ROUTES ================= */}
+//             <Route
+//               path="/dashboard"
+//               element={
+//                 <PrivateRoute>
+//                   <DashboardRedirect />
+//                 </PrivateRoute>
+//               }
+//             />
+
+//             {/* ================= CUSTOMER PORTAL ================= */}
+//             <Route
+//               element={
+//                 <PrivateRoute allowedRoles={["customer", "user"]}>
+//                   <CustomerLayout />
+//                 </PrivateRoute>
+//               }
+//             >
+//               <Route
+//                 path="/customer-dashboard"
+//                 element={<CustomerDashboard />}
+//               />
+//               <Route path="/medicines" element={<MedicineShop />} />
+//               <Route path="/medicine/:id" element={<MedicineDetails />} />
+//               <Route path="/appointments" element={<CustomerAppointments />} />
+//               <Route path="/orders" element={<OrderHistory />} />
+//               <Route path="/prescriptions" element={<PrescriptionsPage />} />
+//               <Route path="/profile" element={<ProfilePage />} />
+//               <Route path="/customer/saved" element={<SavedMedicinesPage />} />
+//             </Route>
+
+//             {/* Legacy Redirects */}
+//             <Route
+//               path="/customer-appointments"
+//               element={<Navigate to="/appointments" replace />}
+//             />
+//             <Route
+//               path="/customer-medicines"
+//               element={<Navigate to="/medicines" replace />}
+//             />
+
+//             {/* ================= CHECKOUT FLOW ================= */}
+//             {/* ✅ UPDATED: Cart Route is now Protected */}
+//             <Route
+//               path="/cart"
+//               element={
+//                 <PrivateRoute allowedRoles={["customer", "user"]}>
+//                   <CartPage />
+//                 </PrivateRoute>
+//               }
+//             />
+//             <Route
+//               path="/shipping"
+//               element={
+//                 <PrivateRoute allowedRoles={["customer", "user"]}>
+//                   <Shipping />
+//                 </PrivateRoute>
+//               }
+//             />
+//             <Route
+//               path="/placeorder"
+//               element={
+//                 <PrivateRoute allowedRoles={["customer", "user"]}>
+//                   <PlaceOrder />
+//                 </PrivateRoute>
+//               }
+//             />
+//             <Route
+//               path="/payment"
+//               element={
+//                 <PrivateRoute allowedRoles={["customer", "user"]}>
+//                   <Payment />
+//                 </PrivateRoute>
+//               }
+//             />
+//             <Route path="/payment-success" element={<OrderConfirmation />} />
+
+//             {/* ================= ADMIN ROUTES ================= */}
+//             <Route
+//               path="/admin/*"
+//               element={
+//                 <PrivateRoute allowedRoles={["admin"]}>
+//                   <AdminLayout />
+//                 </PrivateRoute>
+//               }
+//             />
+
+//             {/* ================= PHARMACIST ROUTES ================= */}
+//             <Route
+//               element={
+//                 <PrivateRoute allowedRoles={["pharmacist", "staff"]}>
+//                   <PharmacistLayout />
+//                 </PrivateRoute>
+//               }
+//             >
+//               <Route
+//                 path="/pharmacist/dashboard"
+//                 element={<PharmacistDashboard />}
+//               />
+//               <Route
+//                 path="/pharmacist/prescriptions"
+//                 element={<PharmacistPrescriptions />}
+//               />
+//               <Route
+//                 path="/pharmacist/inventory"
+//                 element={<PharmacistInventory />}
+//               />
+//               <Route path="/pharmacist/orders" element={<PharmacistOrders />} />
+//               <Route path="/pharmacist/alerts" element={<PharmacistAlerts />} />
+//               <Route
+//                 path="/pharmacist/customers"
+//                 element={<PharmacistCustomers />}
+//               />
+//               <Route
+//                 path="/pharmacist/reports"
+//                 element={<PharmacistReports />}
+//               />
+//               <Route
+//                 path="/pharmacist/profile"
+//                 element={<PharmacistProfile />}
+//               />
+//             </Route>
+
+//             {/* ================= FALLBACK ================= */}
+//             <Route path="*" element={<Navigate to="/login" replace />} />
+//           </Routes>
+//         </RootLayout>
+//       </Router>
+//     </AuthProvider>
+//   );
+// }
+
+// export default App;
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -1953,13 +2220,14 @@ import Privacy from "./pages/Privacy";
 // --- Customer Pages ---
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ProfilePage from "./pages/ProfilePage";
-import CartPage from "./pages/CartPage"; // ✅ Updated Import Name
+import CartPage from "./pages/CartPage";
 import Shipping from "./pages/Shipping";
 import PlaceOrder from "./pages/PlaceOrder";
 import Payment from "./pages/Payment";
-import OrderConfirmation from "./components/OrderConfirm";
+import PaymentSuccess from "./pages/PaymentSuccess"; // ✅ Updated to your beautiful receipt page
 import CustomerAppointments from "./pages/CustomerAppointments";
 import OrderHistory from "./pages/OrderHistory";
+import OrderDetails from "./pages/OrderDetails";
 import PrescriptionsPage from "./pages/PrescriptionsPage";
 import SavedMedicinesPage from "./pages/SavedMedicinesPage";
 
@@ -1976,6 +2244,7 @@ import PharmacistAlerts from "./pages/PharmacistAlerts";
 import PharmacistCustomers from "./pages/PharmacistCustomers";
 import PharmacistReports from "./pages/PharmacistReports";
 import PharmacistProfile from "./pages/PharmacistProfile";
+
 // --- Private Route Component ---
 const PrivateRoute = ({ children, allowedRoles }) => {
   const { user, initLoading } = useAuth();
@@ -1994,7 +2263,6 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Normalize user role
   const userRole = user.role ? user.role.toLowerCase() : "";
   const normalizedAllowedRoles = allowedRoles
     ? allowedRoles.map((r) => r.toLowerCase())
@@ -2011,9 +2279,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 // --- Dashboard Redirector ---
 const DashboardRedirect = () => {
   const { user } = useAuth();
-
   if (!user) return <Navigate to="/login" replace />;
-
   const role = user.role ? user.role.toLowerCase() : "";
 
   switch (role) {
@@ -2066,7 +2332,16 @@ function App() {
             {/* ================= CUSTOMER PORTAL ================= */}
             <Route
               element={
-                <PrivateRoute allowedRoles={["customer", "user"]}>
+                // Allow Customer, Admin, and Pharmacist to view order details
+                <PrivateRoute
+                  allowedRoles={[
+                    "customer",
+                    "user",
+                    "admin",
+                    "pharmacist",
+                    "staff",
+                  ]}
+                >
                   <CustomerLayout />
                 </PrivateRoute>
               }
@@ -2079,23 +2354,13 @@ function App() {
               <Route path="/medicine/:id" element={<MedicineDetails />} />
               <Route path="/appointments" element={<CustomerAppointments />} />
               <Route path="/orders" element={<OrderHistory />} />
+              <Route path="/order/:id" element={<OrderDetails />} />
               <Route path="/prescriptions" element={<PrescriptionsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/customer/saved" element={<SavedMedicinesPage />} />
             </Route>
 
-            {/* Legacy Redirects */}
-            <Route
-              path="/customer-appointments"
-              element={<Navigate to="/appointments" replace />}
-            />
-            <Route
-              path="/customer-medicines"
-              element={<Navigate to="/medicines" replace />}
-            />
-
             {/* ================= CHECKOUT FLOW ================= */}
-            {/* ✅ UPDATED: Cart Route is now Protected */}
             <Route
               path="/cart"
               element={
@@ -2128,7 +2393,16 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/payment-success" element={<OrderConfirmation />} />
+
+            {/* ✅ UPDATED: Success route matches the Khalti return URL */}
+            <Route
+              path="/payment-success"
+              element={
+                <PrivateRoute allowedRoles={["customer", "user"]}>
+                  <PaymentSuccess />
+                </PrivateRoute>
+              }
+            />
 
             {/* ================= ADMIN ROUTES ================= */}
             <Route

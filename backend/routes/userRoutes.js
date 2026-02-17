@@ -433,6 +433,101 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const router = express.Router();
+
+// // -------------------------------------------------------------------
+// // 1. CONTROLLERS
+// // -------------------------------------------------------------------
+// const {
+//   authUser,
+//   registerUser,
+//   getUserProfile,
+//   updateUserProfile,
+//   getSavedMedicines, // ✅ Added: Import the new controller function
+//   getUsers,
+//   deleteUser,
+//   getUserById,
+//   updateUser,
+// } = require("../controllers/userController");
+
+// // -------------------------------------------------------------------
+// // 2. MIDDLEWARE
+// // -------------------------------------------------------------------
+// const { protect } = require("../middleware/authMiddleware");
+// const authorizeRoles = require("../middleware/role"); // ✅ Consistent RBAC
+
+// // -------------------------------------------------------------------
+// // 3. PUBLIC ROUTES (Authentication)
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Register a new user (Self-registration for Customers)
+//  * @route   POST /api/users
+//  */
+// router.post("/", registerUser);
+
+// /**
+//  * @desc    Auth user & get token (Login)
+//  * @route   POST /api/users/login
+//  */
+// router.post("/login", authUser);
+
+// // -------------------------------------------------------------------
+// // 4. PROTECTED PROFILE ROUTES (All Roles: Customer, Doctor, Admin)
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Get & Update Personal Profile Info
+//  * @route   GET /api/users/profile
+//  * @route   PUT /api/users/profile
+//  * ✅ FIX: Used by CustomerProfile.jsx to fetch personal data (Address, Allergies)
+//  */
+// router
+//   .route("/profile")
+//   .get(protect, getUserProfile)
+//   .put(protect, updateUserProfile);
+
+// /**
+//  * @desc    Get User Saved Medicines (Wishlist)
+//  * @route   GET /api/users/saved-medicines
+//  * ✅ FIX: Resolves 500 error on MedicineShop/Dashboard
+//  */
+// router.get("/saved-medicines", protect, getSavedMedicines);
+// router.delete("/saved-medicines/:id", protect, removeSavedMedicine);
+
+// // -------------------------------------------------------------------
+// // 5. ADMINISTRATIVE & STAFF ROUTES
+// // -------------------------------------------------------------------
+
+// /**
+//  * @desc    Get all users (Search & Pagination enabled)
+//  * @route   GET /api/users
+//  * ✅ UPDATED: Allows 'pharmacist' to view customer list in their dashboard
+//  */
+// router.get("/", protect, authorizeRoles("admin", "pharmacist"), getUsers);
+
+// /**
+//  * @desc    Admin creating a staff/pharmacist user manually
+//  * @route   POST /api/users/admin-create
+//  * ✅ Resolves "Unable to create user" in Staff Management
+//  */
+// router.post("/admin-create", protect, authorizeRoles("admin"), registerUser);
+
+// /**
+//  * @desc    Manage specific user records by ID
+//  * @route   GET /api/users/:id
+//  * @route   PUT /api/users/:id
+//  * @route   DELETE /api/users/:id
+//  */
+// router
+//   .route("/:id")
+//   .get(protect, authorizeRoles("admin"), getUserById)
+//   .put(protect, authorizeRoles("admin"), updateUser)
+//   .delete(protect, authorizeRoles("admin"), deleteUser);
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
 
@@ -444,28 +539,35 @@ const {
   registerUser,
   getUserProfile,
   updateUserProfile,
-  getSavedMedicines, // ✅ Added: Import the new controller function
+  getSavedMedicines,
+  removeSavedMedicine,
   getUsers,
   deleteUser,
   getUserById,
   updateUser,
+  toggleSavedMedicine,
 } = require("../controllers/userController");
 
 // -------------------------------------------------------------------
 // 2. MIDDLEWARE
 // -------------------------------------------------------------------
 const { protect } = require("../middleware/authMiddleware");
-const authorizeRoles = require("../middleware/role"); // ✅ Consistent RBAC
+const authorizeRoles = require("../middleware/role");
 
 // -------------------------------------------------------------------
 // 3. PUBLIC ROUTES (Authentication)
 // -------------------------------------------------------------------
 
 /**
- * @desc    Register a new user (Self-registration for Customers)
+ * @desc    Register a new user (Self-registration for Customers) & Get all users
  * @route   POST /api/users
+ * @route   GET /api/users
  */
-router.post("/", registerUser);
+// ✅ Best Practice: Grouped routes with the same path ("/")
+router
+  .route("/")
+  .post(registerUser)
+  .get(protect, authorizeRoles("admin", "pharmacist"), getUsers);
 
 /**
  * @desc    Auth user & get token (Login)
@@ -481,7 +583,6 @@ router.post("/login", authUser);
  * @desc    Get & Update Personal Profile Info
  * @route   GET /api/users/profile
  * @route   PUT /api/users/profile
- * ✅ FIX: Used by CustomerProfile.jsx to fetch personal data (Address, Allergies)
  */
 router
   .route("/profile")
@@ -489,27 +590,22 @@ router
   .put(protect, updateUserProfile);
 
 /**
- * @desc    Get User Saved Medicines (Wishlist)
+ * @desc    Get & Delete User Saved Medicines (Wishlist)
  * @route   GET /api/users/saved-medicines
- * ✅ FIX: Resolves 500 error on MedicineShop/Dashboard
+ * @route   POST /api/users/saved-medicines (Toggle)
+ * @route   DELETE /api/users/saved-medicines/:id
  */
 router.get("/saved-medicines", protect, getSavedMedicines);
+router.post("/saved-medicines", protect, toggleSavedMedicine);
+router.delete("/saved-medicines/:id", protect, removeSavedMedicine); // ✅ Now this will work!
 
 // -------------------------------------------------------------------
 // 5. ADMINISTRATIVE & STAFF ROUTES
 // -------------------------------------------------------------------
 
 /**
- * @desc    Get all users (Search & Pagination enabled)
- * @route   GET /api/users
- * ✅ UPDATED: Allows 'pharmacist' to view customer list in their dashboard
- */
-router.get("/", protect, authorizeRoles("admin", "pharmacist"), getUsers);
-
-/**
  * @desc    Admin creating a staff/pharmacist user manually
  * @route   POST /api/users/admin-create
- * ✅ Resolves "Unable to create user" in Staff Management
  */
 router.post("/admin-create", protect, authorizeRoles("admin"), registerUser);
 

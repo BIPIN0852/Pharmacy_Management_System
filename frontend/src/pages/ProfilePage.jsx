@@ -2110,7 +2110,532 @@
 
 // export default ProfilePage;
 
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState } from "react";
+// import { useAuth } from "../context/AuthContext";
+// import {
+//   Container,
+//   Row,
+//   Col,
+//   Card,
+//   Form,
+//   Button,
+//   Badge,
+//   Image,
+//   Table,
+//   ProgressBar,
+//   Tab,
+//   Tabs,
+//   Alert,
+//   Spinner,
+// } from "react-bootstrap";
+// import {
+//   User,
+//   Mail,
+//   Phone,
+//   MapPin,
+//   Calendar,
+//   Droplet,
+//   AlertCircle,
+//   Activity,
+//   Shield,
+//   Edit2,
+//   Save,
+//   X,
+//   FileText,
+//   ShoppingBag,
+//   Eye,
+//   Camera,
+//   CheckCircle,
+// } from "lucide-react";
+// import api from "../services/api";
+
+// const ProfilePage = () => {
+//   const { user } = useAuth();
+
+//   const [profile, setProfile] = useState({
+//     name: "",
+//     email: "",
+//     phone: "",
+//     gender: "",
+//     dob: "",
+//     address: "",
+//     bloodGroup: "",
+//     allergies: "",
+//     chronicConditions: "",
+//     emergencyContact: "",
+//   });
+
+//   const [orders, setOrders] = useState([]);
+//   const [prescriptions, setPrescriptions] = useState([]);
+//   const [editing, setEditing] = useState(false);
+//   const [loading, setLoading] = useState(false);
+//   const [dataLoading, setDataLoading] = useState(true);
+//   const [message, setMessage] = useState("");
+//   const [error, setError] = useState("");
+//   const [activeTab, setActiveTab] = useState("overview");
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         setDataLoading(true);
+//         // Concurrent Fetching using the consolidated routes
+//         const [userRes, orderRes, presRes] = await Promise.allSettled([
+//           api.get("/users/profile"),
+//           api.get("/orders/my"),
+//           api.get("/prescriptions"), // Interceptor filters by user on backend
+//         ]);
+
+//         if (userRes.status === "fulfilled") {
+//           const userData = userRes.data || userRes.value;
+//           setProfile({
+//             ...userData,
+//             dob: userData.dob
+//               ? new Date(userData.dob).toISOString().split("T")[0]
+//               : "",
+//           });
+//         }
+
+//         if (orderRes.status === "fulfilled") {
+//           setOrders(orderRes.data || orderRes.value || []);
+//         }
+
+//         if (presRes.status === "fulfilled") {
+//           setPrescriptions(presRes.data || presRes.value || []);
+//         }
+//       } catch (err) {
+//         setError("Failed to sync profile data with server.");
+//       } finally {
+//         setDataLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, [user]);
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setProfile((p) => ({ ...p, [name]: value }));
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setError("");
+//     setMessage("");
+
+//     try {
+//       await api.put("/users/profile", profile);
+//       setMessage("Profile details saved successfully.");
+//       setEditing(false);
+//       setTimeout(() => setMessage(""), 3000);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to update profile.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (dataLoading)
+//     return (
+//       <Container
+//         className="py-5 text-center d-flex flex-column align-items-center justify-content-center"
+//         style={{ minHeight: "70vh" }}
+//       >
+//         <Spinner animation="border" variant="primary" className="mb-3" />
+//         <p className="text-muted fw-bold">Synchronizing medical profile...</p>
+//       </Container>
+//     );
+
+//   return (
+//     <Container className="py-5 animate-fade-in">
+//       {/* --- HEADER SECTION --- */}
+//       <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden card-modern">
+//         <div
+//           className="p-4 d-flex flex-column flex-md-row align-items-center gap-4"
+//           style={{
+//             background: "linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)",
+//           }}
+//         >
+//           <div className="position-relative">
+//             <Image
+//               src={
+//                 user?.profilePhoto ||
+//                 `https://ui-avatars.com/api/?name=${profile.name}&background=0d6efd&color=fff&size=128`
+//               }
+//               roundedCircle
+//               style={{
+//                 width: "120px",
+//                 height: "120px",
+//                 objectFit: "cover",
+//                 border: "4px solid white",
+//               }}
+//               className="shadow-sm"
+//             />
+//             <div className="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle shadow cursor-pointer">
+//               <Camera size={16} />
+//             </div>
+//           </div>
+
+//           <div className="flex-grow-1 text-center text-md-start">
+//             <h2 className="fw-bold text-dark mb-1">{profile.name}</h2>
+//             <div className="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-3">
+//               <Badge
+//                 bg="primary-subtle"
+//                 className="text-primary border border-primary-subtle text-uppercase"
+//               >
+//                 {user?.role || "Customer"}
+//               </Badge>
+//               <span className="text-muted small">
+//                 #{user?._id?.slice(-6).toUpperCase()}
+//               </span>
+//             </div>
+//             <div style={{ maxWidth: "250px" }}>
+//               <div className="d-flex justify-content-between small mb-1">
+//                 <span className="text-muted">Profile Completion</span>
+//                 <span className="fw-bold text-primary">
+//                   {profile.bloodGroup ? "100%" : "70%"}
+//                 </span>
+//               </div>
+//               <ProgressBar
+//                 now={profile.bloodGroup ? 100 : 70}
+//                 variant="primary"
+//                 style={{ height: "6px" }}
+//                 rounded
+//               />
+//             </div>
+//           </div>
+
+//           {!editing && (
+//             <Button
+//               variant="primary"
+//               className="rounded-pill px-4 shadow-sm"
+//               onClick={() => setEditing(true)}
+//             >
+//               <Edit2 size={16} className="me-2" /> Edit Profile
+//             </Button>
+//           )}
+//         </div>
+//       </Card>
+
+//       {message && (
+//         <Alert variant="success" className="rounded-3 shadow-sm border-0">
+//           <CheckCircle size={18} className="me-2" />
+//           {message}
+//         </Alert>
+//       )}
+//       {error && (
+//         <Alert variant="danger" className="rounded-3 shadow-sm border-0">
+//           {error}
+//         </Alert>
+//       )}
+
+//       <Row className="g-4">
+//         {/* --- LEFT: DETAILS & MEDICAL --- */}
+//         <Col lg={4}>
+//           <Card className="border-0 shadow-sm rounded-4 mb-4">
+//             <Card.Body className="p-4">
+//               <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+//                 <User size={20} className="text-primary" /> Personal Info
+//               </h5>
+
+//               {editing ? (
+//                 <Form
+//                   onSubmit={handleSubmit}
+//                   className="d-flex flex-column gap-3"
+//                 >
+//                   <Form.Group>
+//                     <Form.Label className="small fw-bold">Full Name</Form.Label>
+//                     <Form.Control
+//                       name="name"
+//                       value={profile.name}
+//                       onChange={handleChange}
+//                       required
+//                     />
+//                   </Form.Group>
+//                   <Form.Group>
+//                     <Form.Label className="small fw-bold">
+//                       Phone Number
+//                     </Form.Label>
+//                     <Form.Control
+//                       name="phone"
+//                       value={profile.phone}
+//                       onChange={handleChange}
+//                     />
+//                   </Form.Group>
+//                   <Form.Group>
+//                     <Form.Label className="small fw-bold">Address</Form.Label>
+//                     <Form.Control
+//                       as="textarea"
+//                       rows={2}
+//                       name="address"
+//                       value={profile.address}
+//                       onChange={handleChange}
+//                     />
+//                   </Form.Group>
+//                   <div className="d-flex gap-2 pt-2">
+//                     <Button
+//                       variant="primary"
+//                       type="submit"
+//                       className="flex-grow-1 rounded-pill"
+//                       disabled={loading}
+//                     >
+//                       {loading ? "Saving..." : "Save"}
+//                     </Button>
+//                     <Button
+//                       variant="light"
+//                       className="flex-grow-1 rounded-pill border"
+//                       onClick={() => setEditing(false)}
+//                     >
+//                       Cancel
+//                     </Button>
+//                   </div>
+//                 </Form>
+//               ) : (
+//                 <div className="d-flex flex-column gap-4">
+//                   {[
+//                     { icon: Mail, label: "Email", val: profile.email },
+//                     { icon: Phone, label: "Phone", val: profile.phone },
+//                     { icon: MapPin, label: "Address", val: profile.address },
+//                     { icon: Calendar, label: "Birth Date", val: profile.dob },
+//                   ].map((item, i) => (
+//                     <div key={i} className="d-flex gap-3">
+//                       <div className="bg-light p-2 rounded-3 text-primary h-100">
+//                         <item.icon size={18} />
+//                       </div>
+//                       <div>
+//                         <div
+//                           className="text-muted small text-uppercase fw-bold"
+//                           style={{ fontSize: "0.65rem" }}
+//                         >
+//                           {item.label}
+//                         </div>
+//                         <div className="fw-bold text-dark">
+//                           {item.val || "Not set"}
+//                         </div>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </Card.Body>
+//           </Card>
+
+//           <Card className="border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 border-primary border-opacity-10">
+//             <Card.Body className="p-4">
+//               <h5 className="fw-bold mb-4 d-flex align-items-center gap-2 text-primary">
+//                 <Activity size={20} /> Medical Profile
+//               </h5>
+//               <div className="d-flex flex-column gap-3">
+//                 <div className="d-flex justify-content-between align-items-center bg-white p-2 rounded-3 shadow-sm px-3">
+//                   <span className="small fw-bold text-muted">Blood Group</span>
+//                   <Badge bg="danger" className="rounded-pill">
+//                     {profile.bloodGroup || "?"}
+//                   </Badge>
+//                 </div>
+//                 <div className="bg-white p-3 rounded-3 shadow-sm">
+//                   <span className="small fw-bold text-muted d-block mb-1">
+//                     Allergies
+//                   </span>
+//                   <span className="text-dark small">
+//                     {profile.allergies || "No known allergies"}
+//                   </span>
+//                 </div>
+//                 <div className="bg-white p-3 rounded-3 shadow-sm border-start border-warning border-4">
+//                   <span className="small fw-bold text-muted d-block mb-1 text-warning">
+//                     Emergency Contact
+//                   </span>
+//                   <span className="fw-bold text-dark">
+//                     {profile.emergencyContact || "Not configured"}
+//                   </span>
+//                 </div>
+//               </div>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+
+//         {/* --- RIGHT: ACTIVITY TABS --- */}
+//         <Col lg={8}>
+//           <Tabs
+//             activeKey={activeTab}
+//             onSelect={(k) => setActiveTab(k)}
+//             className="mb-4 custom-tabs border-0"
+//           >
+//             <Tab
+//               eventKey="overview"
+//               title={
+//                 <>
+//                   <ShoppingBag size={18} className="me-2" /> Activity
+//                 </>
+//               }
+//             >
+//               <Card className="border-0 shadow-sm rounded-4 mb-4">
+//                 <Card.Header className="bg-white p-4 border-0 pb-0">
+//                   <h6 className="fw-bold mb-0">Recent Order History</h6>
+//                 </Card.Header>
+//                 <Card.Body className="p-0">
+//                   {orders.length === 0 ? (
+//                     <div className="p-5 text-center text-muted small">
+//                       No transactions found.
+//                     </div>
+//                   ) : (
+//                     <div className="table-responsive">
+//                       <Table hover className="align-middle mb-0">
+//                         <thead className="bg-light small fw-bold text-muted text-uppercase">
+//                           <tr>
+//                             <th className="ps-4">Order</th>
+//                             <th>Date</th>
+//                             <th>Total</th>
+//                             <th className="pe-4 text-end">Status</th>
+//                           </tr>
+//                         </thead>
+//                         <tbody>
+//                           {orders.slice(0, 5).map((o) => (
+//                             <tr key={o._id}>
+//                               <td className="ps-4 fw-bold">
+//                                 #{o._id.slice(-6).toUpperCase()}
+//                               </td>
+//                               <td className="small">
+//                                 {new Date(o.createdAt).toLocaleDateString()}
+//                               </td>
+//                               <td className="fw-bold text-primary">
+//                                 Rs. {o.totalPrice}
+//                               </td>
+//                               <td className="pe-4 text-end">
+//                                 <Badge
+//                                   bg={
+//                                     o.status === "Delivered"
+//                                       ? "success-subtle"
+//                                       : "warning-subtle"
+//                                   }
+//                                   className={`text-${
+//                                     o.status === "Delivered"
+//                                       ? "success"
+//                                       : "warning"
+//                                   } rounded-pill`}
+//                                 >
+//                                   {o.status}
+//                                 </Badge>
+//                               </td>
+//                             </tr>
+//                           ))}
+//                         </tbody>
+//                       </Table>
+//                     </div>
+//                   )}
+//                 </Card.Body>
+//               </Card>
+
+//               <Card className="border-0 shadow-sm rounded-4">
+//                 <Card.Header className="bg-white p-4 border-0 pb-0">
+//                   <h6 className="fw-bold mb-0">Medical Prescriptions</h6>
+//                 </Card.Header>
+//                 <Card.Body className="p-0">
+//                   {prescriptions.length === 0 ? (
+//                     <div className="p-5 text-center text-muted small">
+//                       No prescriptions uploaded.
+//                     </div>
+//                   ) : (
+//                     <div className="table-responsive">
+//                       <Table hover className="align-middle mb-0">
+//                         <thead className="bg-light small fw-bold text-muted text-uppercase">
+//                           <tr>
+//                             <th className="ps-4">Document</th>
+//                             <th>Verification</th>
+//                             <th className="pe-4 text-end">File</th>
+//                           </tr>
+//                         </thead>
+//                         <tbody>
+//                           {prescriptions.slice(0, 3).map((p) => (
+//                             <tr key={p._id}>
+//                               <td className="ps-4">
+//                                 <div className="small fw-bold">Rx-Record</div>
+//                                 <div
+//                                   className="text-muted"
+//                                   style={{ fontSize: "0.7rem" }}
+//                                 >
+//                                   {new Date(p.createdAt).toLocaleDateString()}
+//                                 </div>
+//                               </td>
+//                               <td>
+//                                 <Badge
+//                                   bg={
+//                                     p.status === "Approved" ? "success" : "info"
+//                                   }
+//                                   className="rounded-pill"
+//                                 >
+//                                   {p.status}
+//                                 </Badge>
+//                               </td>
+//                               <td className="pe-4 text-end">
+//                                 <Button
+//                                   variant="light"
+//                                   size="sm"
+//                                   className="rounded-circle border"
+//                                   onClick={() => window.open(p.image, "_blank")}
+//                                 >
+//                                   <Eye size={14} />
+//                                 </Button>
+//                               </td>
+//                             </tr>
+//                           ))}
+//                         </tbody>
+//                       </Table>
+//                     </div>
+//                   )}
+//                 </Card.Body>
+//               </Card>
+//             </Tab>
+
+//             <Tab
+//               eventKey="security"
+//               title={
+//                 <>
+//                   <Shield size={18} className="me-2" /> Security
+//                 </>
+//               }
+//             >
+//               <Card className="border-0 shadow-sm rounded-4">
+//                 <Card.Body className="p-4">
+//                   <h6 className="fw-bold mb-3">Account Security</h6>
+//                   <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 mb-3">
+//                     <div>
+//                       <div className="fw-bold small">Change Password</div>
+//                       <div
+//                         className="text-muted"
+//                         style={{ fontSize: "0.75rem" }}
+//                       >
+//                         Update your login credentials regularly.
+//                       </div>
+//                     </div>
+//                     <Button variant="white" className="btn-sm border shadow-sm">
+//                       Update
+//                     </Button>
+//                   </div>
+//                   <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded-3">
+//                     <div>
+//                       <div className="fw-bold small">Two-Factor Auth</div>
+//                       <div
+//                         className="text-muted"
+//                         style={{ fontSize: "0.75rem" }}
+//                       >
+//                         Secure your account with OTP.
+//                       </div>
+//                     </div>
+//                     <Form.Check type="switch" id="2fa" defaultChecked />
+//                   </div>
+//                 </Card.Body>
+//               </Card>
+//             </Tab>
+//           </Tabs>
+//         </Col>
+//       </Row>
+//     </Container>
+//   );
+// };
+
+// export default ProfilePage;
+
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   Container,
@@ -2134,24 +2659,22 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Droplet,
-  AlertCircle,
   Activity,
   Shield,
   Edit2,
-  Save,
-  X,
-  FileText,
   ShoppingBag,
   Eye,
   Camera,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import api from "../services/api";
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const fileInputRef = useRef(null);
 
+  // Consolidated profile state
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -2163,10 +2686,20 @@ const ProfilePage = () => {
     allergies: "",
     chronicConditions: "",
     emergencyContact: "",
+    profilePhoto: "",
   });
+
+  // Backup state for Cancel action
+  const [initialProfile, setInitialProfile] = useState({});
+
+  // Image Upload State
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const [orders, setOrders] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+
+  // UI States
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
@@ -2174,35 +2707,71 @@ const ProfilePage = () => {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Options
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const genders = ["Male", "Female", "Other", "Prefer not to say"];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setDataLoading(true);
-        // Concurrent Fetching using the consolidated routes
+        // Concurrent Fetching
         const [userRes, orderRes, presRes] = await Promise.allSettled([
           api.get("/users/profile"),
           api.get("/orders/my"),
-          api.get("/prescriptions"), // Interceptor filters by user on backend
+          api.get("/prescriptions/my"), // Use the specific customer route we fixed
         ]);
 
         if (userRes.status === "fulfilled") {
-          const userData = userRes.data || userRes.value;
-          setProfile({
-            ...userData,
+          const userData = userRes.value.data;
+
+          // ✅ FIX 1: Handle Address Object vs String to prevent crash
+          let addrString = userData.address || "";
+          if (
+            typeof userData.address === "object" &&
+            userData.address !== null
+          ) {
+            addrString = [
+              userData.address.street,
+              userData.address.city,
+              userData.address.province,
+              userData.address.postalCode,
+            ]
+              .filter(Boolean)
+              .join(", ");
+          }
+
+          // ✅ FIX 2: Ensure Phone is string
+          const phoneString = userData.phone ? String(userData.phone) : "";
+
+          const formattedData = {
+            name: userData.name || "",
+            email: userData.email || "",
+            phone: phoneString,
+            address: addrString,
+            profilePhoto: userData.profilePhoto || "",
             dob: userData.dob
               ? new Date(userData.dob).toISOString().split("T")[0]
               : "",
-          });
+            gender: userData.gender || "",
+            bloodGroup: userData.bloodGroup || "",
+            allergies: userData.allergies || "",
+            chronicConditions: userData.chronicConditions || "",
+            emergencyContact: userData.emergencyContact || "",
+          };
+          setProfile(formattedData);
+          setInitialProfile(formattedData);
         }
 
         if (orderRes.status === "fulfilled") {
-          setOrders(orderRes.data || orderRes.value || []);
+          setOrders(orderRes.value.data || []);
         }
 
         if (presRes.status === "fulfilled") {
-          setPrescriptions(presRes.data || presRes.value || []);
+          setPrescriptions(presRes.value.data || []);
         }
       } catch (err) {
+        console.error(err);
         setError("Failed to sync profile data with server.");
       } finally {
         setDataLoading(false);
@@ -2217,6 +2786,22 @@ const ProfilePage = () => {
     setProfile((p) => ({ ...p, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCancel = () => {
+    setProfile(initialProfile);
+    setPreview(null);
+    setSelectedFile(null);
+    setEditing(false);
+    setError("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -2224,15 +2809,74 @@ const ProfilePage = () => {
     setMessage("");
 
     try {
-      await api.put("/users/profile", profile);
+      const formData = new FormData();
+      Object.keys(profile).forEach((key) => {
+        if (key !== "profilePhoto") {
+          // Send as string to ensure compatibility
+          formData.append(key, profile[key] || "");
+        }
+      });
+
+      if (selectedFile) {
+        formData.append("profilePhoto", selectedFile);
+      }
+
+      const { data } = await api.put("/users/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Handle address returning as object or string from backend update
+      let addrString = data.address || "";
+      if (typeof data.address === "object" && data.address !== null) {
+        addrString = [
+          data.address.street,
+          data.address.city,
+          data.address.province,
+        ]
+          .filter(Boolean)
+          .join(", ");
+      }
+
+      const updatedData = {
+        ...data,
+        address: addrString,
+        dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+      };
+
+      setProfile(updatedData);
+      setInitialProfile(updatedData);
+      setPreview(null);
+      setSelectedFile(null);
       setMessage("Profile details saved successfully.");
       setEditing(false);
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
+      console.error(err);
       setError(err.response?.data?.message || "Failed to update profile.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ FIX 3: Robust Completion Calculation
+  const calculateCompletion = () => {
+    const fields = [
+      "name",
+      "email",
+      "phone",
+      "address",
+      "bloodGroup",
+      "emergencyContact",
+    ];
+
+    const filled = fields.filter((field) => {
+      const val = profile[field];
+      // Convert to string safely before checking trim()
+      // This fixes the "val.trim is not a function" error if val is a number
+      return val && String(val).trim() !== "";
+    }).length;
+
+    return Math.round((filled / fields.length) * 100);
   };
 
   if (dataLoading)
@@ -2248,8 +2892,7 @@ const ProfilePage = () => {
 
   return (
     <Container className="py-5 animate-fade-in">
-      {/* --- HEADER SECTION --- */}
-      <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden card-modern">
+      <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div
           className="p-4 d-flex flex-column flex-md-row align-items-center gap-4"
           style={{
@@ -2257,8 +2900,17 @@ const ProfilePage = () => {
           }}
         >
           <div className="position-relative">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              hidden
+              accept="image/*"
+            />
             <Image
               src={
+                preview ||
+                profile.profilePhoto ||
                 user?.profilePhoto ||
                 `https://ui-avatars.com/api/?name=${profile.name}&background=0d6efd&color=fff&size=128`
               }
@@ -2271,9 +2923,15 @@ const ProfilePage = () => {
               }}
               className="shadow-sm"
             />
-            <div className="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle shadow cursor-pointer">
-              <Camera size={16} />
-            </div>
+            {editing && (
+              <div
+                className="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle shadow cursor-pointer hover-scale"
+                onClick={() => fileInputRef.current.click()}
+                title="Change Photo"
+              >
+                <Camera size={16} />
+              </div>
+            )}
           </div>
 
           <div className="flex-grow-1 text-center text-md-start">
@@ -2293,14 +2951,14 @@ const ProfilePage = () => {
               <div className="d-flex justify-content-between small mb-1">
                 <span className="text-muted">Profile Completion</span>
                 <span className="fw-bold text-primary">
-                  {profile.bloodGroup ? "100%" : "70%"}
+                  {calculateCompletion()}%
                 </span>
               </div>
               <ProgressBar
-                now={profile.bloodGroup ? 100 : 70}
+                now={calculateCompletion()}
                 variant="primary"
                 style={{ height: "6px" }}
-                rounded
+                className="rounded"
               />
             </div>
           </div>
@@ -2318,32 +2976,37 @@ const ProfilePage = () => {
       </Card>
 
       {message && (
-        <Alert variant="success" className="rounded-3 shadow-sm border-0">
-          <CheckCircle size={18} className="me-2" />
-          {message}
+        <Alert
+          variant="success"
+          className="rounded-3 shadow-sm border-0 d-flex align-items-center"
+        >
+          <CheckCircle size={18} className="me-2" /> {message}
         </Alert>
       )}
       {error && (
-        <Alert variant="danger" className="rounded-3 shadow-sm border-0">
-          {error}
+        <Alert
+          variant="danger"
+          className="rounded-3 shadow-sm border-0 d-flex align-items-center"
+        >
+          <AlertCircle size={18} className="me-2" /> {error}
         </Alert>
       )}
 
       <Row className="g-4">
-        {/* --- LEFT: DETAILS & MEDICAL --- */}
+        {/* --- LEFT COLUMN --- */}
         <Col lg={4}>
-          <Card className="border-0 shadow-sm rounded-4 mb-4">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
-                <User size={20} className="text-primary" /> Personal Info
-              </h5>
-
-              {editing ? (
-                <Form
-                  onSubmit={handleSubmit}
-                  className="d-flex flex-column gap-3"
-                >
-                  <Form.Group>
+          {editing ? (
+            /* --- EDIT MODE --- */
+            <Card className="border-0 shadow-sm rounded-4 mb-4">
+              <Card.Header className="bg-white border-0 pt-4 px-4 pb-0">
+                <h5 className="fw-bold mb-0 text-primary">Edit Details</h5>
+              </Card.Header>
+              <Card.Body className="p-4">
+                <Form onSubmit={handleSubmit}>
+                  <h6 className="text-muted small fw-bold text-uppercase mb-3">
+                    Personal Info
+                  </h6>
+                  <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold">Full Name</Form.Label>
                     <Form.Control
                       name="name"
@@ -2352,17 +3015,49 @@ const ProfilePage = () => {
                       required
                     />
                   </Form.Group>
-                  <Form.Group>
-                    <Form.Label className="small fw-bold">
-                      Phone Number
-                    </Form.Label>
+                  <Row className="g-2 mb-3">
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">
+                          Gender
+                        </Form.Label>
+                        <Form.Select
+                          name="gender"
+                          value={profile.gender}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select...</option>
+                          {genders.map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col xs={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">
+                          Birth Date
+                        </Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="dob"
+                          value={profile.dob}
+                          onChange={handleChange}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold">Phone</Form.Label>
                     <Form.Control
                       name="phone"
                       value={profile.phone}
                       onChange={handleChange}
                     />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold">Address</Form.Label>
                     <Form.Control
                       as="textarea"
@@ -2372,88 +3067,187 @@ const ProfilePage = () => {
                       onChange={handleChange}
                     />
                   </Form.Group>
-                  <div className="d-flex gap-2 pt-2">
+
+                  <hr className="my-4 opacity-10" />
+
+                  <h6 className="text-muted small fw-bold text-uppercase mb-3">
+                    Medical Info
+                  </h6>
+                  <Row className="g-2 mb-3">
+                    <Col xs={5}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">
+                          Blood Type
+                        </Form.Label>
+                        <Form.Select
+                          name="bloodGroup"
+                          value={profile.bloodGroup}
+                          onChange={handleChange}
+                        >
+                          <option value="">--</option>
+                          {bloodGroups.map((bg) => (
+                            <option key={bg} value={bg}>
+                              {bg}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col xs={7}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold">
+                          Emergency Contact
+                        </Form.Label>
+                        <Form.Control
+                          name="emergencyContact"
+                          value={profile.emergencyContact}
+                          onChange={handleChange}
+                          placeholder="Name & Phone"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold">Allergies</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      name="allergies"
+                      value={profile.allergies}
+                      onChange={handleChange}
+                      placeholder="e.g. Peanuts, Penicillin"
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold">
+                      Chronic Conditions
+                    </Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      name="chronicConditions"
+                      value={profile.chronicConditions}
+                      onChange={handleChange}
+                      placeholder="e.g. Diabetes, Asthma"
+                    />
+                  </Form.Group>
+
+                  <div className="d-flex gap-2">
                     <Button
                       variant="primary"
                       type="submit"
                       className="flex-grow-1 rounded-pill"
                       disabled={loading}
                     >
-                      {loading ? "Saving..." : "Save"}
+                      {loading ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Save Changes"
+                      )}
                     </Button>
                     <Button
                       variant="light"
                       className="flex-grow-1 rounded-pill border"
-                      onClick={() => setEditing(false)}
+                      onClick={handleCancel}
+                      disabled={loading}
                     >
                       Cancel
                     </Button>
                   </div>
                 </Form>
-              ) : (
-                <div className="d-flex flex-column gap-4">
-                  {[
-                    { icon: Mail, label: "Email", val: profile.email },
-                    { icon: Phone, label: "Phone", val: profile.phone },
-                    { icon: MapPin, label: "Address", val: profile.address },
-                    { icon: Calendar, label: "Birth Date", val: profile.dob },
-                  ].map((item, i) => (
-                    <div key={i} className="d-flex gap-3">
-                      <div className="bg-light p-2 rounded-3 text-primary h-100">
-                        <item.icon size={18} />
-                      </div>
-                      <div>
-                        <div
-                          className="text-muted small text-uppercase fw-bold"
-                          style={{ fontSize: "0.65rem" }}
-                        >
-                          {item.label}
+              </Card.Body>
+            </Card>
+          ) : (
+            /* --- VIEW MODE --- */
+            <>
+              <Card className="border-0 shadow-sm rounded-4 mb-4">
+                <Card.Body className="p-4">
+                  <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+                    <User size={20} className="text-primary" /> Personal Info
+                  </h5>
+                  <div className="d-flex flex-column gap-4">
+                    {[
+                      { icon: Mail, label: "Email", val: profile.email },
+                      { icon: Phone, label: "Phone", val: profile.phone },
+                      { icon: User, label: "Gender", val: profile.gender },
+                      { icon: MapPin, label: "Address", val: profile.address },
+                      {
+                        icon: Calendar,
+                        label: "Birth Date",
+                        val: profile.dob,
+                      },
+                    ].map((item, i) => (
+                      <div key={i} className="d-flex gap-3">
+                        <div className="bg-light p-2 rounded-3 text-primary h-100">
+                          <item.icon size={18} />
                         </div>
-                        <div className="fw-bold text-dark">
-                          {item.val || "Not set"}
+                        <div>
+                          <div
+                            className="text-muted small text-uppercase fw-bold"
+                            style={{ fontSize: "0.65rem" }}
+                          >
+                            {item.label}
+                          </div>
+                          <div className="fw-bold text-dark">
+                            {item.val || (
+                              <span className="text-muted fw-normal fst-italic">
+                                Not set
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
 
-          <Card className="border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 border-primary border-opacity-10">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-4 d-flex align-items-center gap-2 text-primary">
-                <Activity size={20} /> Medical Profile
-              </h5>
-              <div className="d-flex flex-column gap-3">
-                <div className="d-flex justify-content-between align-items-center bg-white p-2 rounded-3 shadow-sm px-3">
-                  <span className="small fw-bold text-muted">Blood Group</span>
-                  <Badge bg="danger" className="rounded-pill">
-                    {profile.bloodGroup || "?"}
-                  </Badge>
-                </div>
-                <div className="bg-white p-3 rounded-3 shadow-sm">
-                  <span className="small fw-bold text-muted d-block mb-1">
-                    Allergies
-                  </span>
-                  <span className="text-dark small">
-                    {profile.allergies || "No known allergies"}
-                  </span>
-                </div>
-                <div className="bg-white p-3 rounded-3 shadow-sm border-start border-warning border-4">
-                  <span className="small fw-bold text-muted d-block mb-1 text-warning">
-                    Emergency Contact
-                  </span>
-                  <span className="fw-bold text-dark">
-                    {profile.emergencyContact || "Not configured"}
-                  </span>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
+              <Card className="border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 border-primary border-opacity-10">
+                <Card.Body className="p-4">
+                  <h5 className="fw-bold mb-4 d-flex align-items-center gap-2 text-primary">
+                    <Activity size={20} /> Medical Profile
+                  </h5>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="d-flex justify-content-between align-items-center bg-white p-2 rounded-3 shadow-sm px-3">
+                      <span className="small fw-bold text-muted">
+                        Blood Group
+                      </span>
+                      <Badge bg="danger" className="rounded-pill">
+                        {profile.bloodGroup || "?"}
+                      </Badge>
+                    </div>
+                    <div className="bg-white p-3 rounded-3 shadow-sm">
+                      <span className="small fw-bold text-muted d-block mb-1">
+                        Allergies
+                      </span>
+                      <span className="text-dark small">
+                        {profile.allergies || "None declared"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-3 shadow-sm">
+                      <span className="small fw-bold text-muted d-block mb-1">
+                        Chronic Conditions
+                      </span>
+                      <span className="text-dark small">
+                        {profile.chronicConditions || "None declared"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-3 shadow-sm border-start border-warning border-4">
+                      <span className="small fw-bold text-muted d-block mb-1 text-warning">
+                        Emergency Contact
+                      </span>
+                      <span className="fw-bold text-dark">
+                        {profile.emergencyContact || "Not configured"}
+                      </span>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            </>
+          )}
         </Col>
 
-        {/* --- RIGHT: ACTIVITY TABS --- */}
+        {/* --- RIGHT COLUMN --- */}
         <Col lg={8}>
           <Tabs
             activeKey={activeTab}
@@ -2629,6 +3423,7 @@ const ProfilePage = () => {
           </Tabs>
         </Col>
       </Row>
+      <style>{`.hover-scale:hover { transform: scale(1.1); transition: transform 0.2s; }`}</style>
     </Container>
   );
 };

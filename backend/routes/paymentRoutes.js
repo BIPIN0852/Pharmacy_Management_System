@@ -481,175 +481,440 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const axios = require("axios");
+// const router = express.Router();
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // ✅ Initialize Stripe
+
+// // Models
+// const Order = require("../models/Order");
+// const Transaction = require("../models/Transaction");
+
+// // Middleware
+// const { protect } = require("../middleware/authMiddleware");
+
+// // -------------------------------------------------------------------
+// // 1. STRIPE: Create Payment Intent
+// // @desc    Step 1: Create intent so frontend can show card element
+// // @route   POST /api/payments/create-stripe-intent
+// // -------------------------------------------------------------------
+// router.post("/create-stripe-intent", protect, async (req, res) => {
+//   const { orderId } = req.body;
+
+//   try {
+//     // 1. Fetch Order to calculate accurate amount (Security)
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     // 2. Convert to cents (Stripe expects lowest currency unit)
+//     // Example: $10.00 -> 1000 cents
+//     const amountInCents = Math.round(order.totalPrice * 100);
+
+//     // 3. Create PaymentIntent
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       amount: amountInCents,
+//       currency: "usd", // Change to 'npr' if your Stripe account supports it, otherwise convert
+//       automatic_payment_methods: { enabled: true },
+//       metadata: {
+//         orderId: order._id.toString(),
+//         userId: req.user._id.toString(),
+//       },
+//     });
+
+//     // 4. Send Client Secret to Frontend
+//     res.json({ clientSecret: paymentIntent.client_secret });
+//   } catch (error) {
+//     console.error("Stripe Intent Error:", error);
+//     res.status(500).json({ message: "Failed to create payment intent" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // 2. STRIPE: Verify Payment (Webhook or Manual Confirmation)
+// // @desc    Step 2: Confirm success after frontend finishes payment
+// // @route   POST /api/payments/verify-stripe
+// // -------------------------------------------------------------------
+// router.post("/verify-stripe", protect, async (req, res) => {
+//   const { paymentIntentId, orderId } = req.body;
+
+//   try {
+//     // 1. Retrieve Intent from Stripe to confirm status
+//     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+//     if (paymentIntent.status === "succeeded") {
+//       const order = await Order.findById(orderId);
+//       if (!order) return res.status(404).json({ message: "Order not found" });
+
+//       if (order.isPaid) return res.json({ message: "Order already paid" });
+
+//       // 2. Update Order
+//       order.isPaid = true;
+//       order.paidAt = Date.now();
+//       order.paymentMethod = "Stripe";
+//       order.paymentResult = {
+//         id: paymentIntent.id,
+//         status: paymentIntent.status,
+//         email: req.user.email,
+//       };
+
+//       await order.save();
+
+//       // 3. Create Transaction Record
+//       await Transaction.create({
+//         user: req.user._id,
+//         order: order._id,
+//         amount: paymentIntent.amount / 100, // Convert back to main unit
+//         type: "Payment",
+//         paymentMethod: "Stripe",
+//         status: "Success",
+//         referenceId: paymentIntent.id,
+//         description: `Stripe Payment for Order #${order._id}`,
+//       });
+
+//       res.json({ success: true, message: "Payment Successful" });
+//     } else {
+//       res.status(400).json({ message: "Payment not successful" });
+//     }
+//   } catch (error) {
+//     console.error("Stripe Verification Error:", error);
+//     res.status(500).json({ message: "Verification failed" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // 3. KHALTI: Verify Payment
+// // @route   POST /api/payments/verify-khalti
+// // -------------------------------------------------------------------
+// router.post("/verify-khalti", protect, async (req, res) => {
+//   const { token, amount, orderId } = req.body;
+
+//   try {
+//     const khaltiResponse = await axios.post(
+//       "https://khalti.com/api/v2/payment/verify/",
+//       { token, amount },
+//       {
+//         headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
+//       }
+//     );
+
+//     if (khaltiResponse.data) {
+//       const order = await Order.findById(orderId);
+//       if (!order) return res.status(404).json({ message: "Order not found" });
+
+//       order.isPaid = true;
+//       order.paidAt = Date.now();
+//       order.paymentMethod = "Khalti";
+//       order.paymentResult = {
+//         id: khaltiResponse.data.idx,
+//         status: "success",
+//         email: req.user.email,
+//       };
+
+//       await order.save();
+
+//       await Transaction.create({
+//         user: req.user._id,
+//         order: order._id,
+//         amount: amount / 100,
+//         type: "Payment",
+//         paymentMethod: "Khalti",
+//         status: "Success",
+//         referenceId: khaltiResponse.data.idx,
+//         description: `Khalti Payment for Order #${order._id}`,
+//       });
+
+//       res.json({ message: "Payment Verified", order });
+//     }
+//   } catch (error) {
+//     console.error("Khalti Error:", error.response?.data || error.message);
+//     res.status(400).json({ message: "Khalti verification failed" });
+//   }
+// });
+
+// // -------------------------------------------------------------------
+// // 4. CASH ON DELIVERY (COD)
+// // @route   POST /api/payments/cod
+// // -------------------------------------------------------------------
+// router.post("/cod", protect, async (req, res) => {
+//   const { orderId } = req.body;
+
+//   try {
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     order.paymentMethod = "COD";
+//     order.isPaid = false;
+//     await order.save();
+
+//     res.json({ message: "Order confirmed for COD", order });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// module.exports = router;
+
+// const express = require("express");
+// const axios = require("axios");
+// const router = express.Router();
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+// // Models
+// const Order = require("../models/Order");
+// const Transaction = require("../models/Transaction"); // Ensure you have this model created
+
+// // Middleware
+// const { protect } = require("../middleware/authMiddleware");
+
+// // ===================================================================
+// // 1. STRIPE: Create Payment Intent
+// // ===================================================================
+// router.post("/create-stripe-intent", protect, async (req, res) => {
+//   const { orderId } = req.body;
+
+//   try {
+//     const order = await Order.findById(orderId);
+//     if (!order) {
+//       return res.status(404).json({ message: "Order not found" });
+//     }
+
+//     // ⚠️ CURRENCY CONVERSION (Critical for Nepal)
+//     // Stripe does not support NPR. We must convert NPR to USD.
+//     // Assuming 1 USD = 133 NPR (You should use a dynamic API in production)
+//     const EXCHANGE_RATE = 133;
+//     const priceInUsd = order.totalPrice / EXCHANGE_RATE;
+
+//     // Stripe expects amount in CENTS (smallest unit)
+//     const amountInCents = Math.round(priceInUsd * 100);
+
+//     // Minimum Stripe charge is usually $0.50 (50 cents)
+//     if (amountInCents < 50) {
+//       return res
+//         .status(400)
+//         .json({ message: "Amount too low for card payment." });
+//     }
+
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       amount: amountInCents,
+//       currency: "usd",
+//       automatic_payment_methods: { enabled: true },
+//       metadata: {
+//         orderId: order._id.toString(),
+//         userId: req.user._id.toString(),
+//         originalAmountNPR: order.totalPrice, // Track original NPR amount
+//       },
+//     });
+
+//     res.json({ clientSecret: paymentIntent.client_secret });
+//   } catch (error) {
+//     console.error("Stripe Intent Error:", error);
+//     res.status(500).json({ message: "Failed to create payment intent" });
+//   }
+// });
+
+// // ===================================================================
+// // 2. STRIPE: Verify Payment (Manual Confirmation)
+// // ===================================================================
+// router.post("/verify-stripe", protect, async (req, res) => {
+//   const { paymentIntentId, orderId } = req.body;
+
+//   try {
+//     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+//     if (paymentIntent.status === "succeeded") {
+//       const order = await Order.findById(orderId);
+//       if (!order) return res.status(404).json({ message: "Order not found" });
+
+//       if (order.isPaid) return res.json({ message: "Order already paid" });
+
+//       // Update Order
+//       order.isPaid = true;
+//       order.paidAt = Date.now();
+//       order.paymentMethod = "Stripe";
+//       order.paymentResult = {
+//         id: paymentIntent.id,
+//         status: paymentIntent.status,
+//         email: req.user.email,
+//         amount_paid_usd: paymentIntent.amount / 100,
+//       };
+
+//       await order.save();
+
+//       // Create Transaction Record
+//       await Transaction.create({
+//         user: req.user._id,
+//         order: order._id,
+//         amount: order.totalPrice, // Store in NPR
+//         currency: "NPR",
+//         paymentMethod: "Stripe",
+//         status: "Success",
+//         referenceId: paymentIntent.id,
+//       });
+
+//       res.json({ success: true, message: "Payment Successful" });
+//     } else {
+//       res.status(400).json({ message: "Payment not successful" });
+//     }
+//   } catch (error) {
+//     console.error("Stripe Verify Error:", error);
+//     res.status(500).json({ message: "Verification failed" });
+//   }
+// });
+
+// // ===================================================================
+// // 3. KHALTI: Verify Payment (Legacy)
+// // ===================================================================
+// router.post("/verify-khalti", protect, async (req, res) => {
+//   const { token, amount, orderId } = req.body; // Amount received from frontend (in Paisa)
+
+//   try {
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     // 1. Verify with Khalti Server
+//     const khaltiResponse = await axios.post(
+//       "https://khalti.com/api/v2/payment/verify/",
+//       { token, amount },
+//       {
+//         headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
+//       },
+//     );
+
+//     if (khaltiResponse.data && khaltiResponse.data.idx) {
+//       // ✅ SECURITY CHECK: Match Paid Amount vs Order Amount
+//       // Khalti returns amount in PAISA. Order price is in Rupees.
+//       const paidAmountPaisa = khaltiResponse.data.amount;
+//       const orderAmountPaisa = Math.round(order.totalPrice * 100);
+
+//       // Allow a small buffer (e.g. +/- 10 paisa) for floating point errors, strictly compare otherwise
+//       if (Math.abs(paidAmountPaisa - orderAmountPaisa) > 10) {
+//         return res.status(400).json({
+//           message:
+//             "Payment Verification Failed: Amount mismatch. Please contact support.",
+//         });
+//       }
+
+//       // 2. Success - Update Database
+//       order.isPaid = true;
+//       order.paidAt = Date.now();
+//       order.paymentMethod = "Khalti";
+//       order.paymentResult = {
+//         id: khaltiResponse.data.idx,
+//         status: "success",
+//         email: req.user.email,
+//         mobile: khaltiResponse.data.user.mobile, // Store payer's mobile if available
+//       };
+
+//       await order.save();
+
+//       // 3. Create Transaction Record
+//       await Transaction.create({
+//         user: req.user._id,
+//         order: order._id,
+//         amount: order.totalPrice,
+//         currency: "NPR",
+//         paymentMethod: "Khalti",
+//         status: "Success",
+//         referenceId: khaltiResponse.data.idx,
+//       });
+
+//       res.json({ message: "Payment Verified Successfully", order });
+//     } else {
+//       res.status(400).json({ message: "Invalid Khalti response" });
+//     }
+//   } catch (error) {
+//     console.error(
+//       "Khalti Verify Error:",
+//       error.response?.data || error.message,
+//     );
+//     res.status(400).json({
+//       message: error.response?.data?.detail || "Khalti verification failed",
+//     });
+//   }
+// });
+
+// // ===================================================================
+// // 4. CASH ON DELIVERY (COD)
+// // ===================================================================
+// router.post("/cod", protect, async (req, res) => {
+//   const { orderId } = req.body;
+
+//   try {
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     order.paymentMethod = "COD";
+//     order.isPaid = false;
+//     await order.save();
+
+//     res.json({ message: "Order confirmed for COD", order });
+//   } catch (error) {
+//     console.error("COD Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// module.exports = router;
+
+// const express = require("express");
+// const router = express.Router();
+// const { protect } = require("../middleware/authMiddleware");
+
+// // Import Controllers
+// const {
+//   createStripeIntent,
+//   verifyStripePayment,
+//   verifyKhalti,
+//   setCodMethod,
+// } = require("../controllers/paymentController");
+
+// // STRIPE
+// router.post("/create-stripe-intent", protect, createStripeIntent);
+// router.post("/verify-stripe", protect, verifyStripePayment);
+
+// // KHALTI (Legacy Token Verification)
+// router.post("/verify-khalti", protect, verifyKhalti);
+
+// // COD
+// router.post("/cod", protect, setCodMethod);
+
+// // Legacy Route Compatibility (Optional, if frontend calls 'set-cod' specifically)
+// router.post("/set-cod", protect, setCodMethod);
+
+// module.exports = router;
+
 const express = require("express");
-const axios = require("axios");
 const router = express.Router();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // ✅ Initialize Stripe
-
-// Models
-const Order = require("../models/Order");
-const Transaction = require("../models/Transaction");
-
-// Middleware
 const { protect } = require("../middleware/authMiddleware");
 
-// -------------------------------------------------------------------
-// 1. STRIPE: Create Payment Intent
-// @desc    Step 1: Create intent so frontend can show card element
-// @route   POST /api/payments/create-stripe-intent
-// -------------------------------------------------------------------
-router.post("/create-stripe-intent", protect, async (req, res) => {
-  const { orderId } = req.body;
+// Import Controllers
+const {
+  createStripeIntent,
+  verifyStripePayment,
+  initiateKhaltiPayment, // ✅ ADDED: This was missing
+  verifyKhalti,
+  setCodMethod,
+} = require("../controllers/paymentController");
 
-  try {
-    // 1. Fetch Order to calculate accurate amount (Security)
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: "Order not found" });
+// ===================================================================
+// PAYMENT ROUTES
+// ===================================================================
 
-    // 2. Convert to cents (Stripe expects lowest currency unit)
-    // Example: $10.00 -> 1000 cents
-    const amountInCents = Math.round(order.totalPrice * 100);
+// 1. STRIPE
+router.post("/create-stripe-intent", protect, createStripeIntent);
+router.post("/verify-stripe", protect, verifyStripePayment);
 
-    // 3. Create PaymentIntent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: "usd", // Change to 'npr' if your Stripe account supports it, otherwise convert
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        orderId: order._id.toString(),
-        userId: req.user._id.toString(),
-      },
-    });
+// 2. KHALTI (New ePayment Flow)
+// ✅ FIX: This route handles the request from Payment.jsx
+router.post("/khalti-initiate", protect, initiateKhaltiPayment);
 
-    // 4. Send Client Secret to Frontend
-    res.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error) {
-    console.error("Stripe Intent Error:", error);
-    res.status(500).json({ message: "Failed to create payment intent" });
-  }
-});
+// ✅ FIX: This handles the verification when user returns
+router.post("/khalti-lookup", protect, verifyKhalti);
 
-// -------------------------------------------------------------------
-// 2. STRIPE: Verify Payment (Webhook or Manual Confirmation)
-// @desc    Step 2: Confirm success after frontend finishes payment
-// @route   POST /api/payments/verify-stripe
-// -------------------------------------------------------------------
-router.post("/verify-stripe", protect, async (req, res) => {
-  const { paymentIntentId, orderId } = req.body;
+// 3. CASH ON DELIVERY
+router.post("/cod", protect, setCodMethod);
 
-  try {
-    // 1. Retrieve Intent from Stripe to confirm status
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-    if (paymentIntent.status === "succeeded") {
-      const order = await Order.findById(orderId);
-      if (!order) return res.status(404).json({ message: "Order not found" });
-
-      if (order.isPaid) return res.json({ message: "Order already paid" });
-
-      // 2. Update Order
-      order.isPaid = true;
-      order.paidAt = Date.now();
-      order.paymentMethod = "Stripe";
-      order.paymentResult = {
-        id: paymentIntent.id,
-        status: paymentIntent.status,
-        email: req.user.email,
-      };
-
-      await order.save();
-
-      // 3. Create Transaction Record
-      await Transaction.create({
-        user: req.user._id,
-        order: order._id,
-        amount: paymentIntent.amount / 100, // Convert back to main unit
-        type: "Payment",
-        paymentMethod: "Stripe",
-        status: "Success",
-        referenceId: paymentIntent.id,
-        description: `Stripe Payment for Order #${order._id}`,
-      });
-
-      res.json({ success: true, message: "Payment Successful" });
-    } else {
-      res.status(400).json({ message: "Payment not successful" });
-    }
-  } catch (error) {
-    console.error("Stripe Verification Error:", error);
-    res.status(500).json({ message: "Verification failed" });
-  }
-});
-
-// -------------------------------------------------------------------
-// 3. KHALTI: Verify Payment
-// @route   POST /api/payments/verify-khalti
-// -------------------------------------------------------------------
-router.post("/verify-khalti", protect, async (req, res) => {
-  const { token, amount, orderId } = req.body;
-
-  try {
-    const khaltiResponse = await axios.post(
-      "https://khalti.com/api/v2/payment/verify/",
-      { token, amount },
-      {
-        headers: { Authorization: `Key ${process.env.KHALTI_SECRET_KEY}` },
-      }
-    );
-
-    if (khaltiResponse.data) {
-      const order = await Order.findById(orderId);
-      if (!order) return res.status(404).json({ message: "Order not found" });
-
-      order.isPaid = true;
-      order.paidAt = Date.now();
-      order.paymentMethod = "Khalti";
-      order.paymentResult = {
-        id: khaltiResponse.data.idx,
-        status: "success",
-        email: req.user.email,
-      };
-
-      await order.save();
-
-      await Transaction.create({
-        user: req.user._id,
-        order: order._id,
-        amount: amount / 100,
-        type: "Payment",
-        paymentMethod: "Khalti",
-        status: "Success",
-        referenceId: khaltiResponse.data.idx,
-        description: `Khalti Payment for Order #${order._id}`,
-      });
-
-      res.json({ message: "Payment Verified", order });
-    }
-  } catch (error) {
-    console.error("Khalti Error:", error.response?.data || error.message);
-    res.status(400).json({ message: "Khalti verification failed" });
-  }
-});
-
-// -------------------------------------------------------------------
-// 4. CASH ON DELIVERY (COD)
-// @route   POST /api/payments/cod
-// -------------------------------------------------------------------
-router.post("/cod", protect, async (req, res) => {
-  const { orderId } = req.body;
-
-  try {
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    order.paymentMethod = "COD";
-    order.isPaid = false;
-    await order.save();
-
-    res.json({ message: "Order confirmed for COD", order });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+// Legacy Route Compatibility (Optional)
+router.post("/verify-khalti", protect, verifyKhalti);
 
 module.exports = router;

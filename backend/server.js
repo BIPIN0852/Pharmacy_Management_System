@@ -343,6 +343,7 @@ app.use("/api/doctors", doctorRoutes);
 
 // Customer Portal Utilities (Dashboard, Profile Stats)
 app.use("/api/customer", customerRoutes);
+app.use("/api/customer", userRoutes);
 app.use("/api/customer/saved-medicines", savedMedicineRoutes);
 app.use("/api/refill-reminders", refillRoutes);
 

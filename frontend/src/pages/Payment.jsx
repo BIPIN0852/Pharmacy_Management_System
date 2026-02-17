@@ -1,2639 +1,5 @@
 // import React, { useState, useEffect } from "react";
 // import { useSelector, useDispatch } from "react-redux";
-// import { Form, Button, Col, Card, Row, Table, Alert } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import FormContainer from "../components/FormContainer/FormContainer";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Stripe and Khalti keys -- replace with real keys in production!
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Get cart info (Redux logic)
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, items } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Parse query params from CustomerDashboard
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // State management
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Use query params if present (dashboard "Pay Now"), else Redux/cart
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const paymentAmount = Number(amountFromQuery) || Number(totalPrice) || 1000;
-//   const taxAmount = (paymentAmount * 0.1).toFixed(2);
-//   const finalAmount = (paymentAmount * 1.1).toFixed(2);
-
-//   // Checkout steps state
-//   const step1 = true; // Sign In
-//   const step2 = !!shippingAddress; // Shipping
-//   const step3 = true; // Payment (current)
-//   const step4 = false; // Place Order
-
-//   useEffect(() => {
-//     // Initialize Stripe
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     // Redirect if no shipping address
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // Stripe payment using backend
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: finalAmount * 100, // Stripe uses cents
-//             orderId: paymentOrderId,
-//             medicineName: items?.[0]?.name || "Order Prescription",
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) {
-//         setMessage(data.message || "Stripe payment error.");
-//         return;
-//       }
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("Stripe payment initiation failed.");
-//       console.error("Stripe error:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Khalti popup/widget payment (NPR)
-//   const handleKhaltiPayment = async () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("Khalti SDK not loaded. Please refresh the page.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     setMessage("");
-
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "demo",
-//       productName: "Pharmacy Order",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             // Backend verify after payment
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               setMessage("✅ Khalti Payment Success! Redirecting...");
-//               setTimeout(() => navigate("/placeorder"), 1500);
-//             } else {
-//               setMessage("❌ Khalti Payment Verification Failed!");
-//             }
-//           } catch (error) {
-//             setMessage("❌ Payment verification error.");
-//           }
-//         },
-//         onError: () => {
-//           setMessage("❌ Khalti Payment Failed!");
-//           setLoading(false);
-//         },
-//         onClose: () => {
-//           setLoading(false);
-//         },
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: paymentAmount * 100 }); // NPR to paisa
-//   };
-
-//   // COD handler
-//   const handleCOD = () => {
-//     dispatch(savePaymentMethod("COD"));
-//     setMessage("✅ COD selected! Redirecting...");
-//     setTimeout(() => navigate("/placeorder"), 1000);
-//   };
-
-//   // Main submit handler
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-
-//     if (paymentMethod === "Stripe") {
-//       await handleStripePayment();
-//     } else if (paymentMethod === "Khalti") {
-//       handleKhaltiPayment();
-//     } else if (paymentMethod === "COD") {
-//       handleCOD();
-//     }
-//   };
-
-//   return (
-//     <>
-//       {/* ✅ Updated CheckoutSteps with all 4 steps */}
-//       <CheckoutSteps step1={step1} step2={step2} step3={step3} step4={step4} />
-
-//       <FormContainer>
-//         <Row>
-//           {/* Payment Methods (Left Column) */}
-//           <Col md={8}>
-//             <Card className="shadow-lg border-0">
-//               <Card.Header className="bg-gradient-primary text-white p-4">
-//                 <h4 className="mb-0">
-//                   <i className="fas fa-credit-card me-2"></i>
-//                   Choose Payment Method
-//                 </h4>
-//               </Card.Header>
-//               <Card.Body className="p-4">
-//                 <Form onSubmit={submitHandler}>
-//                   <Form.Group className="mb-4">
-//                     <Form.Label as="legend" className="fw-bold fs-5 mb-3">
-//                       Select Your Payment Method
-//                     </Form.Label>
-
-//                     {/* Khalti */}
-//                     <div
-//                       className={`payment-card p-4 mb-3 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "Khalti"
-//                           ? "border-primary shadow-lg bg-primary-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("Khalti")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <img
-//                               src="https://khalti.com/assets/img/khalti-logo.svg"
-//                               alt="Khalti"
-//                               className="me-3"
-//                               style={{ height: "40px" }}
-//                             />
-//                             <div>
-//                               <div className="fw-bold">Khalti Wallet</div>
-//                               <small className="text-muted">
-//                                 Fast & Secure Digital Wallet
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="Khalti"
-//                         name="paymentMethod"
-//                         value="Khalti"
-//                         checked={paymentMethod === "Khalti"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-
-//                     {/* Stripe */}
-//                     <div
-//                       className={`payment-card p-4 mb-3 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "Stripe"
-//                           ? "border-primary shadow-lg bg-primary-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("Stripe")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <i className="fab fa-cc-stripe fa-2x text-primary me-3"></i>
-//                             <div>
-//                               <div className="fw-bold">Stripe (Card)</div>
-//                               <small className="text-muted">
-//                                 All Credit/Debit Cards
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="Stripe"
-//                         name="paymentMethod"
-//                         value="Stripe"
-//                         checked={paymentMethod === "Stripe"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-
-//                     {/* COD */}
-//                     <div
-//                       className={`payment-card p-4 mb-4 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "COD"
-//                           ? "border-success shadow-lg bg-success-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("COD")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <i className="fas fa-truck fa-2x text-success me-3"></i>
-//                             <div>
-//                               <div className="fw-bold">Cash on Delivery</div>
-//                               <small className="text-muted">
-//                                 Pay when delivered
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="COD"
-//                         name="paymentMethod"
-//                         value="COD"
-//                         checked={paymentMethod === "COD"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-//                   </Form.Group>
-//                 </Form>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-
-//           {/* Order Summary (Right Column) */}
-//           <Col md={4}>
-//             <Card
-//               className="shadow-lg border-0 h-100 sticky-top"
-//               style={{ top: "20px" }}
-//             >
-//               <Card.Header className="bg-light border-0">
-//                 <h5 className="mb-0 fw-bold text-primary">Order Summary</h5>
-//               </Card.Header>
-//               <Card.Body>
-//                 <Table className="mb-0">
-//                   <tbody>
-//                     <tr>
-//                       <td>Subtotal:</td>
-//                       <td className="text-end fw-semibold">
-//                         Rs{paymentAmount}
-//                       </td>
-//                     </tr>
-//                     <tr>
-//                       <td>Tax (10%):</td>
-//                       <td className="text-end">Rs{taxAmount}</td>
-//                     </tr>
-//                     <tr className="border-top">
-//                       <td className="fw-bold h6 mb-0">Total:</td>
-//                       <td className="text-end h5 mb-0 text-primary fw-bold">
-//                         ₹{finalAmount}
-//                       </td>
-//                     </tr>
-//                   </tbody>
-//                 </Table>
-
-//                 <div className="mt-4 pt-3 border-top">
-//                   <div className="d-flex justify-content-between align-items-center mb-3">
-//                     <span className="fw-bold">Order ID:</span>
-//                     <span className="fw-semibold text-primary">
-//                       #{paymentOrderId}
-//                     </span>
-//                   </div>
-
-//                   <Button
-//                     variant="primary"
-//                     size="lg"
-//                     className="w-100 rounded-pill px-4 py-2 fw-bold shadow-lg mb-2"
-//                     onClick={submitHandler}
-//                     disabled={loading || !paymentMethod}
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <span className="spinner-border spinner-border-sm me-2"></span>
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       `Pay Rs${finalAmount} Now`
-//                     )}
-//                   </Button>
-
-//                   <Button
-//                     variant="outline-secondary"
-//                     size="lg"
-//                     className="w-100 rounded-pill"
-//                     onClick={() => navigate(-1)}
-//                     disabled={loading}
-//                   >
-//                     ← Back
-//                   </Button>
-//                 </div>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-//         </Row>
-
-//         {/* Messages */}
-//         {message && (
-//           <Alert
-//             variant={
-//               message.includes("Success") || message.includes("✅")
-//                 ? "success"
-//                 : "danger"
-//             }
-//             className="mt-4 shadow-sm"
-//           >
-//             {message}
-//           </Alert>
-//         )}
-
-//         {/* Khalti SDK Note */}
-//         <div className="mt-4 text-center text-muted small p-3 bg-light rounded-3">
-//           <i className="fas fa-info-circle me-2"></i>
-//           Make sure to add Khalti SDK via script in your index.html:
-//           <br />
-//           <code>
-//             &lt;script
-//             src="https://khalti.com/static/khalti-checkout.js"&gt;&lt;/script&gt;
-//           </code>
-//         </div>
-//       </FormContainer>
-//     </>
-//   );
-// };
-
-// export default Payment;
-///////////////////////////////////////////////////////////////////////////////////////////
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Badge,
-//   Container,
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Stripe and Khalti keys -- replace with real keys in production!
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Get cart info (Redux logic)
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, items } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Parse query params from CustomerDashboard or Redirects
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // State management
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Use query params if present (dashboard "Pay Now"), else Redux/cart
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const paymentAmount = Number(amountFromQuery) || Number(totalPrice) || 1000; // Default fallback to prevent NaN
-//   const taxAmount = (paymentAmount * 0.1).toFixed(2);
-//   const finalAmount = (paymentAmount * 1.1).toFixed(2);
-
-//   // Checkout steps state
-//   const step1 = true; // Sign In
-//   const step2 = !!shippingAddress; // Shipping
-//   const step3 = true; // Payment (current)
-//   const step4 = !!paymentOrderId; // If Order ID exists, Step 4 is "Active/Done"
-
-//   useEffect(() => {
-//     // Initialize Stripe
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     // Redirect if no shipping address and not paying for an existing order
-//     if (!shippingAddress.address && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // Stripe payment using backend
-//   const handleStripePayment = async () => {
-//     if (!paymentOrderId) {
-//       setMessage("Order ID missing. Please place order first.");
-//       return;
-//     }
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(finalAmount * 100), // Stripe uses cents (Integer)
-//             orderId: paymentOrderId,
-//             medicineName: "Pharmacy Order", // Generic name if items not loaded
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) {
-//         setMessage(data.message || "Stripe payment error.");
-//         return;
-//       }
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("Stripe payment initiation failed.");
-//       console.error("Stripe error:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Khalti popup/widget payment (NPR)
-//   const handleKhaltiPayment = async () => {
-//     if (!paymentOrderId) {
-//       setMessage("Order ID missing. Please place order first.");
-//       return;
-//     }
-
-//     if (!window.KhaltiCheckout) {
-//       setMessage("Khalti SDK not loaded. Please refresh the page.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     setMessage("");
-
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "demo_order",
-//       productName: "Pharmacy Order",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             // Backend verify after payment
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               setMessage("✅ Khalti Payment Success! Redirecting...");
-//               // ✅ FIX: Redirect to Payment Success page, NOT PlaceOrder loop
-//               setTimeout(() => navigate("/payment-success"), 1500);
-//             } else {
-//               setMessage("❌ Khalti Payment Verification Failed!");
-//             }
-//           } catch (error) {
-//             setMessage("❌ Payment verification error.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error(error);
-//           setMessage("❌ Khalti Payment Failed!");
-//           setLoading(false);
-//         },
-//         onClose: () => {
-//           setLoading(false);
-//         },
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: Math.round(finalAmount * 100) }); // NPR to paisa
-//   };
-
-//   // COD handler
-//   const handleCOD = () => {
-//     // For COD, we just save the method and go to Review/PlaceOrder page
-//     dispatch(savePaymentMethod("COD"));
-//     setMessage("✅ COD selected! Redirecting to review...");
-//     setTimeout(() => navigate("/placeorder"), 500);
-//   };
-
-//   // Main submit handler
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-
-//     if (paymentMethod === "Stripe") {
-//       await handleStripePayment();
-//     } else if (paymentMethod === "Khalti") {
-//       handleKhaltiPayment();
-//     } else if (paymentMethod === "COD") {
-//       handleCOD();
-//     }
-//   };
-
-//   return (
-//     <Container className="my-5">
-//       {/* Checkout Steps */}
-//       <CheckoutSteps step1={step1} step2={step2} step3={step3} step4={step4} />
-
-//       <Row>
-//         {/* Payment Methods (Left Column) */}
-//         <Col md={8}>
-//           <Card className="shadow-lg border-0 mb-4">
-//             <Card.Header className="bg-primary text-white p-4">
-//               <h4 className="mb-0">
-//                 <i className="fas fa-credit-card me-2"></i>
-//                 Choose Payment Method
-//               </h4>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               <Form onSubmit={submitHandler}>
-//                 <Form.Group className="mb-4">
-//                   <Form.Label as="legend" className="fw-bold fs-5 mb-3">
-//                     Select Your Payment Method
-//                   </Form.Label>
-
-//                   {/* Khalti */}
-//                   <div
-//                     className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                       paymentMethod === "Khalti"
-//                         ? "border-primary bg-light shadow-sm"
-//                         : "border-light"
-//                     }`}
-//                     onClick={() => setPaymentMethod("Khalti")}
-//                     style={{
-//                       cursor: "pointer",
-//                       borderLeft:
-//                         paymentMethod === "Khalti" ? "5px solid #0d6efd" : "",
-//                     }}
-//                   >
-//                     <Form.Check
-//                       type="radio"
-//                       label={
-//                         <div className="d-flex align-items-center">
-//                           <img
-//                             src="https://web.khalti.com/static/img/logo1.png"
-//                             alt="Khalti"
-//                             className="me-3"
-//                             style={{ height: "30px" }}
-//                           />
-//                           <div>
-//                             <div className="fw-bold">Khalti Wallet</div>
-//                             <small className="text-muted">
-//                               Fast & Secure Digital Wallet
-//                             </small>
-//                           </div>
-//                         </div>
-//                       }
-//                       id="Khalti"
-//                       name="paymentMethod"
-//                       value="Khalti"
-//                       checked={paymentMethod === "Khalti"}
-//                       onChange={(e) => setPaymentMethod(e.target.value)}
-//                     />
-//                   </div>
-
-//                   {/* Stripe */}
-//                   <div
-//                     className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                       paymentMethod === "Stripe"
-//                         ? "border-primary bg-light shadow-sm"
-//                         : "border-light"
-//                     }`}
-//                     onClick={() => setPaymentMethod("Stripe")}
-//                     style={{
-//                       cursor: "pointer",
-//                       borderLeft:
-//                         paymentMethod === "Stripe" ? "5px solid #0d6efd" : "",
-//                     }}
-//                   >
-//                     <Form.Check
-//                       type="radio"
-//                       label={
-//                         <div className="d-flex align-items-center">
-//                           <i className="fab fa-cc-stripe fa-2x text-primary me-3"></i>
-//                           <div>
-//                             <div className="fw-bold">Stripe (Card)</div>
-//                             <small className="text-muted">
-//                               Credit/Debit Cards (Visa/Mastercard)
-//                             </small>
-//                           </div>
-//                         </div>
-//                       }
-//                       id="Stripe"
-//                       name="paymentMethod"
-//                       value="Stripe"
-//                       checked={paymentMethod === "Stripe"}
-//                       onChange={(e) => setPaymentMethod(e.target.value)}
-//                     />
-//                   </div>
-
-//                   {/* COD */}
-//                   <div
-//                     className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                       paymentMethod === "COD"
-//                         ? "border-success bg-light shadow-sm"
-//                         : "border-light"
-//                     }`}
-//                     onClick={() => setPaymentMethod("COD")}
-//                     style={{
-//                       cursor: "pointer",
-//                       borderLeft:
-//                         paymentMethod === "COD" ? "5px solid #198754" : "",
-//                     }}
-//                   >
-//                     <Form.Check
-//                       type="radio"
-//                       label={
-//                         <div className="d-flex align-items-center">
-//                           <i className="fas fa-truck fa-2x text-success me-3"></i>
-//                           <div>
-//                             <div className="fw-bold">Cash on Delivery</div>
-//                             <small className="text-muted">
-//                               Pay when delivered
-//                             </small>
-//                           </div>
-//                         </div>
-//                       }
-//                       id="COD"
-//                       name="paymentMethod"
-//                       value="COD"
-//                       checked={paymentMethod === "COD"}
-//                       onChange={(e) => setPaymentMethod(e.target.value)}
-//                     />
-//                   </div>
-//                 </Form.Group>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* Order Summary (Right Column) */}
-//         <Col md={4}>
-//           <Card
-//             className="shadow-lg border-0 h-100 sticky-top"
-//             style={{ top: "20px" }}
-//           >
-//             <Card.Header className="bg-light border-0">
-//               <h5 className="mb-0 fw-bold text-primary">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body>
-//               <Table className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td>Subtotal:</td>
-//                     <td className="text-end fw-semibold">₹{paymentAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td>Tax (10%):</td>
-//                     <td className="text-end">₹{taxAmount}</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="fw-bold h6 mb-0">Total:</td>
-//                     <td className="text-end h5 mb-0 text-primary fw-bold">
-//                       ₹{finalAmount}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top">
-//                 {paymentOrderId && (
-//                   <div className="d-flex justify-content-between align-items-center mb-3">
-//                     <span className="fw-bold">Order ID:</span>
-//                     <Badge bg="info">#{paymentOrderId}</Badge>
-//                   </div>
-//                 )}
-
-//                 <Button
-//                   variant="primary"
-//                   size="lg"
-//                   className="w-100 rounded-pill px-4 py-2 fw-bold shadow-lg mb-2"
-//                   onClick={submitHandler}
-//                   disabled={loading || !paymentMethod}
-//                 >
-//                   {loading ? (
-//                     <>
-//                       <span className="spinner-border spinner-border-sm me-2"></span>
-//                       Processing...
-//                     </>
-//                   ) : paymentMethod === "COD" ? (
-//                     "Continue"
-//                   ) : (
-//                     `Pay ₹${finalAmount}`
-//                   )}
-//                 </Button>
-
-//                 <Button
-//                   variant="outline-secondary"
-//                   size="lg"
-//                   className="w-100 rounded-pill"
-//                   onClick={() => navigate(-1)}
-//                   disabled={loading}
-//                 >
-//                   ← Back
-//                 </Button>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-
-//       {/* Messages */}
-//       {message && (
-//         <Alert
-//           variant={
-//             message.includes("Success") || message.includes("✅")
-//               ? "success"
-//               : "danger"
-//           }
-//           className="mt-4 shadow-sm"
-//         >
-//           {message}
-//         </Alert>
-//       )}
-
-//       {/* Khalti SDK Info */}
-//       <div className="mt-4 text-center text-muted small p-3 bg-light rounded-3">
-//         <i className="fas fa-info-circle me-2"></i>
-//         Secure Payment processed by Khalti/Stripe.
-//       </div>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import { Form, Button, Col, Card, Row, Table, Alert } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import FormContainer from "../components/FormContainer/FormContainer";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Stripe and Khalti keys -- replace with real keys in production!
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Get cart info (Redux logic)
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, items } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Parse query params from CustomerDashboard
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // State management
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Use query params if present (dashboard "Pay Now"), else Redux/cart (no hard-coded fallback)
-//   const rawAmount =
-//     amountFromQuery !== null && amountFromQuery !== ""
-//       ? Number(amountFromQuery)
-//       : Number(totalPrice || 0);
-
-//   const paymentAmount =
-//     Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0;
-
-//   const taxRate = 0.1;
-//   const taxAmount = (paymentAmount * taxRate).toFixed(2);
-//   const finalAmount = (paymentAmount * (1 + taxRate)).toFixed(2);
-
-//   const paymentOrderId = orderIdFromQuery || orderId || "—";
-
-//   // Checkout steps state
-//   const step1 = true; // Sign In
-//   const step2 = !!shippingAddress; // Shipping
-//   const step3 = true; // Payment (current)
-//   const step4 = false; // Place Order
-
-//   useEffect(() => {
-//     // Initialize Stripe
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     // Redirect if nothing to pay
-//     if (!shippingAddress && !orderIdFromQuery && !paymentAmount) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery, paymentAmount]);
-
-//   // Stripe payment using backend
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(Number(finalAmount) * 100), // Stripe uses cents
-//             orderId: paymentOrderId,
-//             medicineName: items?.[0]?.name || "Order Prescription",
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) {
-//         setMessage(data.message || "Stripe payment error.");
-//         return;
-//       }
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("Stripe payment initiation failed.");
-//       console.error("Stripe error:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Khalti popup/widget payment (NPR)
-//   const handleKhaltiPayment = async () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("Khalti SDK not loaded. Please refresh the page.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     setMessage("");
-
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "demo",
-//       productName: "Pharmacy Order",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               setMessage("✅ Khalti Payment Success! Redirecting...");
-//               setTimeout(() => navigate("/placeorder"), 1500);
-//             } else {
-//               setMessage("❌ Khalti Payment Verification Failed!");
-//             }
-//           } catch (error) {
-//             setMessage("❌ Payment verification error.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: () => {
-//           setMessage("❌ Khalti Payment Failed!");
-//           setLoading(false);
-//         },
-//         onClose: () => {
-//           setLoading(false);
-//         },
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: paymentAmount * 100 }); // NPR to paisa
-//   };
-
-//   // COD handler
-//   const handleCOD = () => {
-//     dispatch(savePaymentMethod("COD"));
-//     setMessage("✅ COD selected! Redirecting...");
-//     setTimeout(() => navigate("/placeorder"), 1000);
-//   };
-
-//   // Main submit handler
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-
-//     if (!paymentAmount) {
-//       setMessage("Payment amount is missing. Please go back to cart.");
-//       return;
-//     }
-
-//     if (paymentMethod === "Stripe") {
-//       await handleStripePayment();
-//     } else if (paymentMethod === "Khalti") {
-//       handleKhaltiPayment();
-//     } else if (paymentMethod === "COD") {
-//       handleCOD();
-//     }
-//   };
-
-//   return (
-//     <>
-//       <CheckoutSteps step1={step1} step2={step2} step3={step3} step4={step4} />
-
-//       <FormContainer>
-//         <Row>
-//           {/* Payment Methods (Left Column) */}
-//           <Col xs={12} md={8} className="mb-4 mb-md-0">
-//             <Card className="shadow-lg border-0 h-100">
-//               <Card.Header className="bg-gradient-primary text-white p-4">
-//                 <h4 className="mb-0">
-//                   <i className="fas fa-credit-card me-2"></i>
-//                   Choose Payment Method
-//                 </h4>
-//               </Card.Header>
-//               <Card.Body className="p-4">
-//                 <Form onSubmit={submitHandler}>
-//                   <Form.Group className="mb-4">
-//                     <Form.Label as="legend" className="fw-bold fs-5 mb-3">
-//                       Select Your Payment Method
-//                     </Form.Label>
-
-//                     {/* Khalti */}
-//                     <div
-//                       className={`payment-card p-4 mb-3 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "Khalti"
-//                           ? "border-primary shadow-lg bg-primary-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("Khalti")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <img
-//                               src="https://khalti.com/assets/img/khalti-logo.svg"
-//                               alt="Khalti"
-//                               className="me-3"
-//                               style={{ height: "40px" }}
-//                             />
-//                             <div>
-//                               <div className="fw-bold">Khalti Wallet</div>
-//                               <small className="text-muted">
-//                                 Fast & Secure Digital Wallet
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="Khalti"
-//                         name="paymentMethod"
-//                         value="Khalti"
-//                         checked={paymentMethod === "Khalti"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-
-//                     {/* Stripe */}
-//                     <div
-//                       className={`payment-card p-4 mb-3 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "Stripe"
-//                           ? "border-primary shadow-lg bg-primary-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("Stripe")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <i className="fab fa-cc-stripe fa-2x text-primary me-3"></i>
-//                             <div>
-//                               <div className="fw-bold">Stripe (Card)</div>
-//                               <small className="text-muted">
-//                                 All Credit/Debit Cards
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="Stripe"
-//                         name="paymentMethod"
-//                         value="Stripe"
-//                         checked={paymentMethod === "Stripe"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-
-//                     {/* COD */}
-//                     <div
-//                       className={`payment-card p-4 mb-4 border rounded-4 cursor-pointer transition-all ${
-//                         paymentMethod === "COD"
-//                           ? "border-success shadow-lg bg-success-subtle"
-//                           : "border-secondary-subtle hover-border-primary"
-//                       }`}
-//                       onClick={() => setPaymentMethod("COD")}
-//                     >
-//                       <Form.Check
-//                         type="radio"
-//                         label={
-//                           <div className="d-flex align-items-center">
-//                             <i className="fas fa-truck fa-2x text-success me-3"></i>
-//                             <div>
-//                               <div className="fw-bold">Cash on Delivery</div>
-//                               <small className="text-muted">
-//                                 Pay when delivered
-//                               </small>
-//                             </div>
-//                           </div>
-//                         }
-//                         id="COD"
-//                         name="paymentMethod"
-//                         value="COD"
-//                         checked={paymentMethod === "COD"}
-//                         onChange={(e) => setPaymentMethod(e.target.value)}
-//                       />
-//                     </div>
-//                   </Form.Group>
-//                 </Form>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-
-//           {/* Order Summary (Right Column) */}
-//           <Col xs={12} md={4}>
-//             <Card
-//               className="shadow-lg border-0 h-100"
-//               // sticky only on md+ screens
-//               style={
-//                 typeof window !== "undefined" && window.innerWidth >= 768
-//                   ? { position: "sticky", top: "20px" }
-//                   : {}
-//               }
-//             >
-//               <Card.Header className="bg-light border-0">
-//                 <h5 className="mb-0 fw-bold text-primary">Order Summary</h5>
-//               </Card.Header>
-//               <Card.Body>
-//                 <Table className="mb-0">
-//                   <tbody>
-//                     <tr>
-//                       <td>Subtotal:</td>
-//                       <td className="text-end fw-semibold">
-//                         Rs{paymentAmount.toFixed(2)}
-//                       </td>
-//                     </tr>
-//                     <tr>
-//                       <td>Tax (10%):</td>
-//                       <td className="text-end">Rs{taxAmount}</td>
-//                     </tr>
-//                     <tr className="border-top">
-//                       <td className="fw-bold h6 mb-0">Total:</td>
-//                       <td className="text-end h5 mb-0 text-primary fw-bold">
-//                         ₹{finalAmount}
-//                       </td>
-//                     </tr>
-//                   </tbody>
-//                 </Table>
-
-//                 <div className="mt-4 pt-3 border-top">
-//                   <div className="d-flex justify-content-between align-items-center mb-3">
-//                     <span className="fw-bold">Order ID:</span>
-//                     <span className="fw-semibold text-primary">
-//                       #{paymentOrderId}
-//                     </span>
-//                   </div>
-
-//                   <Button
-//                     variant="primary"
-//                     size="lg"
-//                     className="w-100 rounded-pill px-4 py-2 fw-bold shadow-lg mb-2"
-//                     onClick={submitHandler}
-//                     disabled={loading || !paymentMethod || !paymentAmount}
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <span className="spinner-border spinner-border-sm me-2"></span>
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       `Pay Rs${finalAmount} Now`
-//                     )}
-//                   </Button>
-
-//                   <Button
-//                     variant="outline-secondary"
-//                     size="lg"
-//                     className="w-100 rounded-pill"
-//                     onClick={() => navigate(-1)}
-//                     disabled={loading}
-//                   >
-//                     ← Back
-//                   </Button>
-//                 </div>
-//               </Card.Body>
-//             </Card>
-//           </Col>
-//         </Row>
-
-//         {/* Messages */}
-//         {message && (
-//           <Alert
-//             variant={
-//               message.includes("Success") || message.includes("✅")
-//                 ? "success"
-//                 : "danger"
-//             }
-//             className="mt-4 shadow-sm"
-//           >
-//             {message}
-//           </Alert>
-//         )}
-
-//         {/* Khalti SDK Note */}
-//         <div className="mt-4 text-center text-muted small p-3 bg-light rounded-3">
-//           <i className="fas fa-info-circle me-2"></i>
-//           Make sure to add Khalti SDK via script in your index.html:
-//           <br />
-//           <code>
-//             &lt;script
-//             src="https://khalti.com/static/khalti-checkout.js"&gt;&lt;/script&gt;
-//           </code>
-//         </div>
-//       </FormContainer>
-//     </>
-//   );
-// };
-
-// export default Payment;
-///////////////////////////////////////////////////////
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Badge,
-//   Container,
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import {
-//   CreditCard,
-//   Truck,
-//   ShieldCheck,
-//   Lock,
-//   FileText,
-//   CheckCircle,
-//   AlertTriangle,
-//   ChevronRight,
-// } from "lucide-react";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Keys (Replace with env variables in production)
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4"; // Test Key
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Redux State
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, items } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Query Params (from Dashboard "Pay Now" or Cart flow)
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // Local State
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Calculations
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const rawAmount = Number(amountFromQuery) || Number(totalPrice) || 0;
-
-//   // Financial Breakdown
-//   const subTotal = (rawAmount / 1.1).toFixed(2); // Assuming total included tax
-//   const taxAmount = (rawAmount - subTotal).toFixed(2);
-//   const finalAmount = rawAmount.toFixed(2);
-
-//   // Steps Active State
-//   const step1 = true;
-//   const step2 = !!shippingAddress;
-//   const step3 = true;
-//   const step4 = false;
-
-//   useEffect(() => {
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // --- HANDLERS ---
-
-//   // 1. Stripe
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(finalAmount * 100), // Cents
-//             orderId: paymentOrderId,
-//             medicineName: "Pharmacy Order #" + (paymentOrderId || "New"),
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) throw new Error(data.message || "Stripe session failed");
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("❌ Stripe Error: " + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // 2. Khalti
-//   const handleKhaltiPayment = async () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("⚠️ Khalti SDK missing. Please refresh.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "ORDER_" + Date.now(),
-//       productName: "Pharmacy Medicines",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               navigate(`/payment-success?id=${paymentOrderId}&method=Khalti`);
-//             } else {
-//               setMessage("❌ Verification Failed: " + data.message);
-//             }
-//           } catch (err) {
-//             setMessage("❌ Server Error during verification.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error(error);
-//           setMessage("❌ Khalti Transaction Failed.");
-//           setLoading(false);
-//         },
-//         onClose: () => setLoading(false),
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: Math.round(finalAmount * 100) }); // Paisa
-//   };
-
-//   // 3. COD
-//   const handleCOD = () => {
-//     dispatch(savePaymentMethod("COD"));
-//     // Redirect to place order to finalize, or success if already placed
-//     if (paymentOrderId) {
-//       // If order exists, just update status
-//       navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-//     } else {
-//       navigate("/placeorder");
-//     }
-//   };
-
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-//     if (paymentMethod === "Stripe") await handleStripePayment();
-//     else if (paymentMethod === "Khalti") handleKhaltiPayment();
-//     else if (paymentMethod === "COD") handleCOD();
-//   };
-
-//   return (
-//     <Container className="py-5" style={{ minHeight: "80vh" }}>
-//       <CheckoutSteps step1 step2 step3 />
-
-//       <Row className="g-4 mt-2">
-//         {/* LEFT: Payment Methods */}
-//         <Col lg={8}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
-//               </h4>
-//               <p className="text-muted small mb-0 mt-1">
-//                 All transactions are encrypted and secured.
-//               </p>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {message && (
-//                 <Alert
-//                   variant={message.includes("❌") ? "danger" : "warning"}
-//                   className="mb-4"
-//                 >
-//                   {message}
-//                 </Alert>
-//               )}
-
-//               <Form onSubmit={submitHandler}>
-//                 <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-//                 {/* Khalti Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Khalti"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Khalti")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Khalti"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Khalti"
-//                     name="paymentMethod"
-//                     value="Khalti"
-//                     checked={paymentMethod === "Khalti"}
-//                     onChange={() => setPaymentMethod("Khalti")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <img
-//                           src="https://web.khalti.com/static/img/logo1.png"
-//                           alt="Khalti"
-//                           height="30"
-//                           className="me-3"
-//                         />
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Khalti Digital Wallet
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay securely using your Khalti balance.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                     className="w-100"
-//                   />
-//                 </div>
-
-//                 {/* Stripe Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Stripe"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Stripe")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Stripe"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Stripe"
-//                     name="paymentMethod"
-//                     value="Stripe"
-//                     checked={paymentMethod === "Stripe"}
-//                     onChange={() => setPaymentMethod("Stripe")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-primary">
-//                           <CreditCard size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Credit / Debit Card (Stripe)
-//                           </span>
-//                           <small className="text-muted">
-//                             Visa, Mastercard, Amex supported.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 {/* COD Option */}
-//                 <div
-//                   className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "COD"
-//                       ? "border-success bg-success bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("COD")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "COD"
-//                         ? "5px solid #198754"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="COD"
-//                     name="paymentMethod"
-//                     value="COD"
-//                     checked={paymentMethod === "COD"}
-//                     onChange={() => setPaymentMethod("COD")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-success">
-//                           <Truck size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Cash on Delivery
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay when the medicines arrive at your door.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 <div className="d-grid mt-4">
-//                   <Button
-//                     variant="primary"
-//                     size="lg"
-//                     type="submit"
-//                     disabled={loading}
-//                     className="rounded-pill py-3 fw-bold shadow-sm"
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <span className="spinner-border spinner-border-sm me-2" />
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Lock size={18} className="me-2" /> Pay NPR{" "}
-//                         {finalAmount}
-//                       </>
-//                     )}
-//                   </Button>
-//                 </div>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT: Order Summary */}
-//         <Col lg={4}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {paymentOrderId && (
-//                 <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-//                   <span className="text-muted">Order ID:</span>
-//                   <span className="fw-bold text-primary">
-//                     #{paymentOrderId.slice(-6).toUpperCase()}
-//                   </span>
-//                 </div>
-//               )}
-
-//               <Table borderless size="sm" className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td className="text-muted">Subtotal</td>
-//                     <td className="text-end fw-medium">NPR {subTotal}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Tax (10%)</td>
-//                     <td className="text-end fw-medium">NPR {taxAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Delivery</td>
-//                     <td className="text-end text-success">Free</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="pt-3 h5 fw-bold">Total</td>
-//                     <td className="pt-3 h5 fw-bold text-primary text-end">
-//                       NPR {finalAmount}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top text-center">
-//                 <small className="text-muted d-block mb-2">
-//                   <ShieldCheck size={14} className="me-1 text-success" />
-//                   100% Secure Transaction
-//                 </small>
-//                 <div className="d-flex justify-content-center gap-2 opacity-50">
-//                   <CreditCard size={24} />
-//                   <Truck size={24} />
-//                 </div>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-//       <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Badge,
-//   Container,
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import {
-//   CreditCard,
-//   Truck,
-//   ShieldCheck,
-//   Lock,
-//   AlertTriangle,
-// } from "lucide-react";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Keys (Replace with env variables in production)
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Redux State
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Query Params (from Dashboard "Pay Now" or Cart flow)
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // Local State
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Calculations
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const rawAmount = Number(amountFromQuery) || Number(totalPrice) || 0;
-
-//   // Financial Breakdown
-//   const subTotal = (rawAmount / 1.1).toFixed(2); // Assuming total included 10% tax
-//   const taxAmount = (rawAmount - subTotal).toFixed(2);
-//   const finalAmount = rawAmount.toFixed(2);
-
-//   // Steps Active State
-//   const step1 = true;
-//   const step2 = !!shippingAddress;
-//   const step3 = true;
-//   const step4 = false;
-
-//   useEffect(() => {
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     // Redirect if no shipping address and not paying for an existing order
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // --- HANDLERS ---
-
-//   // 1. Stripe Payment
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(finalAmount * 100), // Stripe uses cents
-//             orderId: paymentOrderId, // Optional: might be null if new order
-//             medicineName: "Pharmacy Order",
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) throw new Error(data.message || "Stripe session failed");
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("❌ Stripe Error: " + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // 2. Khalti Payment
-//   const handleKhaltiPayment = async () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("⚠️ Khalti SDK missing. Please refresh.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "ORDER_NEW",
-//       productName: "Pharmacy Medicines",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId, // Passing ID if existing
-//               }),
-//             });
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               navigate(
-//                 `/payment-success?id=${paymentOrderId || "new"}&method=Khalti`
-//               );
-//             } else {
-//               setMessage("❌ Verification Failed: " + data.message);
-//             }
-//           } catch (err) {
-//             setMessage("❌ Server Error during verification.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error(error);
-//           setMessage("❌ Khalti Transaction Failed.");
-//           setLoading(false);
-//         },
-//         onClose: () => setLoading(false),
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: Math.round(finalAmount * 100) }); // Paisa
-//   };
-
-//   // 3. COD Payment
-//   const handleCOD = async () => {
-//     dispatch(savePaymentMethod("COD"));
-
-//     // Scenario A: Paying for an EXISTING Order (Dashboard -> Pay Now)
-//     if (paymentOrderId) {
-//       try {
-//         setLoading(true);
-//         const token = localStorage.getItem("token");
-//         const res = await fetch(`${API_BASE_URL}/payments/set-cod`, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({ orderId: paymentOrderId }),
-//         });
-
-//         if (res.ok) {
-//           navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-//         } else {
-//           setMessage("❌ Failed to update order method.");
-//         }
-//       } catch (err) {
-//         setMessage("❌ Connection Error.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-//     // Scenario B: New Order Checkout Flow
-//     else {
-//       navigate("/placeorder"); // Go to review page to finalize creation
-//     }
-//   };
-
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-//     if (paymentMethod === "Stripe") await handleStripePayment();
-//     else if (paymentMethod === "Khalti") handleKhaltiPayment();
-//     else if (paymentMethod === "COD") await handleCOD();
-//   };
-
-//   return (
-//     <Container className="py-5" style={{ minHeight: "80vh" }}>
-//       <CheckoutSteps step1 step2 step3 />
-
-//       <Row className="g-4 mt-2">
-//         {/* LEFT: Payment Methods */}
-//         <Col lg={8}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
-//               </h4>
-//               <p className="text-muted small mb-0 mt-1">
-//                 All transactions are encrypted and secured.
-//               </p>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {message && (
-//                 <Alert
-//                   variant={message.includes("❌") ? "danger" : "warning"}
-//                   className="mb-4"
-//                 >
-//                   {message}
-//                 </Alert>
-//               )}
-
-//               <Form onSubmit={submitHandler}>
-//                 <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-//                 {/* Khalti Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Khalti"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Khalti")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Khalti"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Khalti"
-//                     name="paymentMethod"
-//                     value="Khalti"
-//                     checked={paymentMethod === "Khalti"}
-//                     onChange={() => setPaymentMethod("Khalti")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <img
-//                           src="https://web.khalti.com/static/img/logo1.png"
-//                           alt="Khalti"
-//                           height="30"
-//                           className="me-3"
-//                         />
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Khalti Digital Wallet
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay securely using your Khalti balance.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                     className="w-100"
-//                   />
-//                 </div>
-
-//                 {/* Stripe Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Stripe"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Stripe")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Stripe"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Stripe"
-//                     name="paymentMethod"
-//                     value="Stripe"
-//                     checked={paymentMethod === "Stripe"}
-//                     onChange={() => setPaymentMethod("Stripe")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-primary">
-//                           <CreditCard size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Credit / Debit Card (Stripe)
-//                           </span>
-//                           <small className="text-muted">
-//                             Visa, Mastercard, Amex supported.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 {/* COD Option */}
-//                 <div
-//                   className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "COD"
-//                       ? "border-success bg-success bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("COD")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "COD"
-//                         ? "5px solid #198754"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="COD"
-//                     name="paymentMethod"
-//                     value="COD"
-//                     checked={paymentMethod === "COD"}
-//                     onChange={() => setPaymentMethod("COD")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-success">
-//                           <Truck size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Cash on Delivery
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay when the medicines arrive at your door.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 <div className="d-grid mt-4">
-//                   <Button
-//                     variant="primary"
-//                     size="lg"
-//                     type="submit"
-//                     disabled={loading}
-//                     className="rounded-pill py-3 fw-bold shadow-sm"
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <span className="spinner-border spinner-border-sm me-2" />
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Lock size={18} className="me-2" />{" "}
-//                         {paymentMethod === "COD" && !paymentOrderId
-//                           ? "Continue to Review"
-//                           : `Pay NPR ${finalAmount}`}
-//                       </>
-//                     )}
-//                   </Button>
-//                 </div>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT: Order Summary */}
-//         <Col lg={4}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {paymentOrderId && (
-//                 <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-//                   <span className="text-muted">Order ID:</span>
-//                   <span className="fw-bold text-primary">
-//                     #{paymentOrderId.slice(-6).toUpperCase()}
-//                   </span>
-//                 </div>
-//               )}
-
-//               <Table borderless size="sm" className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td className="text-muted">Subtotal</td>
-//                     <td className="text-end fw-medium">NPR {subTotal}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Tax (10%)</td>
-//                     <td className="text-end fw-medium">NPR {taxAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Delivery</td>
-//                     <td className="text-end text-success">Free</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="pt-3 h5 fw-bold">Total</td>
-//                     <td className="pt-3 h5 fw-bold text-primary text-end">
-//                       NPR {finalAmount}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top text-center">
-//                 <small className="text-muted d-block mb-2">
-//                   <ShieldCheck size={14} className="me-1 text-success" />
-//                   100% Secure Transaction
-//                 </small>
-//                 <div className="d-flex justify-content-center gap-2 opacity-50">
-//                   <CreditCard size={24} />
-//                   <Truck size={24} />
-//                 </div>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-//       <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Badge,
-//   Container,
-//   Spinner // Added Spinner
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import {
-//   CreditCard,
-//   Truck,
-//   ShieldCheck,
-//   Lock,
-//   AlertTriangle,
-//   ArrowLeft, // Added for Back Button
-//   Wallet // Added for Khalti
-// } from "lucide-react";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Keys (Replace with env variables in production)
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Redux State
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, cartItems } = cart; // Extracted cartItems
-//   const loggedInUser = userState.userInfo;
-
-//   // Query Params (from Dashboard "Pay Now" or Cart flow)
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // Local State
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // --- LOGIC UPDATE: Fallback for Refresh Issue ---
-//   // If Redux state is lost on refresh, try to get price from localStorage (checkoutData)
-//   const savedCheckoutData = JSON.parse(localStorage.getItem("checkoutData") || "{}");
-//   const persistedPrice = savedCheckoutData.totalPrice || 0;
-
-//   // Calculations
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const rawAmount = Number(amountFromQuery) || Number(totalPrice) || Number(persistedPrice) || 0;
-
-//   // Financial Breakdown
-//   const subTotal = (rawAmount / 1.1).toFixed(2); // Assuming total included 10% tax
-//   const taxAmount = (rawAmount - subTotal).toFixed(2);
-//   const finalAmount = rawAmount.toFixed(2);
-
-//   // Steps Active State
-//   const step1 = true;
-//   const step2 = !!shippingAddress;
-//   const step3 = true;
-//   const step4 = false;
-
-//   useEffect(() => {
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-
-//     // Redirect if no shipping address and not paying for an existing order
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // --- HANDLERS ---
-
-//   // 1. Stripe Payment
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(finalAmount * 100), // Stripe uses cents
-//             orderId: paymentOrderId, // Optional: might be null if new order
-//             medicineName: "Pharmacy Order",
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         }
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) throw new Error(data.message || "Stripe session failed");
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("❌ Stripe Error: " + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // 2. Khalti Payment
-//   const handleKhaltiPayment = async () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("⚠️ Khalti SDK missing. Please refresh.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: paymentOrderId || "ORDER_NEW",
-//       productName: "Pharmacy Medicines",
-//       productUrl: window.location.origin,
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId, // Passing ID if existing
-//               }),
-//             });
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               navigate(
-//                 `/payment-success?id=${paymentOrderId || "new"}&method=Khalti`
-//               );
-//             } else {
-//               setMessage("❌ Verification Failed: " + data.message);
-//             }
-//           } catch (err) {
-//             setMessage("❌ Server Error during verification.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error(error);
-//           setMessage("❌ Khalti Transaction Failed.");
-//           setLoading(false);
-//         },
-//         onClose: () => setLoading(false),
-//       },
-//     };
-
-//     const checkout = new window.KhaltiCheckout(khaltiConfig);
-//     checkout.show({ amount: Math.round(finalAmount * 100) }); // Paisa
-//   };
-
-//   // 3. COD Payment
-//   const handleCOD = async () => {
-//     dispatch(savePaymentMethod("COD"));
-
-//     // Scenario A: Paying for an EXISTING Order (Dashboard -> Pay Now)
-//     if (paymentOrderId) {
-//       try {
-//         setLoading(true);
-//         const token = localStorage.getItem("token");
-//         const res = await fetch(`${API_BASE_URL}/payments/set-cod`, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({ orderId: paymentOrderId }),
-//         });
-
-//         if (res.ok) {
-//           navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-//         } else {
-//           setMessage("❌ Failed to update order method.");
-//         }
-//       } catch (err) {
-//         setMessage("❌ Connection Error.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-//     // Scenario B: New Order Checkout Flow
-//     else {
-//       navigate("/placeorder"); // Go to review page to finalize creation
-//     }
-//   };
-
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-//     if (paymentMethod === "Stripe") await handleStripePayment();
-//     else if (paymentMethod === "Khalti") handleKhaltiPayment();
-//     else if (paymentMethod === "COD") await handleCOD();
-//   };
-
-//   return (
-//     <Container className="py-5" style={{ minHeight: "80vh" }}>
-//       <CheckoutSteps step1 step2 step3 step4={step4} />
-
-//       <Row className="g-4 mt-2">
-//         {/* LEFT: Payment Methods */}
-//         <Col lg={8}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
-//               </h4>
-//               <p className="text-muted small mb-0 mt-1">
-//                 All transactions are encrypted and secured.
-//               </p>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {message && (
-//                 <Alert
-//                   variant={message.includes("❌") ? "danger" : "warning"}
-//                   className="mb-4"
-//                 >
-//                   {message}
-//                 </Alert>
-//               )}
-
-//               <Form onSubmit={submitHandler}>
-//                 <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-//                 {/* Khalti Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Khalti"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Khalti")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Khalti"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Khalti"
-//                     name="paymentMethod"
-//                     value="Khalti"
-//                     checked={paymentMethod === "Khalti"}
-//                     onChange={() => setPaymentMethod("Khalti")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <img
-//                           src="https://web.khalti.com/static/img/logo1.png"
-//                           alt="Khalti"
-//                           height="30"
-//                           className="me-3 img-fluid"
-//                         />
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Khalti Digital Wallet
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay securely using your Khalti balance.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                     className="w-100"
-//                   />
-//                 </div>
-
-//                 {/* Stripe Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Stripe"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Stripe")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Stripe"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Stripe"
-//                     name="paymentMethod"
-//                     value="Stripe"
-//                     checked={paymentMethod === "Stripe"}
-//                     onChange={() => setPaymentMethod("Stripe")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-primary">
-//                           <CreditCard size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Credit / Debit Card (Stripe)
-//                           </span>
-//                           <small className="text-muted">
-//                             Visa, Mastercard, Amex supported.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 {/* COD Option */}
-//                 <div
-//                   className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "COD"
-//                       ? "border-success bg-success bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("COD")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "COD"
-//                         ? "5px solid #198754"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="COD"
-//                     name="paymentMethod"
-//                     value="COD"
-//                     checked={paymentMethod === "COD"}
-//                     onChange={() => setPaymentMethod("COD")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-success">
-//                           <Truck size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Cash on Delivery
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay when the medicines arrive at your door.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 <div className="d-flex gap-3 mt-4">
-//                   {/* Back Button */}
-//                   <Button
-//                     variant="light"
-//                     className="flex-grow-1 py-3 fw-bold text-muted border"
-//                     onClick={() => navigate("/shipping")}
-//                   >
-//                     <ArrowLeft size={18} className="me-2" /> Back
-//                   </Button>
-
-//                   {/* Pay Button */}
-//                   <Button
-//                     variant="primary"
-//                     className="flex-[2] rounded-pill py-3 fw-bold shadow-sm w-100"
-//                     type="submit"
-//                     disabled={loading}
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <Spinner
-//                           animation="border"
-//                           size="sm"
-//                           className="me-2"
-//                         />
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Lock size={18} className="me-2" />{" "}
-//                         {paymentMethod === "COD" && !paymentOrderId
-//                           ? "Continue to Review"
-//                           : `Pay NPR ${finalAmount}`}
-//                       </>
-//                     )}
-//                   </Button>
-//                 </div>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT: Order Summary */}
-//         <Col lg={4}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {cartItems && cartItems.length > 0 && (
-//                 <div className="alert alert-info py-2 small mb-3">
-//                   <strong>{cartItems.length}</strong> items in cart
-//                 </div>
-//               )}
-
-//               {paymentOrderId && (
-//                 <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-//                   <span className="text-muted">Order ID:</span>
-//                   <span className="fw-bold text-primary">
-//                     #{paymentOrderId.slice(-6).toUpperCase()}
-//                   </span>
-//                 </div>
-//               )}
-
-//               <Table borderless size="sm" className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td className="text-muted">Subtotal</td>
-//                     <td className="text-end fw-medium">NPR {subTotal}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Tax (10%)</td>
-//                     <td className="text-end fw-medium">NPR {taxAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Delivery</td>
-//                     <td className="text-end text-success">Free</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="pt-3 h5 fw-bold">Total</td>
-//                     <td className="pt-3 h5 fw-bold text-primary text-end">
-//                       NPR {Number(finalAmount).toLocaleString()}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top text-center">
-//                 <small className="text-muted d-block mb-2">
-//                   <ShieldCheck size={14} className="me-1 text-success" />
-//                   100% Secure Transaction
-//                 </small>
-//                 <div className="d-flex justify-content-center gap-2 opacity-50">
-//                   <CreditCard size={24} />
-//                   <Truck size={24} />
-//                 </div>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-//       <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
 // import {
 //   Form,
 //   Button,
@@ -2654,946 +20,11 @@
 // // Keys
 // const STRIPE_PUBLIC_KEY =
 //   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-// const API_BASE_URL = "http://localhost:5000/api";
 
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
+// // ✅ UPDATED: Use your TEST KEY here.
+// // Go to Khalti Dashboard > Switch to "Test Mode" > Copy "Test Public Key"
+// const KHALTI_PUBLIC_KEY = "aba70c54d2f249bf97c8fb59e8753a1d";
 
-//   // Redux State
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, cartItems } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Query Params
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // Local State
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Logic Fallback
-//   const savedCheckoutData = JSON.parse(
-//     localStorage.getItem("checkoutData") || "{}",
-//   );
-//   const persistedPrice = savedCheckoutData.totalPrice || 0;
-
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const rawAmount =
-//     Number(amountFromQuery) ||
-//     Number(totalPrice) ||
-//     Number(persistedPrice) ||
-//     0;
-
-//   // Financial Breakdown
-//   const subTotal = (rawAmount / 1.1).toFixed(2);
-//   const taxAmount = (rawAmount - subTotal).toFixed(2);
-//   const finalAmount = rawAmount.toFixed(2);
-
-//   const step1 = true;
-//   const step2 = !!shippingAddress;
-//   const step3 = true;
-//   const step4 = false;
-
-//   useEffect(() => {
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // --- HANDLERS ---
-
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(
-//         `${API_BASE_URL}/payments/create-stripe-session`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             amount: Math.round(finalAmount * 100),
-//             orderId: paymentOrderId,
-//             medicineName: "Pharmacy Order",
-//             customerEmail: loggedInUser?.email,
-//           }),
-//         },
-//       );
-
-//       const data = await res.json();
-//       if (!res.ok) throw new Error(data.message || "Stripe session failed");
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("❌ Stripe Error: " + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // ✅ FIXED KHALTI HANDLER
-//   const handleKhaltiPayment = () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage(
-//         "⚠️ Khalti SDK missing. Please check your internet or refresh.",
-//       );
-//       return;
-//     }
-
-//     setLoading(true);
-
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: String(paymentOrderId || "ORDER_NEW"), // Ensure String
-//       productName: "Medical Purchase",
-//       productUrl: window.location.href, // Use current URL
-//       paymentPreference: [
-//         "KHALTI",
-//         "EBANKING",
-//         "MOBILE_BANKING",
-//         "CONNECT_IPS",
-//         "SCT",
-//       ],
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               navigate(
-//                 `/payment-success?id=${paymentOrderId || "new"}&method=Khalti`,
-//               );
-//             } else {
-//               setMessage("❌ Verification Failed: " + data.message);
-//             }
-//           } catch (err) {
-//             setMessage("❌ Server Error during verification.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error("Khalti Error:", error);
-//           setMessage("❌ Khalti Transaction Failed.");
-//           setLoading(false);
-//         },
-//         onClose: () => {
-//           console.log("Khalti Popup Closed");
-//           setLoading(false);
-//         },
-//       },
-//     };
-
-//     try {
-//       const checkout = new window.KhaltiCheckout(khaltiConfig);
-//       checkout.show({ amount: Math.round(finalAmount * 100) }); // Paisa
-//     } catch (err) {
-//       console.error("Khalti Init Error:", err);
-//       setMessage("❌ Failed to load Khalti Payment.");
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleCOD = async () => {
-//     dispatch(savePaymentMethod("COD"));
-//     if (paymentOrderId) {
-//       try {
-//         setLoading(true);
-//         const token = localStorage.getItem("token");
-//         const res = await fetch(`${API_BASE_URL}/payments/set-cod`, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({ orderId: paymentOrderId }),
-//         });
-
-//         if (res.ok) {
-//           navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-//         } else {
-//           setMessage("❌ Failed to update order method.");
-//         }
-//       } catch (err) {
-//         setMessage("❌ Connection Error.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     } else {
-//       navigate("/placeorder");
-//     }
-//   };
-
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-//     if (paymentMethod === "Stripe") await handleStripePayment();
-//     else if (paymentMethod === "Khalti")
-//       handleKhaltiPayment(); // No await needed for Khalti setup
-//     else if (paymentMethod === "COD") await handleCOD();
-//   };
-
-//   return (
-//     <Container className="py-5" style={{ minHeight: "80vh" }}>
-//       <CheckoutSteps step1 step2 step3 step4={step4} />
-
-//       <Row className="g-4 mt-2">
-//         <Col lg={8}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
-//               </h4>
-//               <p className="text-muted small mb-0 mt-1">
-//                 All transactions are encrypted and secured.
-//               </p>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {message && (
-//                 <Alert
-//                   variant={message.includes("❌") ? "danger" : "warning"}
-//                   className="mb-4"
-//                 >
-//                   {message}
-//                 </Alert>
-//               )}
-
-//               <Form onSubmit={submitHandler}>
-//                 <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-//                 {/* Khalti Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Khalti"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Khalti")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Khalti"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Khalti"
-//                     name="paymentMethod"
-//                     value="Khalti"
-//                     checked={paymentMethod === "Khalti"}
-//                     onChange={() => setPaymentMethod("Khalti")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <img
-//                           src="https://web.khalti.com/static/img/logo1.png"
-//                           alt="Khalti"
-//                           height="30"
-//                           className="me-3 img-fluid"
-//                         />
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Khalti Digital Wallet
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay securely using your Khalti balance.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                     className="w-100"
-//                   />
-//                 </div>
-
-//                 {/* Stripe Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Stripe"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Stripe")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "Stripe"
-//                         ? "5px solid #0d6efd"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Stripe"
-//                     name="paymentMethod"
-//                     value="Stripe"
-//                     checked={paymentMethod === "Stripe"}
-//                     onChange={() => setPaymentMethod("Stripe")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-primary">
-//                           <CreditCard size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Credit / Debit Card (Stripe)
-//                           </span>
-//                           <small className="text-muted">
-//                             Visa, Mastercard, Amex supported.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 {/* COD Option */}
-//                 <div
-//                   className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "COD"
-//                       ? "border-success bg-success bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("COD")}
-//                   style={{
-//                     borderLeft:
-//                       paymentMethod === "COD"
-//                         ? "5px solid #198754"
-//                         : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="COD"
-//                     name="paymentMethod"
-//                     value="COD"
-//                     checked={paymentMethod === "COD"}
-//                     onChange={() => setPaymentMethod("COD")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-success">
-//                           <Truck size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">
-//                             Cash on Delivery
-//                           </span>
-//                           <small className="text-muted">
-//                             Pay when the medicines arrive at your door.
-//                           </small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 <div className="d-flex gap-3 mt-4">
-//                   <Button
-//                     variant="light"
-//                     className="flex-grow-1 py-3 fw-bold text-muted border"
-//                     onClick={() => navigate("/shipping")}
-//                   >
-//                     <ArrowLeft size={18} className="me-2" /> Back
-//                   </Button>
-
-//                   <Button
-//                     variant="primary"
-//                     className="flex-[2] rounded-pill py-3 fw-bold shadow-sm w-100"
-//                     type="submit"
-//                     disabled={loading}
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <Spinner
-//                           animation="border"
-//                           size="sm"
-//                           className="me-2"
-//                         />
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Lock size={18} className="me-2" />{" "}
-//                         {paymentMethod === "COD" && !paymentOrderId
-//                           ? "Continue to Review"
-//                           : `Pay NPR ${finalAmount}`}
-//                       </>
-//                     )}
-//                   </Button>
-//                 </div>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT: Order Summary */}
-//         <Col lg={4}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {cartItems && cartItems.length > 0 && (
-//                 <div className="alert alert-info py-2 small mb-3">
-//                   <strong>{cartItems.length}</strong> items in cart
-//                 </div>
-//               )}
-
-//               {paymentOrderId && (
-//                 <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-//                   <span className="text-muted">Order ID:</span>
-//                   <span className="fw-bold text-primary">
-//                     #{paymentOrderId.slice(-6).toUpperCase()}
-//                   </span>
-//                 </div>
-//               )}
-
-//               <Table borderless size="sm" className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td className="text-muted">Subtotal</td>
-//                     <td className="text-end fw-medium">NPR {subTotal}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Tax (10%)</td>
-//                     <td className="text-end fw-medium">NPR {taxAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Delivery</td>
-//                     <td className="text-end text-success">Free</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="pt-3 h5 fw-bold">Total</td>
-//                     <td className="pt-3 h5 fw-bold text-primary text-end">
-//                       NPR {Number(finalAmount).toLocaleString()}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top text-center">
-//                 <small className="text-muted d-block mb-2">
-//                   <ShieldCheck size={14} className="me-1 text-success" />
-//                   100% Secure Transaction
-//                 </small>
-//                 <div className="d-flex justify-content-center gap-2 opacity-50">
-//                   <CreditCard size={24} />
-//                   <Truck size={24} />
-//                 </div>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-//       <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Container,
-//   Spinner
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import {
-//   CreditCard,
-//   Truck,
-//   ShieldCheck,
-//   Lock,
-//   ArrowLeft,
-// } from "lucide-react";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Keys
-// const STRIPE_PUBLIC_KEY = "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "test_public_key_dc74e0fd57cb46cd93832aee0a390234"; // ✅ Use YOUR valid Test Key if the previous one fails
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const Payment = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const dispatch = useDispatch();
-
-//   // Redux State
-//   const cart = useSelector((state) => state.cart);
-//   const userState = useSelector((state) => state.userLogin || {});
-//   const { shippingAddress, orderId, totalPrice, cartItems } = cart;
-//   const loggedInUser = userState.userInfo;
-
-//   // Query Params
-//   const searchParams = new URLSearchParams(location.search);
-//   const orderIdFromQuery = searchParams.get("orderId");
-//   const amountFromQuery = searchParams.get("amount");
-
-//   // Local State
-//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [stripePromise, setStripePromise] = useState(null);
-
-//   // Logic Fallback (Fixes 0.00 issue on refresh)
-//   const savedCheckoutData = JSON.parse(localStorage.getItem("checkoutData") || "{}");
-//   const persistedPrice = savedCheckoutData.totalPrice || 0;
-
-//   const paymentOrderId = orderIdFromQuery || orderId;
-//   const rawAmount = Number(amountFromQuery) || Number(totalPrice) || Number(persistedPrice) || 0;
-
-//   // Financial Breakdown
-//   const subTotal = (rawAmount / 1.1).toFixed(2);
-//   const taxAmount = (rawAmount - subTotal).toFixed(2);
-//   const finalAmount = rawAmount.toFixed(2);
-
-//   const step1 = true;
-//   const step2 = !!shippingAddress;
-//   const step3 = true;
-//   const step4 = false;
-
-//   useEffect(() => {
-//     loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-//     if (!shippingAddress && !orderIdFromQuery) {
-//       navigate("/shipping");
-//     }
-//   }, [shippingAddress, navigate, orderIdFromQuery]);
-
-//   // --- HANDLERS ---
-
-//   const handleStripePayment = async () => {
-//     try {
-//       setLoading(true);
-//       setMessage("");
-//       const stripe = await stripePromise;
-//       const token = localStorage.getItem("token");
-
-//       const res = await fetch(`${API_BASE_URL}/payments/create-stripe-session`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           amount: Math.round(finalAmount * 100),
-//           orderId: paymentOrderId,
-//           medicineName: "Pharmacy Order",
-//           customerEmail: loggedInUser?.email,
-//         }),
-//       });
-
-//       const data = await res.json();
-//       if (!res.ok) throw new Error(data.message || "Stripe session failed");
-
-//       await stripe.redirectToCheckout({ sessionId: data.sessionId });
-//     } catch (error) {
-//       setMessage("❌ Stripe Error: " + error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // ✅ FIXED KHALTI HANDLER
-//   const handleKhaltiPayment = () => {
-//     if (!window.KhaltiCheckout) {
-//       setMessage("⚠️ Khalti SDK missing. Please check your internet or refresh.");
-//       return;
-//     }
-
-//     setLoading(true);
-
-//     const khaltiConfig = {
-//       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: String(paymentOrderId || "ORDER_NEW"), // Ensure String
-//       productName: "Medical Purchase",
-//       productUrl: window.location.href, // Use current URL
-//       paymentPreference: [
-//         "KHALTI",
-//         "EBANKING",
-//         "MOBILE_BANKING",
-//         "CONNECT_IPS",
-//         "SCT",
-//       ],
-//       eventHandler: {
-//         onSuccess: async (payload) => {
-//           try {
-//             const token = localStorage.getItem("token");
-//             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${token}`,
-//               },
-//               body: JSON.stringify({
-//                 token: payload.token,
-//                 amount: payload.amount,
-//                 orderId: paymentOrderId,
-//               }),
-//             });
-//             const data = await res.json();
-//             if (data.success) {
-//               dispatch(savePaymentMethod("Khalti"));
-//               navigate(`/payment-success?id=${paymentOrderId || "new"}&method=Khalti`);
-//             } else {
-//               setMessage("❌ Verification Failed: " + data.message);
-//             }
-//           } catch (err) {
-//             setMessage("❌ Server Error during verification.");
-//           } finally {
-//             setLoading(false);
-//           }
-//         },
-//         onError: (error) => {
-//           console.error("Khalti Error:", error);
-//           setMessage("❌ Khalti Transaction Failed.");
-//           setLoading(false);
-//         },
-//         onClose: () => {
-//           console.log("Khalti Popup Closed");
-//           setLoading(false);
-//         },
-//       },
-//     };
-
-//     try {
-//       const checkout = new window.KhaltiCheckout(khaltiConfig);
-//       checkout.show({ amount: Math.round(finalAmount * 100) }); // Paisa
-//     } catch (err) {
-//       console.error("Khalti Init Error:", err);
-//       setMessage("❌ Failed to load Khalti Payment.");
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleCOD = async () => {
-//     dispatch(savePaymentMethod("COD"));
-//     if (paymentOrderId) {
-//       try {
-//         setLoading(true);
-//         const token = localStorage.getItem("token");
-//         const res = await fetch(`${API_BASE_URL}/payments/set-cod`, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({ orderId: paymentOrderId }),
-//         });
-
-//         if (res.ok) {
-//           navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-//         } else {
-//           setMessage("❌ Failed to update order method.");
-//         }
-//       } catch (err) {
-//         setMessage("❌ Connection Error.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     } else {
-//       navigate("/placeorder");
-//     }
-//   };
-
-//   const submitHandler = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-//     if (paymentMethod === "Stripe") await handleStripePayment();
-//     else if (paymentMethod === "Khalti") handleKhaltiPayment(); // No await needed for Khalti setup
-//     else if (paymentMethod === "COD") await handleCOD();
-//   };
-
-//   return (
-//     <Container className="py-5" style={{ minHeight: "80vh" }}>
-//       <CheckoutSteps step1 step2 step3 step4={step4} />
-
-//       <Row className="g-4 mt-2">
-//         <Col lg={8}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
-//               </h4>
-//               <p className="text-muted small mb-0 mt-1">
-//                 All transactions are encrypted and secured.
-//               </p>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {message && (
-//                 <Alert
-//                   variant={message.includes("❌") ? "danger" : "warning"}
-//                   className="mb-4"
-//                 >
-//                   {message}
-//                 </Alert>
-//               )}
-
-//               <Form onSubmit={submitHandler}>
-//                 <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-//                 {/* Khalti Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Khalti"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Khalti")}
-//                   style={{
-//                     borderLeft: paymentMethod === "Khalti" ? "5px solid #0d6efd" : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Khalti"
-//                     name="paymentMethod"
-//                     value="Khalti"
-//                     checked={paymentMethod === "Khalti"}
-//                     onChange={() => setPaymentMethod("Khalti")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <img
-//                           src="https://web.khalti.com/static/img/logo1.png"
-//                           alt="Khalti"
-//                           height="30"
-//                           className="me-3 img-fluid"
-//                         />
-//                         <div>
-//                           <span className="d-block fw-bold">Khalti Digital Wallet</span>
-//                           <small className="text-muted">Pay securely using your Khalti balance.</small>
-//                         </div>
-//                       </div>
-//                     }
-//                     className="w-100"
-//                   />
-//                 </div>
-
-//                 {/* Stripe Option */}
-//                 <div
-//                   className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "Stripe"
-//                       ? "border-primary bg-primary bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("Stripe")}
-//                   style={{
-//                     borderLeft: paymentMethod === "Stripe" ? "5px solid #0d6efd" : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="Stripe"
-//                     name="paymentMethod"
-//                     value="Stripe"
-//                     checked={paymentMethod === "Stripe"}
-//                     onChange={() => setPaymentMethod("Stripe")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-primary">
-//                           <CreditCard size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">Credit / Debit Card (Stripe)</span>
-//                           <small className="text-muted">Visa, Mastercard, Amex supported.</small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 {/* COD Option */}
-//                 <div
-//                   className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-//                     paymentMethod === "COD"
-//                       ? "border-success bg-success bg-opacity-10"
-//                       : "hover-shadow"
-//                   }`}
-//                   onClick={() => setPaymentMethod("COD")}
-//                   style={{
-//                     borderLeft: paymentMethod === "COD" ? "5px solid #198754" : "1px solid #dee2e6",
-//                   }}
-//                 >
-//                   <Form.Check
-//                     type="radio"
-//                     id="COD"
-//                     name="paymentMethod"
-//                     value="COD"
-//                     checked={paymentMethod === "COD"}
-//                     onChange={() => setPaymentMethod("COD")}
-//                     label={
-//                       <div className="d-flex align-items-center w-100">
-//                         <div className="me-3 text-success">
-//                           <Truck size={30} />
-//                         </div>
-//                         <div>
-//                           <span className="d-block fw-bold">Cash on Delivery</span>
-//                           <small className="text-muted">Pay when the medicines arrive at your door.</small>
-//                         </div>
-//                       </div>
-//                     }
-//                   />
-//                 </div>
-
-//                 <div className="d-flex gap-3 mt-4">
-//                   <Button
-//                     variant="light"
-//                     className="flex-grow-1 py-3 fw-bold text-muted border"
-//                     onClick={() => navigate("/shipping")}
-//                   >
-//                     <ArrowLeft size={18} className="me-2" /> Back
-//                   </Button>
-
-//                   <Button
-//                     variant="primary"
-//                     className="flex-[2] rounded-pill py-3 fw-bold shadow-sm w-100"
-//                     type="submit"
-//                     disabled={loading}
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <Spinner animation="border" size="sm" className="me-2" />
-//                         Processing...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Lock size={18} className="me-2" />{" "}
-//                         {paymentMethod === "COD" && !paymentOrderId
-//                           ? "Continue to Review"
-//                           : `Pay NPR ${finalAmount}`}
-//                       </>
-//                     )}
-//                   </Button>
-//                 </div>
-//               </Form>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT: Order Summary */}
-//         <Col lg={4}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               {cartItems && cartItems.length > 0 && (
-//                 <div className="alert alert-info py-2 small mb-3">
-//                   <strong>{cartItems.length}</strong> items in cart
-//                 </div>
-//               )}
-
-//               {paymentOrderId && (
-//                 <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-//                   <span className="text-muted">Order ID:</span>
-//                   <span className="fw-bold text-primary">
-//                     #{paymentOrderId.slice(-6).toUpperCase()}
-//                   </span>
-//                 </div>
-//               )}
-
-//               <Table borderless size="sm" className="mb-0">
-//                 <tbody>
-//                   <tr>
-//                     <td className="text-muted">Subtotal</td>
-//                     <td className="text-end fw-medium">NPR {subTotal}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Tax (10%)</td>
-//                     <td className="text-end fw-medium">NPR {taxAmount}</td>
-//                   </tr>
-//                   <tr>
-//                     <td className="text-muted">Delivery</td>
-//                     <td className="text-end text-success">Free</td>
-//                   </tr>
-//                   <tr className="border-top">
-//                     <td className="pt-3 h5 fw-bold">Total</td>
-//                     <td className="pt-3 h5 fw-bold text-primary text-end">
-//                       NPR {Number(finalAmount).toLocaleString()}
-//                     </td>
-//                   </tr>
-//                 </tbody>
-//               </Table>
-
-//               <div className="mt-4 pt-3 border-top text-center">
-//                 <small className="text-muted d-block mb-2">
-//                   <ShieldCheck size={14} className="me-1 text-success" />
-//                   100% Secure Transaction
-//                 </small>
-//                 <div className="d-flex justify-content-center gap-2 opacity-50">
-//                   <CreditCard size={24} />
-//                   <Truck size={24} />
-//                 </div>
-//               </div>
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-//       <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
-//     </Container>
-//   );
-// };
-
-// export default Payment;
-
-// import React, { useState, useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   Form,
-//   Button,
-//   Col,
-//   Card,
-//   Row,
-//   Table,
-//   Alert,
-//   Container,
-//   Spinner,
-// } from "react-bootstrap";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { loadStripe } from "@stripe/stripe-js";
-// import { CreditCard, Truck, ShieldCheck, Lock, ArrowLeft } from "lucide-react";
-// import CheckoutSteps from "../components/CheckoutSteps";
-// import { savePaymentMethod } from "../redux/actions/cartActions";
-
-// // Keys
-// const STRIPE_PUBLIC_KEY =
-//   "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-// const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
 // const API_BASE_URL = "http://localhost:5000/api";
 
 // const Payment = () => {
@@ -3690,12 +121,14 @@
 //     // Check if SDK is loaded
 //     if (!window.KhaltiCheckout) {
 //       setMessage(
-//         "⚠️ Khalti SDK missing. Please check your internet or refresh the page.",
+//         "⚠️ Khalti SDK missing. Please check your internet connection or refresh the page.",
 //       );
 //       return;
 //     }
 
-//     const amountInPaisa = Math.round(finalAmount * 100);
+//     // ✅ FIX: Ensure amount is Integer (Paisa)
+//     const amountInPaisa = Math.round(Number(finalAmount) * 100);
+
 //     if (amountInPaisa <= 0) {
 //       setMessage("❌ Invalid amount. Cannot process 0 payment.");
 //       return;
@@ -3705,9 +138,9 @@
 
 //     const khaltiConfig = {
 //       publicKey: KHALTI_PUBLIC_KEY,
-//       productIdentity: String(paymentOrderId || "ORDER_NEW"),
+//       productIdentity: String(paymentOrderId || `ORDER_${Date.now()}`),
 //       productName: "Pharmacy Order",
-//       productUrl: window.location.href, // Required for merchant validation
+//       productUrl: "http://localhost:3000", // ✅ Must be a valid URL string
 //       paymentPreference: [
 //         "KHALTI",
 //         "EBANKING",
@@ -3720,6 +153,8 @@
 //           console.log("Khalti Success:", payload);
 //           try {
 //             const token = localStorage.getItem("token");
+
+//             // ✅ Send payload to backend (Backend must use SECRET KEY)
 //             const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
 //               method: "POST",
 //               headers: {
@@ -3750,7 +185,7 @@
 //         },
 //         onError: (error) => {
 //           console.log("Khalti Error:", error);
-//           setMessage("❌ Transaction Failed. Please try again.");
+//           // Don't show generic error to user immediately, log it
 //           setLoading(false);
 //         },
 //         onClose: () => {
@@ -4065,499 +500,755 @@
 
 // export default Payment;
 
+// import React, { useState, useEffect } from "react";
+// import { useSelector, useDispatch } from "react-redux";
+// import { useNavigate, useSearchParams } from "react-router-dom";
+// import {
+//   Form,
+//   Button,
+//   Col,
+//   Row,
+//   Card,
+//   Container,
+//   Alert,
+//   Spinner,
+//   Table,
+// } from "react-bootstrap";
+// import { CreditCard, Truck, ShieldCheck, Lock, Wallet } from "lucide-react";
+// import { loadStripe } from "@stripe/stripe-js";
+// import {
+//   Elements,
+//   PaymentElement,
+//   useStripe,
+//   useElements,
+// } from "@stripe/react-stripe-js";
+// import CheckoutSteps from "../components/CheckoutSteps";
+// import { savePaymentMethod } from "../redux/actions/cartActions";
+
+// // --- CONFIGURATION ---
+// const API_BASE_URL = "http://localhost:5000/api";
+// // Replace with your actual Publishable Key from Stripe Dashboard
+// const STRIPE_PUBLIC_KEY = "pk_test_YOUR_STRIPE_PUBLISHABLE_KEY";
+// const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+
+// // ==============================================================================
+// // INTERNAL COMPONENT: Stripe Form
+// // ==============================================================================
+// const StripeCheckoutForm = ({ amount }) => {
+//   const stripe = useStripe();
+//   const elements = useElements();
+//   const [error, setError] = useState(null);
+//   const [processing, setProcessing] = useState(false);
+
+//   const handleSubmit = async (event) => {
+//     event.preventDefault();
+//     if (!stripe || !elements) return;
+
+//     setProcessing(true);
+
+//     const { error: submitError } = await stripe.confirmPayment({
+//       elements,
+//       confirmParams: {
+//         return_url: `${window.location.origin}/payment-success?method=Stripe`,
+//       },
+//     });
+
+//     if (submitError) {
+//       setError(submitError.message);
+//       setProcessing(false);
+//     }
+//   };
+
+//   return (
+//     <Form onSubmit={handleSubmit} className="mt-3 border-top pt-3">
+//       <PaymentElement />
+//       {error && (
+//         <Alert variant="danger" className="mt-2">
+//           {error}
+//         </Alert>
+//       )}
+//       <Button
+//         type="submit"
+//         variant="primary"
+//         className="w-100 mt-3 py-2 fw-bold"
+//         disabled={!stripe || processing}
+//       >
+//         {processing ? <Spinner size="sm" /> : `Pay Rs. ${amount} securely`}
+//       </Button>
+//     </Form>
+//   );
+// };
+
+// // ==============================================================================
+// // MAIN COMPONENT: Payment Page
+// // ==============================================================================
+// const Payment = () => {
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch();
+//   const [searchParams] = useSearchParams();
+
+//   // 1. Get Order ID from URL (Passed from PlaceOrder page)
+//   const orderId = searchParams.get("orderId");
+
+//   // Redux State
+//   const cart = useSelector((state) => state.cart);
+//   const { totalPrice, cartItems } = cart;
+
+//   // Local State
+//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState("");
+//   const [clientSecret, setClientSecret] = useState("");
+
+//   useEffect(() => {
+//     if (!orderId) {
+//       navigate("/placeorder");
+//     }
+//   }, [orderId, navigate]);
+
+//   // --- HANDLER: Fetch Stripe Intent ---
+//   const fetchStripeIntent = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       const res = await fetch(`${API_BASE_URL}/payments/create-stripe-intent`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       setClientSecret(data.clientSecret);
+//     } catch (err) {
+//       setMessage("Failed to load Stripe: " + err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- HANDLER: Initiate Khalti (Server-to-Server Redirect) ---
+//   const handleKhaltiPayment = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+
+//       // Call YOUR Backend (which talks to a.khalti.com)
+//       const res = await fetch(`${API_BASE_URL}/payments/khalti-initiate`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) throw new Error(data.message || "Initiation failed");
+
+//       if (data.payment_url) {
+//         dispatch(savePaymentMethod("Khalti"));
+//         // ✅ CRITICAL: Redirect the browser to Khalti
+//         window.location.href = data.payment_url;
+//       } else {
+//         throw new Error("No payment URL received from Khalti.");
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       setMessage("❌ Khalti Error: " + err.message);
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- HANDLER: Cash on Delivery ---
+//   const handleCOD = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       const res = await fetch(`${API_BASE_URL}/payments/cod`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       dispatch(savePaymentMethod("COD"));
+//       navigate(`/payment-success?method=COD&id=${orderId}`);
+//     } catch (err) {
+//       setMessage("COD Error: " + err.message);
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- HANDLER: Method Selection Change ---
+//   const onMethodChange = (method) => {
+//     setPaymentMethod(method);
+//     setMessage("");
+//     if (method === "Stripe" && !clientSecret) {
+//       fetchStripeIntent();
+//     }
+//   };
+
+//   const submitHandler = (e) => {
+//     e.preventDefault();
+//     if (paymentMethod === "Khalti") handleKhaltiPayment();
+//     else if (paymentMethod === "COD") handleCOD();
+//   };
+
+//   return (
+//     <Container className="py-5" style={{ minHeight: "80vh" }}>
+//       <CheckoutSteps step1 step2 step3 />
+
+//       <Row className="g-4 mt-3">
+//         <Col lg={8}>
+//           <Card className="border-0 shadow-sm rounded-4 h-100">
+//             <Card.Header className="bg-white border-bottom p-4">
+//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
+//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
+//               </h4>
+//             </Card.Header>
+//             <Card.Body className="p-4">
+//               {message && <Alert variant="danger">{message}</Alert>}
+
+//               {/* Khalti Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "Khalti"
+//                     ? "border-primary bg-primary bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("Khalti")}
+//               >
+//                 <div className="d-flex align-items-center">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "Khalti"}
+//                     onChange={() => onMethodChange("Khalti")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <Wallet size={20} className="me-2 text-primary" /> Khalti
+//                       Digital Wallet
+//                     </span>
+//                     <small className="text-muted">
+//                       Pay with Khalti Balance or eBanking
+//                     </small>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Stripe Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "Stripe"
+//                     ? "border-primary bg-primary bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("Stripe")}
+//               >
+//                 <div className="d-flex align-items-center mb-2">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "Stripe"}
+//                     onChange={() => onMethodChange("Stripe")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <CreditCard size={20} className="me-2 text-info" /> Credit
+//                       / Debit Card
+//                     </span>
+//                     <small className="text-muted">
+//                       Visa, Mastercard, Amex (via Stripe)
+//                     </small>
+//                   </div>
+//                 </div>
+
+//                 {paymentMethod === "Stripe" && clientSecret && (
+//                   <div className="bg-white p-3 rounded border">
+//                     <Elements stripe={stripePromise} options={{ clientSecret }}>
+//                       <StripeCheckoutForm amount={totalPrice} />
+//                     </Elements>
+//                   </div>
+//                 )}
+//                 {paymentMethod === "Stripe" && !clientSecret && (
+//                   <div className="text-center py-3">
+//                     <Spinner size="sm" animation="border" /> Loading secure card
+//                     fields...
+//                   </div>
+//                 )}
+//               </div>
+
+//               {/* COD Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "COD"
+//                     ? "border-success bg-success bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("COD")}
+//               >
+//                 <div className="d-flex align-items-center">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "COD"}
+//                     onChange={() => onMethodChange("COD")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <Truck size={20} className="me-2 text-success" /> Cash on
+//                       Delivery
+//                     </span>
+//                     <small className="text-muted">
+//                       Pay securely when you receive your order.
+//                     </small>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {paymentMethod !== "Stripe" && (
+//                 <Button
+//                   onClick={submitHandler}
+//                   variant="primary"
+//                   className="w-100 py-3 fw-bold rounded-pill mt-3 shadow-sm"
+//                   disabled={loading}
+//                 >
+//                   {loading ? (
+//                     <>
+//                       <Spinner animation="border" size="sm" className="me-2" />
+//                       Processing...
+//                     </>
+//                   ) : (
+//                     <>
+//                       <Lock size={18} className="me-2" />
+//                       {paymentMethod === "COD"
+//                         ? "Place Order"
+//                         : `Pay Rs. ${totalPrice || 0}`}
+//                     </>
+//                   )}
+//                 </Button>
+//               )}
+//             </Card.Body>
+//           </Card>
+//         </Col>
+
+//         <Col lg={4}>
+//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
+//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
+//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
+//             </Card.Header>
+//             <Card.Body className="p-4">
+//               {cartItems && (
+//                 <div className="alert alert-info py-2 small mb-3">
+//                   <strong>{cartItems.length}</strong> items in cart
+//                 </div>
+//               )}
+//               <Table borderless size="sm" className="mb-0">
+//                 <tbody>
+//                   <tr>
+//                     <td className="text-muted">Order ID</td>
+//                     <td className="text-end font-monospace">
+//                       {orderId ? `#${orderId.slice(-6)}` : "..."}
+//                     </td>
+//                   </tr>
+//                   <tr>
+//                     <td className="text-muted">Total Amount</td>
+//                     <td className="text-end fw-bold text-primary h5">
+//                       Rs. {totalPrice}
+//                     </td>
+//                   </tr>
+//                 </tbody>
+//               </Table>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+//       </Row>
+//     </Container>
+//   );
+// };
+
+// export default Payment;
+
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Form,
   Button,
   Col,
-  Card,
   Row,
-  Table,
-  Alert,
+  Card,
   Container,
+  Alert,
   Spinner,
+  Table,
 } from "react-bootstrap";
-import { useNavigate, useLocation } from "react-router-dom";
+import { CreditCard, Truck, ShieldCheck, Lock, Wallet } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
-import { CreditCard, Truck, ShieldCheck, Lock, ArrowLeft } from "lucide-react";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import CheckoutSteps from "../components/CheckoutSteps";
 import { savePaymentMethod } from "../redux/actions/cartActions";
 
-// Keys
-const STRIPE_PUBLIC_KEY =
-  "pk_test_51SZ3HcAgufYbIAmejyFQscH1Zt6s2Vk3AY3CWdMSmEnwxL01QSmfF4CKjdJciwlsaMjKlrX5CqUURq4BqcmViYc2003TDl2Vu9";
-
-// ✅ UPDATED: YOUR LIVE PUBLIC KEY ONLY
-const KHALTI_PUBLIC_KEY = "168fa21351e64a2d998016e2093aaae4";
-
+// --- CONFIGURATION ---
 const API_BASE_URL = "http://localhost:5000/api";
+const STRIPE_PUBLIC_KEY = "pk_test_YOUR_STRIPE_PUBLISHABLE_KEY";
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
+// ==============================================================================
+// INTERNAL COMPONENT: Stripe Form
+// ==============================================================================
+const StripeCheckoutForm = ({ amount }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+
+    const { error: submitError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/payment-success?method=Stripe`,
+      },
+    });
+
+    if (submitError) {
+      setError(submitError.message);
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} className="mt-3 border-top pt-3">
+      <PaymentElement />
+      {error && (
+        <Alert variant="danger" className="mt-2">
+          {error}
+        </Alert>
+      )}
+      <Button
+        type="submit"
+        variant="primary"
+        className="w-100 mt-3 py-2 fw-bold"
+        disabled={!stripe || processing}
+      >
+        {processing ? <Spinner size="sm" /> : `Pay Rs. ${amount} securely`}
+      </Button>
+    </Form>
+  );
+};
+
+// ==============================================================================
+// MAIN COMPONENT: Payment Page
+// ==============================================================================
 const Payment = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
 
-  // Redux State
-  const cart = useSelector((state) => state.cart);
-  const userState = useSelector((state) => state.userLogin || {});
-  const { shippingAddress, orderId, totalPrice, cartItems } = cart;
-  const loggedInUser = userState.userInfo;
+  // ✅ FIX: Get Order ID AND Amount directly from URL
+  const orderId = searchParams.get("orderId");
+  const urlAmount = searchParams.get("amount");
 
-  // Query Params
-  const searchParams = new URLSearchParams(location.search);
-  const orderIdFromQuery = searchParams.get("orderId");
-  const amountFromQuery = searchParams.get("amount");
+  // Fallback to 0 if amount is missing
+  const finalAmount = urlAmount ? Number(urlAmount) : 0;
 
   // Local State
   const [paymentMethod, setPaymentMethod] = useState("Khalti");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [stripePromise, setStripePromise] = useState(null);
-
-  // Logic Fallback
-  const savedCheckoutData = JSON.parse(
-    localStorage.getItem("checkoutData") || "{}",
-  );
-  const persistedPrice = savedCheckoutData.totalPrice || 0;
-
-  const paymentOrderId = orderIdFromQuery || orderId;
-  const rawAmount =
-    Number(amountFromQuery) ||
-    Number(totalPrice) ||
-    Number(persistedPrice) ||
-    0;
-
-  // Financial Breakdown
-  const subTotal = (rawAmount / 1.1).toFixed(2);
-  const taxAmount = (rawAmount - subTotal).toFixed(2);
-  const finalAmount = rawAmount.toFixed(2);
-
-  const step1 = true;
-  const step2 = !!shippingAddress;
-  const step3 = true;
-  const step4 = false;
+  const [message, setMessage] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
 
   useEffect(() => {
-    loadStripe(STRIPE_PUBLIC_KEY).then(setStripePromise);
-    if (!shippingAddress && !orderIdFromQuery) {
-      navigate("/shipping");
+    if (!orderId) {
+      navigate("/placeorder");
     }
-  }, [shippingAddress, navigate, orderIdFromQuery]);
+  }, [orderId, navigate]);
 
-  // --- HANDLERS ---
-
-  const handleStripePayment = async () => {
+  // --- HANDLER: Fetch Stripe Intent ---
+  const fetchStripeIntent = async () => {
     try {
       setLoading(true);
-      setMessage("");
-      const stripe = await stripePromise;
       const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `${API_BASE_URL}/payments/create-stripe-session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            amount: Math.round(finalAmount * 100),
-            orderId: paymentOrderId,
-            medicineName: "Pharmacy Order",
-            customerEmail: loggedInUser?.email,
-          }),
+      const res = await fetch(`${API_BASE_URL}/payments/create-stripe-intent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
-
+        body: JSON.stringify({ orderId }),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Stripe session failed");
+      if (!res.ok) throw new Error(data.message);
 
-      await stripe.redirectToCheckout({ sessionId: data.sessionId });
-    } catch (error) {
-      setMessage("❌ Stripe Error: " + error.message);
+      setClientSecret(data.clientSecret);
+    } catch (err) {
+      setMessage("Failed to load Stripe: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ FIXED KHALTI HANDLER
-  const handleKhaltiPayment = () => {
-    // Check if SDK is loaded
-    if (!window.KhaltiCheckout) {
-      setMessage(
-        "⚠️ Khalti SDK missing. Please check your internet connection or refresh the page.",
-      );
-      return;
-    }
-
-    const amountInPaisa = Math.round(finalAmount * 100);
-    if (amountInPaisa <= 0) {
-      setMessage("❌ Invalid amount. Cannot process 0 payment.");
-      return;
-    }
-
-    setLoading(true);
-
-    const khaltiConfig = {
-      publicKey: KHALTI_PUBLIC_KEY,
-      productIdentity: String(paymentOrderId || "ORDER_NEW"),
-      productName: "Pharmacy Order",
-      productUrl: window.location.href, // Must be valid URL to avoid CSP errors
-      paymentPreference: [
-        "KHALTI",
-        "EBANKING",
-        "MOBILE_BANKING",
-        "CONNECT_IPS",
-        "SCT",
-      ],
-      eventHandler: {
-        onSuccess: async (payload) => {
-          console.log("Khalti Success:", payload);
-          try {
-            const token = localStorage.getItem("token");
-
-            // ✅ Send payload to backend (Backend must use SECRET KEY)
-            const res = await fetch(`${API_BASE_URL}/payments/khalti-verify`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                token: payload.token,
-                amount: payload.amount,
-                orderId: paymentOrderId,
-              }),
-            });
-            const data = await res.json();
-            if (data.success) {
-              dispatch(savePaymentMethod("Khalti"));
-              navigate(
-                `/payment-success?id=${paymentOrderId || "new"}&method=Khalti`,
-              );
-            } else {
-              setMessage("❌ Payment Verification Failed: " + data.message);
-            }
-          } catch (err) {
-            console.error("Verification Error:", err);
-            setMessage("❌ Server Error during verification.");
-          } finally {
-            setLoading(false);
-          }
-        },
-        onError: (error) => {
-          console.log("Khalti Error:", error);
-          setMessage("❌ Transaction Failed. Please try again.");
-          setLoading(false);
-        },
-        onClose: () => {
-          console.log("Khalti Popup Closed");
-          setLoading(false);
-        },
-      },
-    };
-
+  // --- HANDLER: Initiate Khalti ---
+  const handleKhaltiPayment = async () => {
     try {
-      const checkout = new window.KhaltiCheckout(khaltiConfig);
-      checkout.show({ amount: amountInPaisa });
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/payments/khalti-initiate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Initiation failed");
+
+      if (data.payment_url) {
+        dispatch(savePaymentMethod("Khalti"));
+        window.location.href = data.payment_url;
+      } else {
+        throw new Error("No payment URL received.");
+      }
     } catch (err) {
-      console.error("Khalti Init Error:", err);
-      setMessage("❌ Failed to initialize Khalti.");
+      console.error(err);
+      setMessage("❌ Khalti Error: " + err.message);
       setLoading(false);
     }
   };
 
+  // --- HANDLER: Cash on Delivery ---
   const handleCOD = async () => {
-    dispatch(savePaymentMethod("COD"));
-    if (paymentOrderId) {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/payments/set-cod`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ orderId: paymentOrderId }),
-        });
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/payments/cod`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-        if (res.ok) {
-          navigate(`/payment-success?id=${paymentOrderId}&method=COD`);
-        } else {
-          setMessage("❌ Failed to update order method.");
-        }
-      } catch (err) {
-        setMessage("❌ Connection Error.");
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      navigate("/placeorder");
+      dispatch(savePaymentMethod("COD"));
+      navigate(`/payment-success?method=COD&id=${orderId}`);
+    } catch (err) {
+      setMessage("COD Error: " + err.message);
+      setLoading(false);
     }
   };
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
+  const onMethodChange = (method) => {
+    setPaymentMethod(method);
     setMessage("");
-    if (paymentMethod === "Stripe") await handleStripePayment();
-    else if (paymentMethod === "Khalti") handleKhaltiPayment();
-    else if (paymentMethod === "COD") await handleCOD();
+    if (method === "Stripe" && !clientSecret) {
+      fetchStripeIntent();
+    }
+  };
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+    if (paymentMethod === "Khalti") handleKhaltiPayment();
+    else if (paymentMethod === "COD") handleCOD();
   };
 
   return (
     <Container className="py-5" style={{ minHeight: "80vh" }}>
-      <CheckoutSteps step1 step2 step3 step4={step4} />
+      <CheckoutSteps step1 step2 step3 />
 
-      <Row className="g-4 mt-2">
+      <Row className="g-4 mt-3">
         <Col lg={8}>
           <Card className="border-0 shadow-sm rounded-4 h-100">
             <Card.Header className="bg-white border-bottom p-4">
               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
                 <ShieldCheck className="me-2" size={24} /> Secure Payment
               </h4>
-              <p className="text-muted small mb-0 mt-1">
-                All transactions are encrypted and secured.
-              </p>
             </Card.Header>
             <Card.Body className="p-4">
-              {message && (
-                <Alert
-                  variant={message.includes("❌") ? "danger" : "warning"}
-                  className="mb-4"
-                >
-                  {message}
-                </Alert>
-              )}
+              {message && <Alert variant="danger">{message}</Alert>}
 
-              <Form onSubmit={submitHandler}>
-                <h6 className="fw-bold mb-3">Select Payment Method</h6>
-
-                {/* Khalti Option */}
-                <div
-                  className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-                    paymentMethod === "Khalti"
-                      ? "border-primary bg-primary bg-opacity-10"
-                      : "hover-shadow"
-                  }`}
-                  onClick={() => setPaymentMethod("Khalti")}
-                  style={{
-                    borderLeft:
-                      paymentMethod === "Khalti"
-                        ? "5px solid #0d6efd"
-                        : "1px solid #dee2e6",
-                  }}
-                >
+              {/* Khalti Option */}
+              <div
+                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+                  paymentMethod === "Khalti"
+                    ? "border-primary bg-primary bg-opacity-10"
+                    : ""
+                }`}
+                onClick={() => onMethodChange("Khalti")}
+              >
+                <div className="d-flex align-items-center">
                   <Form.Check
                     type="radio"
-                    id="Khalti"
                     name="paymentMethod"
-                    value="Khalti"
                     checked={paymentMethod === "Khalti"}
-                    onChange={() => setPaymentMethod("Khalti")}
-                    label={
-                      <div className="d-flex align-items-center w-100">
-                        <img
-                          src="https://web.khalti.com/static/img/logo1.png"
-                          alt="Khalti"
-                          height="30"
-                          className="me-3 img-fluid"
-                        />
-                        <div>
-                          <span className="d-block fw-bold">
-                            Khalti Digital Wallet
-                          </span>
-                          <small className="text-muted">
-                            Pay securely using your Khalti balance.
-                          </small>
-                        </div>
-                      </div>
-                    }
-                    className="w-100"
+                    onChange={() => onMethodChange("Khalti")}
+                    className="me-3"
                   />
+                  <div>
+                    <span className="d-block fw-bold d-flex align-items-center">
+                      <Wallet size={20} className="me-2 text-primary" /> Khalti
+                      Digital Wallet
+                    </span>
+                    <small className="text-muted">
+                      Pay with Khalti Balance or eBanking
+                    </small>
+                  </div>
                 </div>
+              </div>
 
-                {/* Stripe Option */}
-                <div
-                  className={`p-3 mb-3 border rounded-3 cursor-pointer transition-all ${
-                    paymentMethod === "Stripe"
-                      ? "border-primary bg-primary bg-opacity-10"
-                      : "hover-shadow"
-                  }`}
-                  onClick={() => setPaymentMethod("Stripe")}
-                  style={{
-                    borderLeft:
-                      paymentMethod === "Stripe"
-                        ? "5px solid #0d6efd"
-                        : "1px solid #dee2e6",
-                  }}
-                >
+              {/* Stripe Option */}
+              <div
+                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+                  paymentMethod === "Stripe"
+                    ? "border-primary bg-primary bg-opacity-10"
+                    : ""
+                }`}
+                onClick={() => onMethodChange("Stripe")}
+              >
+                <div className="d-flex align-items-center mb-2">
                   <Form.Check
                     type="radio"
-                    id="Stripe"
                     name="paymentMethod"
-                    value="Stripe"
                     checked={paymentMethod === "Stripe"}
-                    onChange={() => setPaymentMethod("Stripe")}
-                    label={
-                      <div className="d-flex align-items-center w-100">
-                        <div className="me-3 text-primary">
-                          <CreditCard size={30} />
-                        </div>
-                        <div>
-                          <span className="d-block fw-bold">
-                            Credit / Debit Card (Stripe)
-                          </span>
-                          <small className="text-muted">
-                            Visa, Mastercard, Amex supported.
-                          </small>
-                        </div>
-                      </div>
-                    }
+                    onChange={() => onMethodChange("Stripe")}
+                    className="me-3"
                   />
+                  <div>
+                    <span className="d-block fw-bold d-flex align-items-center">
+                      <CreditCard size={20} className="me-2 text-info" /> Credit
+                      / Debit Card
+                    </span>
+                    <small className="text-muted">
+                      Visa, Mastercard, Amex (via Stripe)
+                    </small>
+                  </div>
                 </div>
 
-                {/* COD Option */}
-                <div
-                  className={`p-3 mb-4 border rounded-3 cursor-pointer transition-all ${
-                    paymentMethod === "COD"
-                      ? "border-success bg-success bg-opacity-10"
-                      : "hover-shadow"
-                  }`}
-                  onClick={() => setPaymentMethod("COD")}
-                  style={{
-                    borderLeft:
-                      paymentMethod === "COD"
-                        ? "5px solid #198754"
-                        : "1px solid #dee2e6",
-                  }}
-                >
+                {paymentMethod === "Stripe" && clientSecret && (
+                  <div className="bg-white p-3 rounded border">
+                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                      <StripeCheckoutForm amount={finalAmount} />
+                    </Elements>
+                  </div>
+                )}
+                {paymentMethod === "Stripe" && !clientSecret && (
+                  <div className="text-center py-3">
+                    <Spinner size="sm" animation="border" /> Loading secure card
+                    fields...
+                  </div>
+                )}
+              </div>
+
+              {/* COD Option */}
+              <div
+                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+                  paymentMethod === "COD"
+                    ? "border-success bg-success bg-opacity-10"
+                    : ""
+                }`}
+                onClick={() => onMethodChange("COD")}
+              >
+                <div className="d-flex align-items-center">
                   <Form.Check
                     type="radio"
-                    id="COD"
                     name="paymentMethod"
-                    value="COD"
                     checked={paymentMethod === "COD"}
-                    onChange={() => setPaymentMethod("COD")}
-                    label={
-                      <div className="d-flex align-items-center w-100">
-                        <div className="me-3 text-success">
-                          <Truck size={30} />
-                        </div>
-                        <div>
-                          <span className="d-block fw-bold">
-                            Cash on Delivery
-                          </span>
-                          <small className="text-muted">
-                            Pay when the medicines arrive at your door.
-                          </small>
-                        </div>
-                      </div>
-                    }
+                    onChange={() => onMethodChange("COD")}
+                    className="me-3"
                   />
+                  <div>
+                    <span className="d-block fw-bold d-flex align-items-center">
+                      <Truck size={20} className="me-2 text-success" /> Cash on
+                      Delivery
+                    </span>
+                    <small className="text-muted">
+                      Pay securely when you receive your order.
+                    </small>
+                  </div>
                 </div>
+              </div>
 
-                <div className="d-flex gap-3 mt-4">
-                  <Button
-                    variant="light"
-                    className="flex-grow-1 py-3 fw-bold text-muted border"
-                    onClick={() => navigate("/shipping")}
-                  >
-                    <ArrowLeft size={18} className="me-2" /> Back
-                  </Button>
-
-                  <Button
-                    variant="primary"
-                    className="flex-[2] rounded-pill py-3 fw-bold shadow-sm w-100"
-                    type="submit"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner
-                          animation="border"
-                          size="sm"
-                          className="me-2"
-                        />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={18} className="me-2" />{" "}
-                        {paymentMethod === "COD" && !paymentOrderId
-                          ? "Continue to Review"
-                          : `Pay NPR ${Number(finalAmount).toLocaleString()}`}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Form>
+              {paymentMethod !== "Stripe" && (
+                <Button
+                  onClick={submitHandler}
+                  variant="primary"
+                  className="w-100 py-3 fw-bold rounded-pill mt-3 shadow-sm"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={18} className="me-2" />
+                      {paymentMethod === "COD"
+                        ? "Place Order"
+                        : `Pay Rs. ${finalAmount}`}
+                    </>
+                  )}
+                </Button>
+              )}
             </Card.Body>
           </Card>
         </Col>
 
-        {/* RIGHT: Order Summary */}
         <Col lg={4}>
           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
             <Card.Header className="bg-transparent border-0 p-4 pb-0">
               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
             </Card.Header>
             <Card.Body className="p-4">
-              {cartItems && cartItems.length > 0 && (
-                <div className="alert alert-info py-2 small mb-3">
-                  <strong>{cartItems.length}</strong> items in cart
-                </div>
-              )}
-
-              {paymentOrderId && (
-                <div className="mb-3 p-2 bg-white rounded border d-flex justify-content-between">
-                  <span className="text-muted">Order ID:</span>
-                  <span className="fw-bold text-primary">
-                    #{paymentOrderId.slice(-6).toUpperCase()}
-                  </span>
-                </div>
-              )}
-
               <Table borderless size="sm" className="mb-0">
                 <tbody>
                   <tr>
-                    <td className="text-muted">Subtotal</td>
-                    <td className="text-end fw-medium">NPR {subTotal}</td>
+                    <td className="text-muted">Order ID</td>
+                    <td className="text-end font-monospace">
+                      {orderId ? `#${orderId.slice(-6)}` : "..."}
+                    </td>
                   </tr>
                   <tr>
-                    <td className="text-muted">Tax (10%)</td>
-                    <td className="text-end fw-medium">NPR {taxAmount}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-muted">Delivery</td>
-                    <td className="text-end text-success">Free</td>
-                  </tr>
-                  <tr className="border-top">
-                    <td className="pt-3 h5 fw-bold">Total</td>
-                    <td className="pt-3 h5 fw-bold text-primary text-end">
-                      NPR {Number(finalAmount).toLocaleString()}
+                    <td className="text-muted">Total Amount</td>
+                    <td className="text-end fw-bold text-primary h5">
+                      Rs. {finalAmount}
                     </td>
                   </tr>
                 </tbody>
               </Table>
-
-              <div className="mt-4 pt-3 border-top text-center">
-                <small className="text-muted d-block mb-2">
-                  <ShieldCheck size={14} className="me-1 text-success" />
-                  100% Secure Transaction
-                </small>
-                <div className="d-flex justify-content-center gap-2 opacity-50">
-                  <CreditCard size={24} />
-                  <Truck size={24} />
-                </div>
-              </div>
             </Card.Body>
           </Card>
         </Col>
       </Row>
-      <style>{` .hover-shadow:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); } `}</style>
     </Container>
   );
 };
