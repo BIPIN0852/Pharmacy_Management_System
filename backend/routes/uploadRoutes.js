@@ -1,57 +1,3 @@
-// const express = require("express");
-// const multer = require("multer");
-// const path = require("path");
-// const router = express.Router();
-
-// // 1. Configure Storage
-// const storage = multer.diskStorage({
-//   destination(req, file, cb) {
-//     // Save to 'backend/uploads/' folder
-//     cb(null, "uploads/");
-//   },
-//   filename(req, file, cb) {
-//     // Create unique filename: fieldname-date-random.ext
-//     cb(
-//       null,
-//       `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-//     );
-//   },
-// });
-
-// // 2. Validate File Type (Images only)
-// function checkFileType(file, cb) {
-//   const filetypes = /jpg|jpeg|png|webp/;
-//   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-//   const mimetype = filetypes.test(file.mimetype);
-
-//   if (extname && mimetype) {
-//     return cb(null, true);
-//   } else {
-//     cb("Images only!");
-//   }
-// }
-
-// // 3. Initialize Multer
-// const upload = multer({
-//   storage,
-//   fileFilter: function (req, file, cb) {
-//     checkFileType(file, cb);
-//   },
-// });
-
-// // 4. Define Route
-// // POST /api/upload
-// // Expects a form-data field named 'image'
-// router.post("/", upload.single("image"), (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).send({ message: "No file uploaded" });
-//   }
-//   // Return the path so frontend can use it
-//   res.send(`/${req.file.path.replace(/\\/g, "/")}`);
-// });
-
-// module.exports = router;
-
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -81,7 +27,7 @@ const storage = multer.diskStorage({
     // Create unique filename: image-date-random.ext
     cb(
       null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
+      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`,
     );
   },
 });

@@ -918,7 +918,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "pharmacist", "staff", "customer"],
+      enum: ["admin", "doctor", "pharmacist", "staff", "customer"],
       default: "customer",
     },
 

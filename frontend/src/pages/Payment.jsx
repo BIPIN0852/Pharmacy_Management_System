@@ -882,6 +882,379 @@
 
 // export default Payment;
 
+// import React, { useState, useEffect } from "react";
+// import { useDispatch } from "react-redux";
+// import { useNavigate, useSearchParams } from "react-router-dom";
+// import {
+//   Form,
+//   Button,
+//   Col,
+//   Row,
+//   Card,
+//   Container,
+//   Alert,
+//   Spinner,
+//   Table,
+// } from "react-bootstrap";
+// import { CreditCard, Truck, ShieldCheck, Lock, Wallet } from "lucide-react";
+// import { loadStripe } from "@stripe/stripe-js";
+// import {
+//   Elements,
+//   PaymentElement,
+//   useStripe,
+//   useElements,
+// } from "@stripe/react-stripe-js";
+// import CheckoutSteps from "../components/CheckoutSteps";
+// import { savePaymentMethod } from "../redux/actions/cartActions";
+
+// // --- CONFIGURATION ---
+// const API_BASE_URL = "http://localhost:5000/api";
+// const STRIPE_PUBLIC_KEY = "pk_test_YOUR_STRIPE_PUBLISHABLE_KEY";
+// const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+
+// // ==============================================================================
+// // INTERNAL COMPONENT: Stripe Form
+// // ==============================================================================
+// const StripeCheckoutForm = ({ amount }) => {
+//   const stripe = useStripe();
+//   const elements = useElements();
+//   const [error, setError] = useState(null);
+//   const [processing, setProcessing] = useState(false);
+
+//   const handleSubmit = async (event) => {
+//     event.preventDefault();
+//     if (!stripe || !elements) return;
+
+//     setProcessing(true);
+
+//     const { error: submitError } = await stripe.confirmPayment({
+//       elements,
+//       confirmParams: {
+//         return_url: `${window.location.origin}/payment-success?method=Stripe`,
+//       },
+//     });
+
+//     if (submitError) {
+//       setError(submitError.message);
+//       setProcessing(false);
+//     }
+//   };
+
+//   return (
+//     <Form onSubmit={handleSubmit} className="mt-3 border-top pt-3">
+//       <PaymentElement />
+//       {error && (
+//         <Alert variant="danger" className="mt-2">
+//           {error}
+//         </Alert>
+//       )}
+//       <Button
+//         type="submit"
+//         variant="primary"
+//         className="w-100 mt-3 py-2 fw-bold"
+//         disabled={!stripe || processing}
+//       >
+//         {processing ? <Spinner size="sm" /> : `Pay Rs. ${amount} securely`}
+//       </Button>
+//     </Form>
+//   );
+// };
+
+// // ==============================================================================
+// // MAIN COMPONENT: Payment Page
+// // ==============================================================================
+// const Payment = () => {
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch();
+//   const [searchParams] = useSearchParams();
+
+//   // ✅ FIX: Get Order ID AND Amount directly from URL
+//   const orderId = searchParams.get("orderId");
+//   const urlAmount = searchParams.get("amount");
+
+//   // Fallback to 0 if amount is missing
+//   const finalAmount = urlAmount ? Number(urlAmount) : 0;
+
+//   // Local State
+//   const [paymentMethod, setPaymentMethod] = useState("Khalti");
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState("");
+//   const [clientSecret, setClientSecret] = useState("");
+
+//   useEffect(() => {
+//     if (!orderId) {
+//       navigate("/placeorder");
+//     }
+//   }, [orderId, navigate]);
+
+//   // --- HANDLER: Fetch Stripe Intent ---
+//   const fetchStripeIntent = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       const res = await fetch(`${API_BASE_URL}/payments/create-stripe-intent`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       setClientSecret(data.clientSecret);
+//     } catch (err) {
+//       setMessage("Failed to load Stripe: " + err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- HANDLER: Initiate Khalti ---
+//   const handleKhaltiPayment = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+
+//       const res = await fetch(`${API_BASE_URL}/payments/khalti-initiate`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) throw new Error(data.message || "Initiation failed");
+
+//       if (data.payment_url) {
+//         dispatch(savePaymentMethod("Khalti"));
+//         window.location.href = data.payment_url;
+//       } else {
+//         throw new Error("No payment URL received.");
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       setMessage("❌ Khalti Error: " + err.message);
+//       setLoading(false);
+//     }
+//   };
+
+//   // --- HANDLER: Cash on Delivery ---
+//   const handleCOD = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       const res = await fetch(`${API_BASE_URL}/payments/cod`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ orderId }),
+//       });
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       dispatch(savePaymentMethod("COD"));
+//       navigate(`/payment-success?method=COD&id=${orderId}`);
+//     } catch (err) {
+//       setMessage("COD Error: " + err.message);
+//       setLoading(false);
+//     }
+//   };
+
+//   const onMethodChange = (method) => {
+//     setPaymentMethod(method);
+//     setMessage("");
+//     if (method === "Stripe" && !clientSecret) {
+//       fetchStripeIntent();
+//     }
+//   };
+
+//   const submitHandler = (e) => {
+//     e.preventDefault();
+//     if (paymentMethod === "Khalti") handleKhaltiPayment();
+//     else if (paymentMethod === "COD") handleCOD();
+//   };
+
+//   return (
+//     <Container className="py-5" style={{ minHeight: "80vh" }}>
+//       <CheckoutSteps step1 step2 step3 />
+
+//       <Row className="g-4 mt-3">
+//         <Col lg={8}>
+//           <Card className="border-0 shadow-sm rounded-4 h-100">
+//             <Card.Header className="bg-white border-bottom p-4">
+//               <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
+//                 <ShieldCheck className="me-2" size={24} /> Secure Payment
+//               </h4>
+//             </Card.Header>
+//             <Card.Body className="p-4">
+//               {message && <Alert variant="danger">{message}</Alert>}
+
+//               {/* Khalti Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "Khalti"
+//                     ? "border-primary bg-primary bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("Khalti")}
+//               >
+//                 <div className="d-flex align-items-center">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "Khalti"}
+//                     onChange={() => onMethodChange("Khalti")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <Wallet size={20} className="me-2 text-primary" /> Khalti
+//                       Digital Wallet
+//                     </span>
+//                     <small className="text-muted">
+//                       Pay with Khalti Balance or eBanking
+//                     </small>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Stripe Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "Stripe"
+//                     ? "border-primary bg-primary bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("Stripe")}
+//               >
+//                 <div className="d-flex align-items-center mb-2">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "Stripe"}
+//                     onChange={() => onMethodChange("Stripe")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <CreditCard size={20} className="me-2 text-info" /> Credit
+//                       / Debit Card
+//                     </span>
+//                     <small className="text-muted">
+//                       Visa, Mastercard, Amex (via Stripe)
+//                     </small>
+//                   </div>
+//                 </div>
+
+//                 {paymentMethod === "Stripe" && clientSecret && (
+//                   <div className="bg-white p-3 rounded border">
+//                     <Elements stripe={stripePromise} options={{ clientSecret }}>
+//                       <StripeCheckoutForm amount={finalAmount} />
+//                     </Elements>
+//                   </div>
+//                 )}
+//                 {paymentMethod === "Stripe" && !clientSecret && (
+//                   <div className="text-center py-3">
+//                     <Spinner size="sm" animation="border" /> Loading secure card
+//                     fields...
+//                   </div>
+//                 )}
+//               </div>
+
+//               {/* COD Option */}
+//               <div
+//                 className={`p-3 mb-3 border rounded-3 cursor-pointer ${
+//                   paymentMethod === "COD"
+//                     ? "border-success bg-success bg-opacity-10"
+//                     : ""
+//                 }`}
+//                 onClick={() => onMethodChange("COD")}
+//               >
+//                 <div className="d-flex align-items-center">
+//                   <Form.Check
+//                     type="radio"
+//                     name="paymentMethod"
+//                     checked={paymentMethod === "COD"}
+//                     onChange={() => onMethodChange("COD")}
+//                     className="me-3"
+//                   />
+//                   <div>
+//                     <span className="d-block fw-bold d-flex align-items-center">
+//                       <Truck size={20} className="me-2 text-success" /> Cash on
+//                       Delivery
+//                     </span>
+//                     <small className="text-muted">
+//                       Pay securely when you receive your order.
+//                     </small>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {paymentMethod !== "Stripe" && (
+//                 <Button
+//                   onClick={submitHandler}
+//                   variant="primary"
+//                   className="w-100 py-3 fw-bold rounded-pill mt-3 shadow-sm"
+//                   disabled={loading}
+//                 >
+//                   {loading ? (
+//                     <>
+//                       <Spinner animation="border" size="sm" className="me-2" />
+//                       Processing...
+//                     </>
+//                   ) : (
+//                     <>
+//                       <Lock size={18} className="me-2" />
+//                       {paymentMethod === "COD"
+//                         ? "Place Order"
+//                         : `Pay Rs. ${finalAmount}`}
+//                     </>
+//                   )}
+//                 </Button>
+//               )}
+//             </Card.Body>
+//           </Card>
+//         </Col>
+
+//         <Col lg={4}>
+//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
+//             <Card.Header className="bg-transparent border-0 p-4 pb-0">
+//               <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
+//             </Card.Header>
+//             <Card.Body className="p-4">
+//               <Table borderless size="sm" className="mb-0">
+//                 <tbody>
+//                   <tr>
+//                     <td className="text-muted">Order ID</td>
+//                     <td className="text-end font-monospace">
+//                       {orderId ? `#${orderId.slice(-6)}` : "..."}
+//                     </td>
+//                   </tr>
+//                   <tr>
+//                     <td className="text-muted">Total Amount</td>
+//                     <td className="text-end fw-bold text-primary h5">
+//                       Rs. {finalAmount}
+//                     </td>
+//                   </tr>
+//                 </tbody>
+//               </Table>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+//       </Row>
+//     </Container>
+//   );
+// };
+
+// export default Payment;
+
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -894,9 +1267,8 @@ import {
   Container,
   Alert,
   Spinner,
-  Table,
 } from "react-bootstrap";
-import { CreditCard, Truck, ShieldCheck, Lock, Wallet } from "lucide-react";
+import { CreditCard, Truck, Lock, Wallet, ArrowLeft } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -941,20 +1313,26 @@ const StripeCheckoutForm = ({ amount }) => {
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="mt-3 border-top pt-3">
+    <Form onSubmit={handleSubmit} className="mt-3 pt-3">
       <PaymentElement />
       {error && (
-        <Alert variant="danger" className="mt-2">
+        <Alert variant="danger" className="mt-3 py-2 small">
           {error}
         </Alert>
       )}
       <Button
         type="submit"
-        variant="primary"
-        className="w-100 mt-3 py-2 fw-bold"
+        variant="warning"
+        className="w-100 mt-4 py-2 shadow-sm border-0"
+        style={{
+          backgroundColor: "#FFD814",
+          borderRadius: "8px",
+          color: "#0F1111",
+          fontWeight: "500",
+        }}
         disabled={!stripe || processing}
       >
-        {processing ? <Spinner size="sm" /> : `Pay Rs. ${amount} securely`}
+        {processing ? <Spinner size="sm" /> : `Use this payment method`}
       </Button>
     </Form>
   );
@@ -1082,174 +1460,285 @@ const Payment = () => {
   };
 
   return (
-    <Container className="py-5" style={{ minHeight: "80vh" }}>
-      <CheckoutSteps step1 step2 step3 />
+    <div
+      style={{
+        backgroundColor: "#f0f2f2",
+        minHeight: "100vh",
+        paddingBottom: "50px",
+      }}
+    >
+      <Container className="py-4">
+        {/* ✅ NEW: Back Button */}
+        <div className="mb-3">
+          <Button
+            variant="link"
+            className="text-decoration-none text-dark p-0 d-flex align-items-center"
+            style={{ width: "fit-content" }}
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft size={18} className="me-1" /> Return to Shipping
+          </Button>
+        </div>
 
-      <Row className="g-4 mt-3">
-        <Col lg={8}>
-          <Card className="border-0 shadow-sm rounded-4 h-100">
-            <Card.Header className="bg-white border-bottom p-4">
-              <h4 className="fw-bold mb-0 text-primary d-flex align-items-center">
-                <ShieldCheck className="me-2" size={24} /> Secure Payment
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              {message && <Alert variant="danger">{message}</Alert>}
+        {/* Checkout Steps Indicator */}
+        <div className="mb-4">
+          <CheckoutSteps step1 step2 step3 />
+        </div>
 
-              {/* Khalti Option */}
-              <div
-                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
-                  paymentMethod === "Khalti"
-                    ? "border-primary bg-primary bg-opacity-10"
-                    : ""
-                }`}
-                onClick={() => onMethodChange("Khalti")}
-              >
-                <div className="d-flex align-items-center">
-                  <Form.Check
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "Khalti"}
-                    onChange={() => onMethodChange("Khalti")}
-                    className="me-3"
-                  />
-                  <div>
-                    <span className="d-block fw-bold d-flex align-items-center">
-                      <Wallet size={20} className="me-2 text-primary" /> Khalti
-                      Digital Wallet
-                    </span>
-                    <small className="text-muted">
-                      Pay with Khalti Balance or eBanking
-                    </small>
+        <Row className="g-4">
+          <Col lg={8}>
+            <Card className="border-0 shadow-sm rounded-3 h-100">
+              <Card.Header className="bg-white border-bottom p-4">
+                <h3 className="fw-normal mb-0 d-flex align-items-center">
+                  Select a payment method
+                </h3>
+              </Card.Header>
+              <Card.Body className="p-4">
+                {message && (
+                  <Alert variant="danger" className="py-2 small">
+                    {message}
+                  </Alert>
+                )}
+
+                <div className="border rounded-3 overflow-hidden">
+                  {/* Khalti Option */}
+                  <div
+                    className={`p-3 border-bottom cursor-pointer ${
+                      paymentMethod === "Khalti" ? "bg-light" : "bg-white"
+                    }`}
+                    onClick={() => onMethodChange("Khalti")}
+                    style={{ transition: "background-color 0.2s ease" }}
+                  >
+                    <div className="d-flex align-items-center">
+                      <Form.Check
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === "Khalti"}
+                        onChange={() => onMethodChange("Khalti")}
+                        className="me-3"
+                        id="khalti-radio"
+                      />
+                      <label
+                        htmlFor="khalti-radio"
+                        className="w-100 d-flex flex-column m-0"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <span className="fw-bold text-dark d-flex align-items-center">
+                          <Wallet
+                            size={18}
+                            className="me-2"
+                            style={{ color: "#5E35B1" }}
+                          />{" "}
+                          Khalti Digital Wallet
+                        </span>
+                        <small className="text-muted ms-4 ps-1">
+                          Pay with Khalti Balance, eBanking, or Mobile Banking
+                        </small>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Stripe Option */}
+                  <div
+                    className={`p-3 border-bottom cursor-pointer ${
+                      paymentMethod === "Stripe" ? "bg-light" : "bg-white"
+                    }`}
+                    onClick={() => onMethodChange("Stripe")}
+                    style={{ transition: "background-color 0.2s ease" }}
+                  >
+                    <div className="d-flex align-items-center mb-1">
+                      <Form.Check
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === "Stripe"}
+                        onChange={() => onMethodChange("Stripe")}
+                        className="me-3"
+                        id="stripe-radio"
+                      />
+                      <label
+                        htmlFor="stripe-radio"
+                        className="w-100 d-flex flex-column m-0"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <span className="fw-bold text-dark d-flex align-items-center">
+                          <CreditCard
+                            size={18}
+                            className="me-2"
+                            style={{ color: "#007185" }}
+                          />{" "}
+                          Credit or Debit Card
+                        </span>
+                        <small className="text-muted ms-4 ps-1">
+                          Visa, Mastercard, Amex
+                        </small>
+                      </label>
+                    </div>
+
+                    {paymentMethod === "Stripe" && clientSecret && (
+                      <div className="ms-4 ps-4 pe-2 mt-3 mb-2 animate-fade-in">
+                        <Elements
+                          stripe={stripePromise}
+                          options={{ clientSecret }}
+                        >
+                          <StripeCheckoutForm amount={finalAmount} />
+                        </Elements>
+                      </div>
+                    )}
+                    {paymentMethod === "Stripe" && !clientSecret && (
+                      <div className="ms-4 ps-4 mt-3 mb-2 text-muted small">
+                        <Spinner
+                          size="sm"
+                          animation="border"
+                          className="me-2"
+                        />{" "}
+                        Secure connection established...
+                      </div>
+                    )}
+                  </div>
+
+                  {/* COD Option */}
+                  <div
+                    className={`p-3 cursor-pointer ${
+                      paymentMethod === "COD" ? "bg-light" : "bg-white"
+                    }`}
+                    onClick={() => onMethodChange("COD")}
+                    style={{ transition: "background-color 0.2s ease" }}
+                  >
+                    <div className="d-flex align-items-center">
+                      <Form.Check
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === "COD"}
+                        onChange={() => onMethodChange("COD")}
+                        className="me-3"
+                        id="cod-radio"
+                      />
+                      <label
+                        htmlFor="cod-radio"
+                        className="w-100 d-flex flex-column m-0"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <span className="fw-bold text-dark d-flex align-items-center">
+                          <Truck size={18} className="me-2 text-success" /> Cash
+                          on Delivery (COD)
+                        </span>
+                        <small className="text-muted ms-4 ps-1">
+                          Pay by cash when your package arrives.
+                        </small>
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Stripe Option */}
-              <div
-                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
-                  paymentMethod === "Stripe"
-                    ? "border-primary bg-primary bg-opacity-10"
-                    : ""
-                }`}
-                onClick={() => onMethodChange("Stripe")}
-              >
-                <div className="d-flex align-items-center mb-2">
-                  <Form.Check
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "Stripe"}
-                    onChange={() => onMethodChange("Stripe")}
-                    className="me-3"
-                  />
-                  <div>
-                    <span className="d-block fw-bold d-flex align-items-center">
-                      <CreditCard size={20} className="me-2 text-info" /> Credit
-                      / Debit Card
-                    </span>
-                    <small className="text-muted">
-                      Visa, Mastercard, Amex (via Stripe)
-                    </small>
-                  </div>
-                </div>
-
-                {paymentMethod === "Stripe" && clientSecret && (
-                  <div className="bg-white p-3 rounded border">
-                    <Elements stripe={stripePromise} options={{ clientSecret }}>
-                      <StripeCheckoutForm amount={finalAmount} />
-                    </Elements>
+                {/* Submit button for Non-Stripe Methods */}
+                {paymentMethod !== "Stripe" && (
+                  <div className="mt-4 pt-3 border-top">
+                    <Button
+                      onClick={submitHandler}
+                      variant="warning"
+                      className="py-2 shadow-sm border-0 d-block ms-auto px-5"
+                      style={{
+                        backgroundColor: "#FFD814",
+                        borderRadius: "8px",
+                        color: "#0F1111",
+                        fontWeight: "500",
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
+                          Processing...
+                        </>
+                      ) : (
+                        `Use this payment method`
+                      )}
+                    </Button>
                   </div>
                 )}
-                {paymentMethod === "Stripe" && !clientSecret && (
-                  <div className="text-center py-3">
-                    <Spinner size="sm" animation="border" /> Loading secure card
-                    fields...
-                  </div>
-                )}
-              </div>
+              </Card.Body>
+            </Card>
+          </Col>
 
-              {/* COD Option */}
-              <div
-                className={`p-3 mb-3 border rounded-3 cursor-pointer ${
-                  paymentMethod === "COD"
-                    ? "border-success bg-success bg-opacity-10"
-                    : ""
-                }`}
-                onClick={() => onMethodChange("COD")}
-              >
-                <div className="d-flex align-items-center">
-                  <Form.Check
-                    type="radio"
-                    name="paymentMethod"
-                    checked={paymentMethod === "COD"}
-                    onChange={() => onMethodChange("COD")}
-                    className="me-3"
-                  />
-                  <div>
-                    <span className="d-block fw-bold d-flex align-items-center">
-                      <Truck size={20} className="me-2 text-success" /> Cash on
-                      Delivery
-                    </span>
-                    <small className="text-muted">
-                      Pay securely when you receive your order.
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              {paymentMethod !== "Stripe" && (
+          {/* Sidebar Summary */}
+          <Col lg={4}>
+            <Card
+              className="border-0 shadow-sm rounded-3 bg-white sticky-top"
+              style={{ top: "20px" }}
+            >
+              <Card.Body className="p-4">
                 <Button
-                  onClick={submitHandler}
-                  variant="primary"
-                  className="w-100 py-3 fw-bold rounded-pill mt-3 shadow-sm"
-                  disabled={loading}
+                  onClick={
+                    paymentMethod !== "Stripe"
+                      ? submitHandler
+                      : () => {
+                          document
+                            .querySelector("form")
+                            .dispatchEvent(
+                              new Event("submit", {
+                                cancelable: true,
+                                bubbles: true,
+                              }),
+                            );
+                        }
+                  }
+                  variant="warning"
+                  className="w-100 py-2 shadow-sm border-0 mb-3"
+                  style={{
+                    backgroundColor: "#FFD814",
+                    borderRadius: "8px",
+                    color: "#0F1111",
+                    fontWeight: "500",
+                    fontSize: "0.95rem",
+                  }}
+                  disabled={
+                    loading || (paymentMethod === "Stripe" && !clientSecret)
+                  }
                 >
-                  {loading ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={18} className="me-2" />
-                      {paymentMethod === "COD"
-                        ? "Place Order"
-                        : `Pay Rs. ${finalAmount}`}
-                    </>
-                  )}
+                  Place your order
                 </Button>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+                <div className="text-center mb-3 border-bottom pb-3">
+                  <small
+                    className="text-muted"
+                    style={{
+                      fontSize: "0.75rem",
+                      lineHeight: "1.2",
+                      display: "block",
+                    }}
+                  >
+                    By placing your order, you agree to PharmacyStore's privacy
+                    notice and conditions of use.
+                  </small>
+                </div>
 
-        <Col lg={4}>
-          <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
-            <Card.Header className="bg-transparent border-0 p-4 pb-0">
-              <h5 className="fw-bold text-dark mb-0">Order Summary</h5>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <Table borderless size="sm" className="mb-0">
-                <tbody>
-                  <tr>
-                    <td className="text-muted">Order ID</td>
-                    <td className="text-end font-monospace">
-                      {orderId ? `#${orderId.slice(-6)}` : "..."}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="text-muted">Total Amount</td>
-                    <td className="text-end fw-bold text-primary h5">
-                      Rs. {finalAmount}
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                <h5 className="fw-bold text-dark mb-3">Order Summary</h5>
+                <div className="d-flex justify-content-between small mb-1">
+                  <span className="text-muted">Order Ref:</span>
+                  <span className="font-monospace text-dark">
+                    {orderId ? `#${orderId.slice(-6).toUpperCase()}` : "..."}
+                  </span>
+                </div>
+                <hr className="my-2" />
+                <div className="d-flex justify-content-between align-items-center fw-bold text-danger h5 mt-3 mb-0">
+                  <span>Order Total:</span>
+                  <span>NPR {finalAmount.toFixed(2)}</span>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+
+      <style>{`
+        .cursor-pointer { cursor: pointer; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
   );
 };
 

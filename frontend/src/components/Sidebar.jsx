@@ -1170,6 +1170,170 @@
 
 // export default Sidebar;
 
+// import React, { useState, useEffect } from "react";
+// import { NavLink, useNavigate } from "react-router-dom";
+// import { useAuth } from "../context/AuthContext";
+// import {
+//   LayoutDashboard,
+//   Users,
+//   UserCheck,
+//   Pill,
+//   Stethoscope,
+//   Calendar,
+//   ShoppingBag,
+//   Truck,
+//   FileBarChart,
+//   Settings,
+//   LogOut,
+//   CreditCard,
+//   Menu,
+//   ChevronLeft,
+// } from "lucide-react";
+
+// const Sidebar = () => {
+//   const [collapsed, setCollapsed] = useState(false);
+//   const navigate = useNavigate();
+//   const { logout, user } = useAuth();
+
+//   // ✅ FIXED: Paths now match frontend AdminLayout routes precisely
+//   // Removed "/api/..." prefixes as those cause redirects to dashboard
+//   const menuItems = [
+//     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
+//     { name: "Staff Management", path: "/admin/users", icon: Users },
+//     { name: "Customer List", path: "/admin/customers", icon: UserCheck },
+//     { name: "Medicines", path: "/admin/medicines", icon: Pill },
+//     { name: "Doctor Management", path: "/admin/doctors", icon: Stethoscope },
+//     { name: "Appointments", path: "/admin/appointments", icon: Calendar },
+//     { name: "Global Orders", path: "/admin/orders", icon: ShoppingBag },
+//     { name: "Suppliers", path: "/admin/suppliers", icon: Truck },
+//     { name: "Purchases", path: "/admin/purchases", icon: CreditCard },
+//     { name: "System Reports", path: "/admin/reports", icon: FileBarChart },
+//     { name: "Settings", path: "/admin/settings", icon: Settings },
+//   ];
+
+//   // Auto-collapse on smaller screens
+//   useEffect(() => {
+//     const handleResize = () => {
+//       if (window.innerWidth < 1024) setCollapsed(true);
+//       else setCollapsed(false);
+//     };
+//     window.addEventListener("resize", handleResize);
+//     handleResize();
+//     return () => window.removeEventListener("resize", handleResize);
+//   }, []);
+
+//   const handleLogout = () => {
+//     logout();
+//     navigate("/login");
+//   };
+
+//   return (
+//     <aside
+//       className="bg-dark text-white d-flex flex-column shadow-lg transition-all"
+//       style={{
+//         width: collapsed ? "80px" : "280px",
+//         height: "100vh",
+//         position: "sticky",
+//         top: 0,
+//         zIndex: 1100,
+//         backgroundColor: "#0f172a", // ✅ Deep Slate Navy for Admin
+//       }}
+//     >
+//       {/* Brand Header */}
+//       <div
+//         className="d-flex align-items-center justify-content-between px-3 py-4 border-bottom border-secondary border-opacity-25"
+//         style={{ height: "80px" }}
+//       >
+//         {!collapsed && (
+//           <div className="d-flex align-items-center gap-2 overflow-hidden animate-fade-in">
+//             <div className="rounded-3 bg-primary p-2 shadow-sm">
+//               <LayoutDashboard size={22} className="text-white" />
+//             </div>
+//             <div className="lh-1">
+//               <h5 className="mb-0 fw-bold">AdminPanel</h5>
+//               <small
+//                 className="text-white-50 uppercase tracking-tighter"
+//                 style={{ fontSize: "0.65rem" }}
+//               >
+//                 System Manager
+//               </small>
+//             </div>
+//           </div>
+//         )}
+//         <button
+//           className="btn btn-sm text-white-50 hover-text-white border-0 p-1 mx-auto"
+//           onClick={() => setCollapsed(!collapsed)}
+//         >
+//           {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+//         </button>
+//       </div>
+
+//       {/* Navigation List */}
+//       <nav className="flex-grow-1 overflow-y-auto py-3 px-3 custom-scrollbar">
+//         {menuItems.map((item) => (
+//           <NavLink
+//             key={item.name}
+//             to={item.path}
+//             className={({ isActive }) =>
+//               `d-flex align-items-center gap-3 px-3 py-3 mb-1 rounded-3 text-decoration-none transition-all ${
+//                 isActive
+//                   ? "bg-primary text-white shadow-lg fw-bold translate-x-active"
+//                   : "text-white-50 hover-bg-slate hover-text-white"
+//               } ${collapsed ? "justify-content-center px-0" : ""}`
+//             }
+//             title={collapsed ? item.name : ""}
+//           >
+//             <item.icon size={20} strokeWidth={collapsed ? 2.5 : 2} />
+//             {!collapsed && <span className="small">{item.name}</span>}
+//           </NavLink>
+//         ))}
+//       </nav>
+
+//       {/* Admin Footer */}
+//       <div className="p-3 border-top border-secondary border-opacity-25 mt-auto">
+//         {!collapsed && user && (
+//           <div className="d-flex align-items-center gap-2 mb-3 px-2 bg-white bg-opacity-5 p-2 rounded-3 border border-white border-opacity-10">
+//             <div
+//               className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+//               style={{ width: 32, height: 32 }}
+//             >
+//               {user.name?.charAt(0).toUpperCase() || "A"}
+//             </div>
+//             <div className="overflow-hidden">
+//               <div className="text-white small fw-bold text-truncate">
+//                 {user.name}
+//               </div>
+//               <div className="text-success" style={{ fontSize: "0.65rem" }}>
+//                 ● SuperAdmin
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//         <button
+//           onClick={handleLogout}
+//           className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 fw-bold shadow-sm"
+//         >
+//           <LogOut size={18} />
+//           {!collapsed && <span className="small">Logout</span>}
+//         </button>
+//       </div>
+
+//       <style>{`
+//         .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+//         .hover-bg-slate:hover { background-color: rgba(255,255,255,0.05); }
+//         .hover-text-white:hover { color: #fff !important; }
+//         .translate-x-active { transform: translateX(4px); }
+//         .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+//         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+//         .animate-fade-in { animation: fadeIn 0.3s ease; }
+//         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+//       `}</style>
+//     </aside>
+//   );
+// };
+
+// export default Sidebar;
+
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -1187,7 +1351,6 @@ import {
   LogOut,
   CreditCard,
   Menu,
-  ChevronLeft,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -1196,7 +1359,6 @@ const Sidebar = () => {
   const { logout, user } = useAuth();
 
   // ✅ FIXED: Paths now match frontend AdminLayout routes precisely
-  // Removed "/api/..." prefixes as those cause redirects to dashboard
   const menuItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Staff Management", path: "/admin/users", icon: Users },
@@ -1229,31 +1391,35 @@ const Sidebar = () => {
 
   return (
     <aside
-      className="bg-dark text-white d-flex flex-column shadow-lg transition-all"
+      className="d-flex flex-column transition-all"
       style={{
-        width: collapsed ? "80px" : "280px",
+        width: collapsed ? "65px" : "250px",
         height: "100vh",
         position: "sticky",
         top: 0,
         zIndex: 1100,
-        backgroundColor: "#0f172a", // ✅ Deep Slate Navy for Admin
+        backgroundColor: "#0f172a", // Deep Slate Navy for Admin
+        borderRight: "1px solid #1e293b",
       }}
     >
       {/* Brand Header */}
       <div
-        className="d-flex align-items-center justify-content-between px-3 py-4 border-bottom border-secondary border-opacity-25"
-        style={{ height: "80px" }}
+        className="d-flex align-items-center justify-content-between px-3 py-3"
+        style={{ height: "65px", backgroundColor: "#0b1120" }} // Slightly darker header
       >
         {!collapsed && (
           <div className="d-flex align-items-center gap-2 overflow-hidden animate-fade-in">
-            <div className="rounded-3 bg-primary p-2 shadow-sm">
-              <LayoutDashboard size={22} className="text-white" />
-            </div>
-            <div className="lh-1">
-              <h5 className="mb-0 fw-bold">AdminPanel</h5>
+            <LayoutDashboard size={22} className="text-primary" />
+            <div style={{ lineHeight: "1.1" }}>
+              <div
+                className="fw-bold text-white"
+                style={{ fontSize: "1.1rem" }}
+              >
+                AdminPanel
+              </div>
               <small
-                className="text-white-50 uppercase tracking-tighter"
-                style={{ fontSize: "0.65rem" }}
+                className="text-white-50 text-uppercase fw-semibold"
+                style={{ fontSize: "0.6rem", letterSpacing: "0.5px" }}
               >
                 System Manager
               </small>
@@ -1261,70 +1427,124 @@ const Sidebar = () => {
           </div>
         )}
         <button
-          className="btn btn-sm text-white-50 hover-text-white border-0 p-1 mx-auto"
+          className={`btn btn-sm text-white border-0 p-1 ${collapsed ? "mx-auto" : ""}`}
           onClick={() => setCollapsed(!collapsed)}
+          style={{ opacity: 0.8 }}
+          onMouseOver={(e) => (e.currentTarget.style.opacity = 1)}
+          onMouseOut={(e) => (e.currentTarget.style.opacity = 0.8)}
         >
-          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+          <Menu size={22} />
         </button>
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-grow-1 overflow-y-auto py-3 px-3 custom-scrollbar">
+      <nav className="flex-grow-1 overflow-y-auto pt-3 sidebar-scroll">
         {menuItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `d-flex align-items-center gap-3 px-3 py-3 mb-1 rounded-3 text-decoration-none transition-all ${
-                isActive
-                  ? "bg-primary text-white shadow-lg fw-bold translate-x-active"
-                  : "text-white-50 hover-bg-slate hover-text-white"
+              `d-flex align-items-center gap-3 py-3 px-4 text-decoration-none transition-all ${
+                isActive ? "active-nav-item fw-bold" : "inactive-nav-item"
               } ${collapsed ? "justify-content-center px-0" : ""}`
             }
-            title={collapsed ? item.name : ""}
+            title={collapsed ? item.name : undefined}
           >
-            <item.icon size={20} strokeWidth={collapsed ? 2.5 : 2} />
-            {!collapsed && <span className="small">{item.name}</span>}
+            {({ isActive }) => (
+              <>
+                <item.icon
+                  size={20}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  className={isActive ? "text-primary" : "text-white-50"}
+                />
+                {!collapsed && (
+                  <span
+                    className="small"
+                    style={{ fontSize: "0.85rem", letterSpacing: "0.3px" }}
+                  >
+                    {item.name}
+                  </span>
+                )}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
       {/* Admin Footer */}
-      <div className="p-3 border-top border-secondary border-opacity-25 mt-auto">
+      <div className="mt-auto" style={{ backgroundColor: "#0b1120" }}>
         {!collapsed && user && (
-          <div className="d-flex align-items-center gap-2 mb-3 px-2 bg-white bg-opacity-5 p-2 rounded-3 border border-white border-opacity-10">
+          <div
+            className="px-4 py-3 border-bottom"
+            style={{ borderColor: "rgba(255,255,255,0.05) !important" }}
+          >
             <div
-              className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
-              style={{ width: 32, height: 32 }}
+              className="text-white small fw-bold text-truncate"
+              style={{ fontSize: "0.85rem" }}
             >
-              {user.name?.charAt(0).toUpperCase() || "A"}
+              {user.name || "Administrator"}
             </div>
-            <div className="overflow-hidden">
-              <div className="text-white small fw-bold text-truncate">
-                {user.name}
-              </div>
-              <div className="text-success" style={{ fontSize: "0.65rem" }}>
-                ● SuperAdmin
+            <div className="d-flex align-items-center gap-2 mt-1">
+              <div
+                className="rounded-circle bg-success"
+                style={{ width: 8, height: 8 }}
+              ></div>
+              <div className="text-white-50" style={{ fontSize: "0.7rem" }}>
+                SuperAdmin
               </div>
             </div>
           </div>
         )}
+
         <button
+          className="btn w-100 d-flex align-items-center gap-3 py-3 px-4 border-0 rounded-0 logout-btn"
           onClick={handleLogout}
-          className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 fw-bold shadow-sm"
         >
-          <LogOut size={18} />
-          {!collapsed && <span className="small">Logout</span>}
+          <LogOut size={20} className="text-white-50" />
+          {!collapsed && (
+            <span className="small fw-medium text-white-50">Sign Out</span>
+          )}
         </button>
       </div>
 
       <style>{`
-        .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .hover-bg-slate:hover { background-color: rgba(255,255,255,0.05); }
-        .hover-text-white:hover { color: #fff !important; }
-        .translate-x-active { transform: translateX(4px); }
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .transition-all { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Enterprise Flat Active State */
+        .active-nav-item {
+          background-color: #1e293b; /* Slightly lighter slate */
+          color: #ffffff;
+          border-left: 4px solid #3b82f6; /* Bright blue highlight */
+        }
+        
+        /* Inactive State Hover */
+        .inactive-nav-item {
+          color: rgba(255, 255, 255, 0.7);
+          border-left: 4px solid transparent;
+        }
+        .inactive-nav-item:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+
+        /* Logout Hover */
+        .logout-btn {
+          background-color: transparent;
+          transition: background-color 0.2s;
+        }
+        .logout-btn:hover {
+          background-color: #B12704 !important; /* Amazon Error Red */
+        }
+        .logout-btn:hover span, .logout-btn:hover svg {
+          color: #ffffff !important;
+        }
+
+        /* Custom Scrollbar */
+        .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        
         .animate-fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>

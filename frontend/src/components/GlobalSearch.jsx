@@ -168,6 +168,199 @@
 
 // export default GlobalSearch;
 
+// import React, { useState, useEffect, useRef } from "react";
+// import {
+//   Search,
+//   X,
+//   Pill,
+//   Truck,
+//   User,
+//   ShoppingBag,
+//   Stethoscope,
+// } from "lucide-react";
+// import api from "../services/api";
+// import { useNavigate } from "react-router-dom";
+
+// const GlobalSearch = () => {
+//   const [query, setQuery] = useState("");
+//   const [results, setResults] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [showResults, setShowResults] = useState(false);
+//   const navigate = useNavigate();
+//   const timeoutRef = useRef(null);
+//   const searchRef = useRef(null); // ✅ Ref to detect clicks outside
+
+//   // ✅ Close search results when clicking outside
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (searchRef.current && !searchRef.current.contains(event.target)) {
+//         setShowResults(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   const fetchResults = async (searchQuery) => {
+//     if (searchQuery.length < 2) {
+//       setResults([]);
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       // ✅ UPDATED: Points to consolidated search endpoint
+//       // Adjust this URL to /api/medicines/search or /api/users/search depending on user role if needed
+//       const res = await api.get(
+//         `/medicines?search=${encodeURIComponent(searchQuery)}`
+//       );
+
+//       // Transform backend data to match search result format if necessary
+//       // Assuming backend returns a list of medicines
+//       const transformedResults = (res.data.medicines || []).map((item) => ({
+//         ...item,
+//         type: "medicine",
+//       }));
+
+//       setResults(transformedResults);
+//       setShowResults(true);
+//     } catch (err) {
+//       console.error("Search Error:", err);
+//       setResults([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+//     if (query.trim() === "") {
+//       setResults([]);
+//       return;
+//     }
+
+//     timeoutRef.current = setTimeout(() => {
+//       fetchResults(query);
+//     }, 300);
+
+//     return () => clearTimeout(timeoutRef.current);
+//   }, [query]);
+
+//   const handleSelectResult = (result) => {
+//     setQuery("");
+//     setShowResults(false);
+
+//     // ✅ Navigation logic matching our new route structure
+//     switch (result.type) {
+//       case "medicine":
+//         navigate(`/medicine/${result._id}`);
+//         break;
+//       case "order":
+//         navigate(`/orders/${result._id}`);
+//         break;
+//       default:
+//         navigate("/customer-dashboard");
+//     }
+//   };
+
+//   const getIcon = (type) => {
+//     switch (type) {
+//       case "medicine":
+//         return <Pill size={14} className="text-success" />;
+//       case "supplier":
+//         return <Truck size={14} className="text-info" />;
+//       case "doctor":
+//         return <Stethoscope size={14} className="text-primary" />;
+//       case "order":
+//         return <ShoppingBag size={14} className="text-warning" />;
+//       default:
+//         return <User size={14} className="text-secondary" />;
+//     }
+//   };
+
+//   return (
+//     <div
+//       className="position-relative w-100"
+//       ref={searchRef}
+//       style={{ maxWidth: "400px" }}
+//     >
+//       <div className="input-group">
+//         <span className="input-group-text bg-light border-end-0 rounded-start-pill ps-3">
+//           {loading ? (
+//             <div
+//               className="spinner-border spinner-border-sm text-primary"
+//               role="status"
+//             ></div>
+//           ) : (
+//             <Search size={18} className="text-muted" />
+//           )}
+//         </span>
+//         <input
+//           type="text"
+//           className="form-control border-start-0 bg-light rounded-end-pill py-2"
+//           placeholder="Search medicines..."
+//           value={query}
+//           onChange={(e) => setQuery(e.target.value)}
+//           onFocus={() => results.length > 0 && setShowResults(true)}
+//         />
+//         {query && (
+//           <button
+//             className="btn position-absolute end-0 top-50 translate-middle-y border-0 me-2"
+//             onClick={() => {
+//               setQuery("");
+//               setResults([]);
+//             }}
+//             style={{ zIndex: 10 }}
+//           >
+//             <X size={16} className="text-muted" />
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Search Results Dropdown */}
+//       {showResults && (results.length > 0 || loading) && (
+//         <div
+//           className="position-absolute w-100 bg-white shadow-lg border-0 rounded-3 mt-2 overflow-hidden animate-fade-in"
+//           style={{ zIndex: 2000, top: "100%" }}
+//         >
+//           <div
+//             className="list-group list-group-flush"
+//             style={{ maxHeight: "350px", overflowY: "auto" }}
+//           >
+//             {results.map((result) => (
+//               <button
+//                 key={result._id}
+//                 className="list-group-item list-group-item-action border-0 d-flex align-items-center gap-3 py-3"
+//                 onClick={() => handleSelectResult(result)}
+//               >
+//                 <div className="bg-light p-2 rounded-circle d-flex align-items-center justify-content-center">
+//                   {getIcon(result.type)}
+//                 </div>
+//                 <div className="flex-grow-1 overflow-hidden">
+//                   <div className="fw-bold text-dark text-truncate small">
+//                     {result.name || `Order #${result._id.substring(0, 8)}`}
+//                   </div>
+//                   <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+//                     {result.category || result.role || "Medicine"} • Rs.{" "}
+//                     {result.price || 0}
+//                   </div>
+//                 </div>
+//               </button>
+//             ))}
+//           </div>
+//           {results.length > 0 && (
+//             <div className="bg-light p-2 text-center small text-muted border-top">
+//               Showing {results.length} matching items
+//             </div>
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default GlobalSearch;
+
 import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
@@ -188,9 +381,9 @@ const GlobalSearch = () => {
   const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
   const timeoutRef = useRef(null);
-  const searchRef = useRef(null); // ✅ Ref to detect clicks outside
+  const searchRef = useRef(null); // Ref to detect clicks outside
 
-  // ✅ Close search results when clicking outside
+  // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -209,10 +402,10 @@ const GlobalSearch = () => {
 
     try {
       setLoading(true);
-      // ✅ UPDATED: Points to consolidated search endpoint
+      // UPDATED: Points to consolidated search endpoint
       // Adjust this URL to /api/medicines/search or /api/users/search depending on user role if needed
       const res = await api.get(
-        `/medicines?search=${encodeURIComponent(searchQuery)}`
+        `/medicines?search=${encodeURIComponent(searchQuery)}`,
       );
 
       // Transform backend data to match search result format if necessary
@@ -250,7 +443,7 @@ const GlobalSearch = () => {
     setQuery("");
     setShowResults(false);
 
-    // ✅ Navigation logic matching our new route structure
+    // Navigation logic matching our new route structure
     switch (result.type) {
       case "medicine":
         navigate(`/medicine/${result._id}`);
@@ -266,95 +459,165 @@ const GlobalSearch = () => {
   const getIcon = (type) => {
     switch (type) {
       case "medicine":
-        return <Pill size={14} className="text-success" />;
+        return <Pill size={14} style={{ color: "#007185" }} />; // Amazon Teal
       case "supplier":
-        return <Truck size={14} className="text-info" />;
+        return <Truck size={14} className="text-muted" />;
       case "doctor":
-        return <Stethoscope size={14} className="text-primary" />;
+        return <Stethoscope size={14} className="text-muted" />;
       case "order":
-        return <ShoppingBag size={14} className="text-warning" />;
+        return <ShoppingBag size={14} style={{ color: "#B12704" }} />; // Amazon Red
       default:
-        return <User size={14} className="text-secondary" />;
+        return <User size={14} className="text-muted" />;
     }
   };
 
   return (
     <div
-      className="position-relative w-100"
+      className="position-relative w-100 amazon-search-container"
       ref={searchRef}
-      style={{ maxWidth: "400px" }}
+      style={{ maxWidth: "600px" }}
     >
-      <div className="input-group">
-        <span className="input-group-text bg-light border-end-0 rounded-start-pill ps-3">
-          {loading ? (
-            <div
-              className="spinner-border spinner-border-sm text-primary"
-              role="status"
-            ></div>
-          ) : (
-            <Search size={18} className="text-muted" />
-          )}
-        </span>
+      <div className="d-flex position-relative">
         <input
           type="text"
-          className="form-control border-start-0 bg-light rounded-end-pill py-2"
-          placeholder="Search medicines..."
+          className="form-control amazon-search-input"
+          placeholder="Search medicines, categories..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setShowResults(true)}
+          style={{
+            padding: "10px 40px 10px 15px", // Padding right for the X button
+            borderRadius: "4px 0 0 4px",
+            border: "1px solid #cdcdcd",
+            borderRight: "none",
+            boxShadow: "none",
+            fontSize: "15px",
+          }}
         />
+
+        {/* Clear Button (X) inside the input */}
         {query && (
           <button
-            className="btn position-absolute end-0 top-50 translate-middle-y border-0 me-2"
+            className="btn position-absolute border-0 p-0"
             onClick={() => {
               setQuery("");
               setResults([]);
             }}
-            style={{ zIndex: 10 }}
+            style={{
+              right: "55px", // Positioned just before the search icon block
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              backgroundColor: "transparent",
+            }}
           >
-            <X size={16} className="text-muted" />
+            <X size={18} style={{ color: "#565959" }} />
           </button>
         )}
+
+        <button
+          className="btn amazon-search-button d-flex align-items-center justify-content-center"
+          style={{
+            backgroundColor: "#FEBD69", // Amazon Search Bar Orange
+            border: "1px solid #F3A847",
+            borderRadius: "0 4px 4px 0",
+            width: "45px",
+            padding: "0",
+          }}
+          onClick={() => query && fetchResults(query)}
+        >
+          {loading ? (
+            <div
+              className="spinner-border spinner-border-sm"
+              role="status"
+              style={{ color: "#0F1111" }}
+            ></div>
+          ) : (
+            <Search size={20} style={{ color: "#0F1111" }} />
+          )}
+        </button>
       </div>
 
       {/* Search Results Dropdown */}
       {showResults && (results.length > 0 || loading) && (
         <div
-          className="position-absolute w-100 bg-white shadow-lg border-0 rounded-3 mt-2 overflow-hidden animate-fade-in"
-          style={{ zIndex: 2000, top: "100%" }}
+          className="position-absolute w-100 bg-white border mt-1"
+          style={{
+            zIndex: 2000,
+            top: "100%",
+            borderRadius: "4px",
+            borderColor: "#D5D9D9",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+          }}
         >
           <div
-            className="list-group list-group-flush"
-            style={{ maxHeight: "350px", overflowY: "auto" }}
+            className="list-group list-group-flush rounded-0"
+            style={{ maxHeight: "400px", overflowY: "auto" }}
           >
             {results.map((result) => (
               <button
                 key={result._id}
-                className="list-group-item list-group-item-action border-0 d-flex align-items-center gap-3 py-3"
+                className="list-group-item list-group-item-action border-0 d-flex align-items-center gap-3 py-2 amazon-search-result"
                 onClick={() => handleSelectResult(result)}
+                style={{ cursor: "pointer" }}
               >
-                <div className="bg-light p-2 rounded-circle d-flex align-items-center justify-content-center">
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{ width: "24px" }}
+                >
                   {getIcon(result.type)}
                 </div>
-                <div className="flex-grow-1 overflow-hidden">
-                  <div className="fw-bold text-dark text-truncate small">
+                <div className="flex-grow-1 overflow-hidden d-flex justify-content-between align-items-center">
+                  <div
+                    className="text-truncate text-dark"
+                    style={{ fontSize: "14px" }}
+                  >
                     {result.name || `Order #${result._id.substring(0, 8)}`}
                   </div>
-                  <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                    {result.category || result.role || "Medicine"} • Rs.{" "}
-                    {result.price || 0}
+                  <div
+                    className="text-end fw-bold"
+                    style={{ fontSize: "13px", color: "#B12704" }}
+                  >
+                    NPR {result.price ? result.price.toFixed(2) : "0.00"}
                   </div>
                 </div>
               </button>
             ))}
           </div>
           {results.length > 0 && (
-            <div className="bg-light p-2 text-center small text-muted border-top">
+            <div
+              className="p-2 text-center"
+              style={{
+                fontSize: "12px",
+                backgroundColor: "#f8f9fa",
+                borderTop: "1px solid #D5D9D9",
+                color: "#565959",
+              }}
+            >
               Showing {results.length} matching items
             </div>
           )}
         </div>
       )}
+
+      <style>{`
+        .amazon-search-input:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px #F90, 0 0 0 3px rgba(255, 153, 0, 0.5) !important;
+          border-color: #F90 !important;
+          z-index: 5; /* Ensures the focus ring overlaps the button border */
+        }
+        .amazon-search-button:hover {
+          background-color: #F3A847 !important;
+        }
+        .amazon-search-result {
+          background-color: #ffffff;
+          transition: background-color 0.1s;
+        }
+        .amazon-search-result:hover {
+          background-color: #f0f2f2 !important; /* Amazon Grey hover */
+        }
+      `}</style>
     </div>
   );
 };

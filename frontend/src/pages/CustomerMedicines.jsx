@@ -929,13 +929,452 @@
 
 // export default CustomerMedicines;
 
+// import React, { useEffect, useState, useMemo } from "react";
+// import { Search, Package, Filter, ShoppingCart, Heart } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { addToCart } from "../redux/actions/cartActions";
+// import api from "../services/api";
+// import { Badge, Spinner, Button } from "react-bootstrap";
+
+// const CustomerMedicines = () => {
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch();
+
+//   // --- State ---
+//   const [medicines, setMedicines] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [loadError, setLoadError] = useState("");
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [category, setCategory] = useState("All");
+
+//   // ✅ Unit Selection State
+//   // Format: { [medicineId]: { unitName: "Strip", price: 50, multiplier: 10 } }
+//   const [selectedUnits, setSelectedUnits] = useState({});
+
+//   // ✅ Saved Items State
+//   const [savedIds, setSavedIds] = useState(new Set());
+//   const [saveLoading, setSaveLoading] = useState(null);
+
+//   // --- Effects ---
+//   useEffect(() => {
+//     fetchMedicines();
+//     fetchSavedStatus();
+//   }, []);
+
+//   const fetchMedicines = async () => {
+//     try {
+//       setLoading(true);
+//       setLoadError("");
+
+//       const res = await api.get("/medicines");
+//       const medList = Array.isArray(res.data)
+//         ? res.data
+//         : res.data.medicines || [];
+//       setMedicines(medList);
+
+//       // Initialize default selections (Base Unit)
+//       const defaults = {};
+//       medList.forEach((m) => {
+//         defaults[m._id] = {
+//           unitName: m.baseUnit || "Unit",
+//           price: m.price,
+//           multiplier: 1,
+//         };
+//       });
+//       setSelectedUnits(defaults);
+//     } catch (err) {
+//       console.error("Failed to fetch medicines:", err);
+//       setLoadError("Unable to load medicines.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const fetchSavedStatus = async () => {
+//     try {
+//       const { data } = await api.get("/customer/saved-medicines");
+//       const ids = new Set(data.map((item) => item.medicine._id));
+//       setSavedIds(ids);
+//     } catch (error) {
+//       console.error("Error fetching saved items", error);
+//     }
+//   };
+
+//   // --- Handlers ---
+
+//   // 1. Unit Change Handler
+//   const handleUnitChange = (medicine, unitName) => {
+//     let newSelection = {};
+
+//     if (unitName === (medicine.baseUnit || "Unit")) {
+//       newSelection = {
+//         unitName: medicine.baseUnit || "Unit",
+//         price: medicine.price,
+//         multiplier: 1,
+//       };
+//     } else {
+//       const unit = medicine.units.find((u) => u.name === unitName);
+//       if (unit) {
+//         newSelection = {
+//           unitName: unit.name,
+//           price: unit.price,
+//           multiplier: unit.multiplier,
+//         };
+//       }
+//     }
+
+//     setSelectedUnits((prev) => ({
+//       ...prev,
+//       [medicine._id]: newSelection,
+//     }));
+//   };
+
+//   // 2. Add to Cart Handler
+//   const handleAddToCart = (med) => {
+//     const selection = selectedUnits[med._id] || {
+//       unitName: med.baseUnit || "Unit",
+//       price: med.price,
+//       multiplier: 1,
+//     };
+
+//     if ((med.quantity || 0) < selection.multiplier) {
+//       alert("Insufficient stock for this pack size.");
+//       return;
+//     }
+
+//     dispatch(
+//       addToCart({
+//         medicine: med._id || med.id,
+//         name: med.name,
+//         image: med.image,
+//         stock: med.quantity, // Total base units
+//         unit: selection.unitName,
+//         price: selection.price,
+//         buyingMultiplier: selection.multiplier,
+//         qty: 1,
+//       })
+//     );
+//     alert("Added to cart!");
+//   };
+
+//   // 3. Save/Unsave Handler
+//   const handleToggleSave = async (medicineId) => {
+//     try {
+//       setSaveLoading(medicineId);
+//       if (savedIds.has(medicineId)) {
+//         await api.delete(`/customer/saved-medicines/${medicineId}`);
+//         setSavedIds((prev) => {
+//           const newSet = new Set(prev);
+//           newSet.delete(medicineId);
+//           return newSet;
+//         });
+//       } else {
+//         await api.post("/customer/saved-medicines", { medicineId });
+//         setSavedIds((prev) => new Set(prev).add(medicineId));
+//       }
+//     } catch (error) {
+//       // alert("Could not update saved status.");
+//     } finally {
+//       setSaveLoading(null);
+//     }
+//   };
+
+//   // --- Image Helper ---
+//   const getImageUrl = (path) => {
+//     if (!path) return "https://via.placeholder.com/150";
+//     return path.startsWith("http") ? path : `http://localhost:5000${path}`;
+//   };
+
+//   // --- Filtering Logic ---
+//   const categories = useMemo(() => {
+//     const set = new Set();
+//     medicines.forEach((m) => {
+//       if (m.category) set.add(m.category);
+//     });
+//     return ["All", ...Array.from(set)];
+//   }, [medicines]);
+
+//   const filteredMedicines = useMemo(() => {
+//     return medicines.filter((m) => {
+//       const matchSearch =
+//         !searchTerm.trim() ||
+//         m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         m.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase());
+//       const matchCat =
+//         category === "All" ||
+//         (m.category || "").toLowerCase() === category.toLowerCase();
+//       return matchSearch && matchCat;
+//     });
+//   }, [medicines, searchTerm, category]);
+
+//   // --- Render ---
+//   return (
+//     <div className="container py-5 fade-in" style={{ minHeight: "80vh" }}>
+//       {/* Header */}
+//       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
+//         <div>
+//           <h2 className="fw-bold mb-1">Browse Medicines</h2>
+//           <p className="text-muted mb-0">
+//             Search and filter our catalog, then add items to your cart.
+//           </p>
+//         </div>
+//         <button
+//           className="btn btn-outline-secondary rounded-pill btn-sm px-3"
+//           onClick={() => navigate("/customer-dashboard")}
+//         >
+//           ← Back to Dashboard
+//         </button>
+//       </div>
+
+//       {/* Filters row */}
+//       <div className="row g-3 align-items-center mb-4">
+//         <div className="col-12 col-md-6">
+//           <div className="input-group shadow-sm rounded-pill overflow-hidden">
+//             <span className="input-group-text bg-white border-0 ps-3">
+//               <Search size={18} className="text-muted" />
+//             </span>
+//             <input
+//               type="search"
+//               className="form-control border-0 shadow-none bg-white"
+//               placeholder="Search by medicine name or manufacturer..."
+//               value={searchTerm}
+//               onChange={(e) => setSearchTerm(e.target.value)}
+//             />
+//           </div>
+//         </div>
+//         <div className="col-12 col-md-3">
+//           <div className="input-group shadow-sm rounded-3">
+//             <span className="input-group-text bg-white border-0">
+//               <Filter size={16} className="text-muted" />
+//             </span>
+//             <select
+//               className="form-select border-0 shadow-none bg-white"
+//               value={category}
+//               onChange={(e) => setCategory(e.target.value)}
+//               style={{ cursor: "pointer" }}
+//             >
+//               {categories.map((cat) => (
+//                 <option key={cat} value={cat}>
+//                   {cat === "All" ? "All Categories" : cat}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+//         </div>
+//         <div className="col-12 col-md-3 text-md-end">
+//           <span className="badge bg-light text-dark border px-3 py-2 rounded-pill">
+//             {filteredMedicines.length} Result
+//             {filteredMedicines.length !== 1 && "s"}
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* Loading / Error / Empty States */}
+//       {loading && (
+//         <div className="d-flex justify-content-center align-items-center py-5">
+//           <Spinner animation="border" variant="primary" className="me-2" />
+//           <span>Loading medicines...</span>
+//         </div>
+//       )}
+
+//       {loadError && !loading && (
+//         <div className="alert alert-danger shadow-sm border-0" role="alert">
+//           {loadError}
+//         </div>
+//       )}
+
+//       {!loading && !loadError && filteredMedicines.length === 0 && (
+//         <div className="text-center text-muted py-5 bg-light rounded-4">
+//           <Package size={48} className="mb-3 opacity-50" />
+//           <h5 className="fw-bold">No medicines found</h5>
+//           <p className="mb-0">Try adjusting your search or filters.</p>
+//         </div>
+//       )}
+
+//       {/* Medicines Grid */}
+//       {!loading && !loadError && filteredMedicines.length > 0 && (
+//         <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+//           {filteredMedicines.map((med) => {
+//             const currentSelection = selectedUnits[med._id] || {
+//               unitName: med.baseUnit || "Unit",
+//               price: med.price,
+//               multiplier: 1,
+//             };
+
+//             const isOutOfStock =
+//               (med.quantity || 0) < currentSelection.multiplier;
+
+//             return (
+//               <div key={med._id || med.id} className="col">
+//                 <div className="card shadow-sm border-0 rounded-4 h-100 overflow-hidden hover-shadow transition-all">
+//                   {/* Image Area */}
+//                   <div
+//                     className="bg-light text-center p-4 position-relative"
+//                     style={{ minHeight: "180px" }}
+//                   >
+//                     <img
+//                       src={getImageUrl(med.image)}
+//                       className="img-fluid"
+//                       alt={med.name}
+//                       style={{
+//                         maxHeight: "140px",
+//                         objectFit: "contain",
+//                         mixBlendMode: "multiply",
+//                       }}
+//                     />
+
+//                     {/* ✅ Heart Save Button */}
+//                     <button
+//                       className="position-absolute top-0 end-0 m-2 btn btn-light rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center border-0"
+//                       style={{ width: "32px", height: "32px" }}
+//                       onClick={() => handleToggleSave(med._id)}
+//                       disabled={saveLoading === med._id}
+//                       title={
+//                         savedIds.has(med._id)
+//                           ? "Remove from Saved"
+//                           : "Save Item"
+//                       }
+//                     >
+//                       {saveLoading === med._id ? (
+//                         <Spinner
+//                           size="sm"
+//                           style={{ width: "14px", height: "14px" }}
+//                         />
+//                       ) : (
+//                         <Heart
+//                           size={16}
+//                           className={
+//                             savedIds.has(med._id) ? "text-danger" : "text-muted"
+//                           }
+//                           fill={savedIds.has(med._id) ? "#dc3545" : "none"}
+//                         />
+//                       )}
+//                     </button>
+
+//                     {isOutOfStock && (
+//                       <div className="position-absolute top-0 start-0 m-2">
+//                         <span className="badge bg-danger rounded-pill shadow-sm">
+//                           Out of Stock
+//                         </span>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* Content Area */}
+//                   <div className="card-body d-flex flex-column p-3">
+//                     <div className="mb-2">
+//                       <h6
+//                         className="card-title fw-bold mb-1 text-truncate"
+//                         title={med.name}
+//                       >
+//                         {med.name}
+//                       </h6>
+//                       <p className="card-subtitle text-muted small text-truncate">
+//                         {med.manufacturer || "Generic"}
+//                       </p>
+//                     </div>
+
+//                     <div className="mb-3 d-flex align-items-center gap-2">
+//                       <span
+//                         className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1"
+//                         style={{ fontSize: "0.7rem" }}
+//                       >
+//                         {med.category}
+//                       </span>
+//                     </div>
+
+//                     {/* ✅ Unit Selector */}
+//                     <div className="mt-auto bg-light rounded-3 p-2 border border-light-subtle">
+//                       <div className="d-flex justify-content-between align-items-center mb-2">
+//                         <label className="small text-muted fw-medium mb-0">
+//                           Pack Size:
+//                         </label>
+//                         <select
+//                           className="form-select form-select-sm border-0 bg-white shadow-sm py-0 ps-2 pe-4"
+//                           style={{
+//                             width: "auto",
+//                             fontSize: "0.8rem",
+//                             height: "24px",
+//                           }}
+//                           value={currentSelection.unitName}
+//                           onChange={(e) =>
+//                             handleUnitChange(med, e.target.value)
+//                           }
+//                         >
+//                           <option value={med.baseUnit || "Unit"}>
+//                             {med.baseUnit || "Unit"} (1x)
+//                           </option>
+//                           {med.units &&
+//                             med.units.map((u, idx) => (
+//                               <option key={idx} value={u.name}>
+//                                 {u.name} (x{u.multiplier})
+//                               </option>
+//                             ))}
+//                         </select>
+//                       </div>
+
+//                       <div className="d-flex justify-content-between align-items-center">
+//                         <div>
+//                           <div className="fw-bold text-primary">
+//                             Rs. {currentSelection.price}
+//                           </div>
+//                           {!isOutOfStock && (
+//                             <small
+//                               className="text-muted"
+//                               style={{ fontSize: "0.7rem" }}
+//                             >
+//                               Max:{" "}
+//                               {Math.floor(
+//                                 med.quantity / currentSelection.multiplier
+//                               )}{" "}
+//                               packs
+//                             </small>
+//                           )}
+//                         </div>
+
+//                         <button
+//                           className="btn btn-sm btn-primary rounded-circle p-2 shadow-sm d-flex align-items-center justify-content-center"
+//                           style={{ width: 32, height: 32 }}
+//                           onClick={() => handleAddToCart(med)}
+//                           disabled={isOutOfStock}
+//                           title="Add to Cart"
+//                         >
+//                           <ShoppingCart size={16} />
+//                         </button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+//       <style>{`
+//         .hover-shadow:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; transform: translateY(-3px); }
+//         .transition-all { transition: all 0.2s ease-in-out; }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default CustomerMedicines;
+
 import React, { useEffect, useState, useMemo } from "react";
-import { Search, Package, Filter, ShoppingCart, Heart } from "lucide-react";
+import {
+  Search,
+  Package,
+  Filter,
+  ShoppingCart,
+  Heart,
+  ArrowLeft,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../redux/actions/cartActions";
 import api from "../services/api";
-import { Badge, Spinner, Button } from "react-bootstrap";
+import { Spinner } from "react-bootstrap";
 
 const CustomerMedicines = () => {
   const navigate = useNavigate();
@@ -1053,7 +1492,7 @@ const CustomerMedicines = () => {
         price: selection.price,
         buyingMultiplier: selection.multiplier,
         qty: 1,
-      })
+      }),
     );
     alert("Added to cart!");
   };
@@ -1110,60 +1549,70 @@ const CustomerMedicines = () => {
 
   // --- Render ---
   return (
-    <div className="container py-5 fade-in" style={{ minHeight: "80vh" }}>
+    <div className="dark-dashboard-container py-4 px-3 px-md-4 min-vh-100 animate-fade-in">
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
-        <div>
-          <h2 className="fw-bold mb-1">Browse Medicines</h2>
-          <p className="text-muted mb-0">
-            Search and filter our catalog, then add items to your cart.
-          </p>
+        <div className="d-flex align-items-center gap-3">
+          <button
+            className="btn btn-outline-cyan rounded-circle p-2 d-flex align-items-center justify-content-center"
+            onClick={() => navigate("/customer-dashboard")}
+            title="Back to Dashboard"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h2 className="fw-bolder mb-0 text-white tracking-tight">
+              Pharmacy Store
+            </h2>
+            <p className="text-muted mb-0 fw-medium">
+              Browse our catalog and securely add items to your cart.
+            </p>
+          </div>
         </div>
-        <button
-          className="btn btn-outline-secondary rounded-pill btn-sm px-3"
-          onClick={() => navigate("/customer-dashboard")}
-        >
-          ← Back to Dashboard
-        </button>
       </div>
 
       {/* Filters row */}
-      <div className="row g-3 align-items-center mb-4">
+      <div className="row g-3 align-items-center mb-5">
         <div className="col-12 col-md-6">
-          <div className="input-group shadow-sm rounded-pill overflow-hidden">
-            <span className="input-group-text bg-white border-0 ps-3">
-              <Search size={18} className="text-muted" />
-            </span>
+          <div className="position-relative">
+            <Search
+              size={18}
+              className="position-absolute top-50 translate-middle-y text-cyan"
+              style={{ left: "16px" }}
+            />
             <input
               type="search"
-              className="form-control border-0 shadow-none bg-white"
+              className="form-control form-control-lg dark-input border-dark-subtle rounded-pill ps-5 bg-transparent shadow-sm"
               placeholder="Search by medicine name or manufacturer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
-        <div className="col-12 col-md-3">
-          <div className="input-group shadow-sm rounded-3">
-            <span className="input-group-text bg-white border-0">
-              <Filter size={16} className="text-muted" />
-            </span>
+
+        <div className="col-12 col-md-4">
+          <div className="position-relative">
+            <Filter
+              size={18}
+              className="position-absolute top-50 translate-middle-y text-cyan"
+              style={{ left: "16px" }}
+            />
             <select
-              className="form-select border-0 shadow-none bg-white"
+              className="form-select form-select-lg dark-input border-dark-subtle rounded-pill ps-5 bg-transparent shadow-sm cursor-pointer"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              style={{ cursor: "pointer" }}
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
+                <option key={cat} value={cat} className="text-dark">
                   {cat === "All" ? "All Categories" : cat}
                 </option>
               ))}
             </select>
           </div>
         </div>
-        <div className="col-12 col-md-3 text-md-end">
-          <span className="badge bg-light text-dark border px-3 py-2 rounded-pill">
+
+        <div className="col-12 col-md-2 text-md-end">
+          <span className="badge bg-cyan bg-opacity-10 text-cyan border border-cyan px-3 py-2 rounded-pill shadow-sm">
             {filteredMedicines.length} Result
             {filteredMedicines.length !== 1 && "s"}
           </span>
@@ -1172,23 +1621,31 @@ const CustomerMedicines = () => {
 
       {/* Loading / Error / Empty States */}
       {loading && (
-        <div className="d-flex justify-content-center align-items-center py-5">
-          <Spinner animation="border" variant="primary" className="me-2" />
-          <span>Loading medicines...</span>
+        <div className="d-flex flex-column justify-content-center align-items-center py-5">
+          <Loader2 size={40} className="spin-animation text-cyan mb-3" />
+          <span className="text-muted fw-semibold">Loading inventory...</span>
         </div>
       )}
 
       {loadError && !loading && (
-        <div className="alert alert-danger shadow-sm border-0" role="alert">
+        <div
+          className="alert alert-danger bg-danger bg-opacity-10 border-0 text-danger shadow-sm rounded-4"
+          role="alert"
+        >
           {loadError}
         </div>
       )}
 
       {!loading && !loadError && filteredMedicines.length === 0 && (
-        <div className="text-center text-muted py-5 bg-light rounded-4">
+        <div
+          className="text-center text-muted py-5 dark-card rounded-4 border-dashed border-dark-subtle mx-auto"
+          style={{ maxWidth: "500px" }}
+        >
           <Package size={48} className="mb-3 opacity-50" />
-          <h5 className="fw-bold">No medicines found</h5>
-          <p className="mb-0">Try adjusting your search or filters.</p>
+          <h5 className="fw-bold text-white">No medicines found</h5>
+          <p className="mb-0 small">
+            Try adjusting your search or category filters.
+          </p>
         </div>
       )}
 
@@ -1207,27 +1664,36 @@ const CustomerMedicines = () => {
 
             return (
               <div key={med._id || med.id} className="col">
-                <div className="card shadow-sm border-0 rounded-4 h-100 overflow-hidden hover-shadow transition-all">
+                <div className="dark-card h-100 rounded-4 overflow-hidden hover-glow transition-all d-flex flex-column">
                   {/* Image Area */}
                   <div
-                    className="bg-light text-center p-4 position-relative"
-                    style={{ minHeight: "180px" }}
+                    className="dark-inner-card text-center p-4 position-relative border-bottom-dark"
+                    style={{
+                      minHeight: "200px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     <img
                       src={getImageUrl(med.image)}
-                      className="img-fluid"
+                      className="img-fluid rounded-3"
                       alt={med.name}
                       style={{
                         maxHeight: "140px",
                         objectFit: "contain",
-                        mixBlendMode: "multiply",
+                        filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))",
                       }}
                     />
 
                     {/* ✅ Heart Save Button */}
                     <button
-                      className="position-absolute top-0 end-0 m-2 btn btn-light rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center border-0"
-                      style={{ width: "32px", height: "32px" }}
+                      className="position-absolute top-0 end-0 m-3 btn btn-dark rounded-circle shadow-sm p-0 d-flex align-items-center justify-content-center border-dark-subtle hover-glow"
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        backgroundColor: "#0f172a",
+                      }}
                       onClick={() => handleToggleSave(med._id)}
                       disabled={saveLoading === med._id}
                       title={
@@ -1239,22 +1705,23 @@ const CustomerMedicines = () => {
                       {saveLoading === med._id ? (
                         <Spinner
                           size="sm"
-                          style={{ width: "14px", height: "14px" }}
+                          style={{ width: "16px", height: "16px" }}
+                          className="text-cyan"
                         />
                       ) : (
                         <Heart
-                          size={16}
+                          size={18}
                           className={
-                            savedIds.has(med._id) ? "text-danger" : "text-muted"
+                            savedIds.has(med._id) ? "text-red" : "text-muted"
                           }
-                          fill={savedIds.has(med._id) ? "#dc3545" : "none"}
+                          fill={savedIds.has(med._id) ? "#ef4444" : "none"}
                         />
                       )}
                     </button>
 
                     {isOutOfStock && (
-                      <div className="position-absolute top-0 start-0 m-2">
-                        <span className="badge bg-danger rounded-pill shadow-sm">
+                      <div className="position-absolute top-0 start-0 m-3">
+                        <span className="badge bg-danger rounded-pill shadow-sm py-1 px-2 border border-danger border-opacity-50">
                           Out of Stock
                         </span>
                       </div>
@@ -1262,85 +1729,85 @@ const CustomerMedicines = () => {
                   </div>
 
                   {/* Content Area */}
-                  <div className="card-body d-flex flex-column p-3">
-                    <div className="mb-2">
+                  <div className="p-4 d-flex flex-column flex-grow-1">
+                    <div className="mb-3">
                       <h6
-                        className="card-title fw-bold mb-1 text-truncate"
+                        className="fw-bold mb-1 text-truncate text-white fs-5"
                         title={med.name}
                       >
                         {med.name}
                       </h6>
-                      <p className="card-subtitle text-muted small text-truncate">
-                        {med.manufacturer || "Generic"}
+                      <p className="text-muted small text-truncate mb-2">
+                        {med.manufacturer || "Generic Manufacturer"}
                       </p>
-                    </div>
-
-                    <div className="mb-3 d-flex align-items-center gap-2">
                       <span
-                        className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1"
+                        className="badge bg-cyan bg-opacity-10 text-cyan border border-cyan border-opacity-25 rounded-pill px-2 py-1"
                         style={{ fontSize: "0.7rem" }}
                       >
                         {med.category}
                       </span>
                     </div>
 
-                    {/* ✅ Unit Selector */}
-                    <div className="mt-auto bg-light rounded-3 p-2 border border-light-subtle">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <label className="small text-muted fw-medium mb-0">
-                          Pack Size:
+                    {/* ✅ Unit Selector & Price block pushed to bottom */}
+                    <div className="mt-auto">
+                      <div className="dark-inner-card rounded-3 p-3 border border-dark-subtle mb-3">
+                        <label className="small text-muted fw-medium mb-2 d-block">
+                          Select Pack Size:
                         </label>
                         <select
-                          className="form-select form-select-sm border-0 bg-white shadow-sm py-0 ps-2 pe-4"
-                          style={{
-                            width: "auto",
-                            fontSize: "0.8rem",
-                            height: "24px",
-                          }}
+                          className="form-select form-select-sm dark-input border-dark-subtle bg-transparent cursor-pointer"
                           value={currentSelection.unitName}
                           onChange={(e) =>
                             handleUnitChange(med, e.target.value)
                           }
                         >
-                          <option value={med.baseUnit || "Unit"}>
+                          <option
+                            value={med.baseUnit || "Unit"}
+                            className="text-dark"
+                          >
                             {med.baseUnit || "Unit"} (1x)
                           </option>
                           {med.units &&
                             med.units.map((u, idx) => (
-                              <option key={idx} value={u.name}>
+                              <option
+                                key={idx}
+                                value={u.name}
+                                className="text-dark"
+                              >
                                 {u.name} (x{u.multiplier})
                               </option>
                             ))}
                         </select>
                       </div>
 
-                      <div className="d-flex justify-content-between align-items-center">
+                      <div className="d-flex justify-content-between align-items-end">
                         <div>
-                          <div className="fw-bold text-primary">
+                          <div className="small text-muted mb-1">Price</div>
+                          <div className="fw-bolder text-cyan fs-4 lh-1">
                             Rs. {currentSelection.price}
                           </div>
                           {!isOutOfStock && (
-                            <small
-                              className="text-muted"
+                            <div
+                              className="text-muted mt-1"
                               style={{ fontSize: "0.7rem" }}
                             >
                               Max:{" "}
                               {Math.floor(
-                                med.quantity / currentSelection.multiplier
+                                med.quantity / currentSelection.multiplier,
                               )}{" "}
-                              packs
-                            </small>
+                              available
+                            </div>
                           )}
                         </div>
 
                         <button
-                          className="btn btn-sm btn-primary rounded-circle p-2 shadow-sm d-flex align-items-center justify-content-center"
-                          style={{ width: 32, height: 32 }}
+                          className="btn btn-cyan-glow rounded-circle p-0 d-flex align-items-center justify-content-center shadow-sm"
+                          style={{ width: "48px", height: "48px" }}
                           onClick={() => handleAddToCart(med)}
                           disabled={isOutOfStock}
                           title="Add to Cart"
                         >
-                          <ShoppingCart size={16} />
+                          <ShoppingCart size={20} className="text-white" />
                         </button>
                       </div>
                     </div>
@@ -1351,10 +1818,6 @@ const CustomerMedicines = () => {
           })}
         </div>
       )}
-      <style>{`
-        .hover-shadow:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; transform: translateY(-3px); }
-        .transition-all { transition: all 0.2s ease-in-out; }
-      `}</style>
     </div>
   );
 };
