@@ -1293,15 +1293,51 @@ const PlaceOrder = () => {
         prescriptionImage: requiresPrescription ? prescriptionImage : null,
       };
 
+      // 1. Create the Order
       const res = await api.post("/orders", orderData);
-
       const data = res.data || res;
       const orderId =
         data._id || data.order?._id || data.createdOrder?._id || data.id;
 
       if (orderId) {
-        // Optional: Clear checkout data once order is successfully created
+        // ✅ 2. CART CLEANUP: Remove ONLY the purchased items from the backend cart
+        try {
+          await Promise.all(
+            finalCartItems.map((item) => {
+              const id = item.product || item.medicine;
+              // Tell backend to delete this specific item from cart
+              return api.delete(`/cart/${id}`).catch(() => null);
+            }),
+          );
+        } catch (cleanupErr) {
+          console.warn(
+            "Minor error clearing backend cart, local will still clear.",
+            cleanupErr,
+          );
+        }
+
+        // ✅ 3. CART CLEANUP: Remove purchased items from Local Storage
+        const currentLocalCart =
+          JSON.parse(localStorage.getItem("cartItems")) || [];
+        const purchasedIds = finalCartItems.map((i) =>
+          String(i.product || i.medicine),
+        );
+
+        // Filter out the items we just bought
+        const remainingCart = currentLocalCart.filter((item) => {
+          const id = String(
+            item.medicine?._id || item.medicine || item.product,
+          );
+          return !purchasedIds.includes(id);
+        });
+
+        // Save the remaining items back to the cart
+        localStorage.setItem("cartItems", JSON.stringify(remainingCart));
+
+        // Clear the active checkout session
         localStorage.removeItem("checkoutData");
+
+        // Proceed to payment gateway
         navigate(`/payment?orderId=${orderId}&amount=${totalPrice}`);
       } else {
         throw new Error("Order created but ID was missing from response.");

@@ -196,6 +196,73 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const router = express.Router();
+// const {
+//   addOrderItems,
+//   getOrderById,
+//   updateOrderToPaid,
+//   updateOrderStatus,
+//   updateOrderToPaidManual,
+//   getMyOrders,
+//   getOrders,
+//   deleteOrder,
+//   updatePrescriptionStatus, // ✅ Added new prescription controller
+// } = require("../controllers/orderController");
+// const { protect } = require("../middleware/authMiddleware");
+// const authorizeRoles = require("../middleware/role"); // Ensure this path is correct
+
+// // ===================================================================
+// // ROOT ROUTES: /api/orders
+// // ===================================================================
+// router
+//   .route("/")
+//   .post(protect, addOrderItems) // Create new order (Any logged-in user)
+//   .get(protect, authorizeRoles("admin", "pharmacist"), getOrders); // View all orders (Admin/Pharmacist only)
+
+// // ===================================================================
+// // USER SPECIFIC ROUTES
+// // ===================================================================
+// // Note: Put these BEFORE /:id routes to prevent "myorders" being treated as an ID
+// router.route("/myorders").get(protect, getMyOrders);
+// // ✅ ADDED: Alternative route to match frontend call /api/orders/my
+// router.route("/my").get(protect, getMyOrders);
+
+// // ===================================================================
+// // ID SPECIFIC ROUTES: /api/orders/:id
+// // ===================================================================
+// router
+//   .route("/:id")
+//   .get(protect, getOrderById) // View single order details
+//   .delete(protect, deleteOrder); // ✅ Delete order (User can delete their own, or Admin)
+
+// router
+//   .route("/:id/status")
+//   .put(protect, authorizeRoles("admin", "pharmacist"), updateOrderStatus);
+
+// // ===================================================================
+// // PRESCRIPTION ROUTES
+// // ===================================================================
+// // ✅ NEW: Route for Pharmacist to approve/reject prescription
+// router
+//   .route("/:id/prescription")
+//   .put(
+//     protect,
+//     authorizeRoles("admin", "pharmacist"),
+//     updatePrescriptionStatus,
+//   );
+
+// // ===================================================================
+// // PAYMENT ROUTES
+// // ===================================================================
+// router.route("/:id/pay").put(protect, updateOrderToPaid);
+
+// router
+//   .route("/:id/pay-manual")
+//   .put(protect, authorizeRoles("admin", "pharmacist"), updateOrderToPaidManual);
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
 const {
@@ -207,10 +274,10 @@ const {
   getMyOrders,
   getOrders,
   deleteOrder,
-  updatePrescriptionStatus, // ✅ Added new prescription controller
+  updatePrescriptionStatus,
 } = require("../controllers/orderController");
 const { protect } = require("../middleware/authMiddleware");
-const authorizeRoles = require("../middleware/role"); // Ensure this path is correct
+const authorizeRoles = require("../middleware/role");
 
 // ===================================================================
 // ROOT ROUTES: /api/orders
@@ -225,8 +292,7 @@ router
 // ===================================================================
 // Note: Put these BEFORE /:id routes to prevent "myorders" being treated as an ID
 router.route("/myorders").get(protect, getMyOrders);
-// ✅ ADDED: Alternative route to match frontend call /api/orders/my
-router.route("/my").get(protect, getMyOrders);
+router.route("/my").get(protect, getMyOrders); // Alternative route to match frontend call /api/orders/my
 
 // ===================================================================
 // ID SPECIFIC ROUTES: /api/orders/:id
@@ -234,7 +300,7 @@ router.route("/my").get(protect, getMyOrders);
 router
   .route("/:id")
   .get(protect, getOrderById) // View single order details
-  .delete(protect, deleteOrder); // ✅ Delete order (User can delete their own, or Admin)
+  .delete(protect, deleteOrder); // Cancel/Delete order (User can delete their own, or Admin)
 
 router
   .route("/:id/status")
@@ -243,7 +309,7 @@ router
 // ===================================================================
 // PRESCRIPTION ROUTES
 // ===================================================================
-// ✅ NEW: Route for Pharmacist to approve/reject prescription
+// Route for Pharmacist to approve/reject prescription
 router
   .route("/:id/prescription")
   .put(

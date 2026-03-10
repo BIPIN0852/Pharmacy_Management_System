@@ -68,7 +68,7 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/User"); // Ensure path is correct
 const { protect } = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/role");
 
@@ -85,7 +85,7 @@ const {
 } = require("../controllers/messageController");
 
 // ✅ OPTIONAL AUTH MIDDLEWARE
-// Allows guests to send messages, but if a logged-in user sends one, it attaches their user ID.
+// Allows guests to send support messages, but if a logged-in user sends one, it attaches their user ID.
 const optionalAuth = async (req, res, next) => {
   let token;
   if (
@@ -120,10 +120,10 @@ router.get("/appointment/:appointmentId", protect, getAppointmentMessages);
 // 🛠️ PUBLIC / CUSTOMER SUPPORT TICKET ROUTES
 // ===================================================================
 
-// Route to send a message (Handles both Guests and Logged-In Users)
+// Route to send a support message (Handles both Guests and Logged-In Users)
 router.post("/", optionalAuth, sendMessage);
 
-// Route for a logged-in customer to fetch their message history
+// Route for a logged-in customer to fetch their support ticket history
 // ⚠️ MUST BE ABOVE `/:id` routes!
 router.get("/my", protect, getMyMessages);
 
@@ -134,13 +134,13 @@ router.put("/:id/read-reply", protect, markReplyAsRead);
 // 👔 ADMIN ONLY ROUTES
 // ===================================================================
 
-// View all messages from all users
+// View all support messages from all users
 router.get("/", protect, authorizeRoles("admin"), getMessages);
 
-// Mark a message as read (without replying)
+// Mark a support message as read (without replying)
 router.put("/:id/read", protect, authorizeRoles("admin"), markMessageAsRead);
 
-// Reply to a message (sends email & updates DB)
+// Reply to a support message (sends email & updates DB)
 router.put("/:id/reply", protect, authorizeRoles("admin"), replyToMessage);
 
 module.exports = router;

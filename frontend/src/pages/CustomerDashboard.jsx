@@ -4008,7 +4008,2158 @@
 
 // export default CustomerDashboard;
 
+// import React, { useState, useEffect } from "react";
+// import {
+//   Package,
+//   Calendar,
+//   FileText,
+//   CreditCard,
+//   Upload,
+//   Plus,
+//   Clock,
+//   Ticket,
+//   Heart,
+//   ShoppingCart,
+//   Loader2,
+//   Activity,
+//   ArrowUpRight,
+//   MessageSquare,
+//   Bell,
+//   CheckCircle2,
+//   Send,
+//   Pill,
+//   User,
+// } from "lucide-react";
+// import { Form, Row, Col, Modal } from "react-bootstrap";
+// import { useNavigate, useLocation } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { useAuth } from "../context/AuthContext";
+// import { addToCart } from "../redux/actions/cartActions";
+
+// const API_BASE_URL = "http://localhost:5000/api";
+
+// const CustomerDashboard = () => {
+//   const { user } = useAuth();
+//   const navigate = useNavigate();
+//   const location = useLocation();
+//   const dispatch = useDispatch();
+
+//   // --- UI State ---
+//   const [showUploadModal, setShowUploadModal] = useState(false);
+//   const [selectedMessage, setSelectedMessage] = useState(null);
+
+//   // ✅ Customer Reply State
+//   const [customerReplyText, setCustomerReplyText] = useState("");
+//   const [replyLoading, setReplyLoading] = useState(false);
+
+//   // --- Data State ---
+//   const [loading, setLoading] = useState(true);
+//   const [profile, setProfile] = useState(null);
+//   const [orders, setOrders] = useState([]);
+//   const [myAppointments, setMyAppointments] = useState([]);
+//   const [myPrescriptions, setMyPrescriptions] = useState([]);
+//   const [savedMedicines, setSavedMedicines] = useState([]);
+//   const [myMessages, setMyMessages] = useState([]);
+//   const [medicines, setMedicines] = useState([]);
+
+//   // --- Interaction State ---
+//   const [prescriptionFile, setPrescriptionFile] = useState(null);
+//   const [prescriptionPreview, setPrescriptionPreview] = useState(null);
+//   const [notes, setNotes] = useState("");
+//   const [uploadMessage, setUploadMessage] = useState("");
+//   const [uploadLoading, setUploadLoading] = useState(false);
+
+//   // --- Effects ---
+//   useEffect(() => {
+//     fetchAllData();
+
+//     // Background Sync
+//     const syncMessages = async () => {
+//       try {
+//         const token = localStorage.getItem("token");
+//         if (!token) return;
+//         const res = await fetch(`${API_BASE_URL}/messages/my`, {
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+//         if (res.ok) {
+//           const latestMessages = await res.json();
+//           setMyMessages(latestMessages);
+//         }
+//       } catch (err) {}
+//     };
+
+//     const interval = setInterval(syncMessages, 15000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // ✅ Auto-scroll if navigated from the Layout Notification Bell
+//   useEffect(() => {
+//     if (location.state?.scrollTo === "support-tickets") {
+//       scrollToTickets();
+//       // Clear the state so it doesn't keep scrolling on every re-render
+//       window.history.replaceState({}, document.title);
+//     }
+//   }, [location]);
+
+//   // Helper function to scroll to tickets and highlight
+//   const scrollToTickets = () => {
+//     const el = document.getElementById("support-tickets-section");
+//     if (el) {
+//       el.scrollIntoView({ behavior: "smooth", block: "center" });
+//       el.classList.add("border-primary", "shadow-lg");
+//       setTimeout(
+//         () => el.classList.remove("border-primary", "shadow-lg"),
+//         2000,
+//       );
+//     }
+//   };
+
+//   const safelyGetArray = (data, key) => {
+//     if (Array.isArray(data)) return data;
+//     if (data && Array.isArray(data[key])) return data[key];
+//     return [];
+//   };
+
+//   const getImageUrl = (path) => {
+//     if (!path)
+//       return "https://ui-avatars.com/api/?name=Med&background=eff6ff&color=2563eb";
+//     return path.startsWith("http") ? path : `http://localhost:5000${path}`;
+//   };
+
+//   const fetchAllData = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       if (!token) return navigate("/login");
+//       const headers = { Authorization: `Bearer ${token}` };
+
+//       const results = await Promise.allSettled([
+//         fetch(`${API_BASE_URL}/auth/profile`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/orders`, { headers }),
+//         fetch(`${API_BASE_URL}/medicines`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/appointments`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/prescriptions`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/saved-medicines`, { headers }),
+//         fetch(`${API_BASE_URL}/messages/my`, { headers }),
+//       ]);
+
+//       const [
+//         profileRes,
+//         ordersRes,
+//         medsRes,
+//         apptRes,
+//         presRes,
+//         savedRes,
+//         msgRes,
+//       ] = results;
+
+//       if (profileRes.status === "fulfilled" && profileRes.value.ok)
+//         setProfile(await profileRes.value.json());
+//       if (ordersRes.status === "fulfilled" && ordersRes.value.ok)
+//         setOrders(safelyGetArray(await ordersRes.value.json(), "orders"));
+//       if (medsRes.status === "fulfilled" && medsRes.value.ok)
+//         setMedicines(safelyGetArray(await medsRes.value.json(), "medicines"));
+//       if (apptRes.status === "fulfilled" && apptRes.value.ok)
+//         setMyAppointments(
+//           safelyGetArray(await apptRes.value.json(), "appointments"),
+//         );
+//       if (presRes.status === "fulfilled" && presRes.value.ok)
+//         setMyPrescriptions(
+//           safelyGetArray(await presRes.value.json(), "prescriptions"),
+//         );
+//       if (savedRes.status === "fulfilled" && savedRes.value.ok)
+//         setSavedMedicines(await savedRes.value.json());
+//       if (msgRes.status === "fulfilled" && msgRes.value.ok)
+//         setMyMessages(await msgRes.value.json());
+//     } catch (error) {
+//       console.error("Failed to fetch dashboard data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Mark Message Reply as Read
+//   const handleReadMessage = async (msg) => {
+//     setSelectedMessage(msg);
+//     setCustomerReplyText(""); // Reset reply box when opening
+
+//     if (msg.adminReply && !msg.isReplyRead) {
+//       try {
+//         const token = localStorage.getItem("token");
+//         await fetch(`${API_BASE_URL}/messages/${msg._id}/read-reply`, {
+//           method: "PUT",
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+
+//         setMyMessages((prev) =>
+//           prev.map((m) =>
+//             m._id === msg._id ? { ...m, isReplyRead: true } : m,
+//           ),
+//         );
+//       } catch (err) {}
+//     }
+//   };
+
+//   // ✅ Send a Customer Reply back to Admin
+//   const handleSendCustomerReply = async () => {
+//     if (!customerReplyText.trim()) return;
+//     try {
+//       setReplyLoading(true);
+//       const token = localStorage.getItem("token");
+
+//       // We trigger the standard create message endpoint so it shows as a new ticket for admin
+//       await fetch(`${API_BASE_URL}/messages`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           name: profile?.name || user?.name || "Customer",
+//           email: profile?.email || user?.email || "customer@example.com",
+//           text: `[Reply to previous ticket]: ${customerReplyText}`,
+//         }),
+//       });
+
+//       setCustomerReplyText("");
+//       setSelectedMessage(null);
+//       fetchAllData(); // Refresh list to show the new outgoing message
+//     } catch (err) {
+//       console.error(err);
+//       alert("Failed to send reply.");
+//     } finally {
+//       setReplyLoading(false);
+//     }
+//   };
+
+//   // ... (Upload Prescription Logic remains the same)
+//   const handlePrescriptionChange = (e) => {
+//     const file = e.target.files?.[0];
+//     setPrescriptionFile(file || null);
+//     setPrescriptionPreview(file ? URL.createObjectURL(file) : null);
+//   };
+
+//   const handleUploadPrescription = async (e) => {
+//     e.preventDefault();
+//     if (!prescriptionFile) return;
+//     try {
+//       setUploadLoading(true);
+//       const token = localStorage.getItem("token");
+//       const formData = new FormData();
+//       formData.append("image", prescriptionFile);
+//       formData.append("notes", notes);
+//       let res = await fetch(`${API_BASE_URL}/prescriptions`, {
+//         method: "POST",
+//         headers: { Authorization: `Bearer ${token}` },
+//         body: formData,
+//       });
+//       if (!res.ok)
+//         res = await fetch(`${API_BASE_URL}/customer/prescriptions`, {
+//           method: "POST",
+//           headers: { Authorization: `Bearer ${token}` },
+//           body: formData,
+//         });
+//       if (res.ok) {
+//         setUploadMessage("Prescription uploaded successfully!");
+//         setPrescriptionFile(null);
+//         setPrescriptionPreview(null);
+//         setNotes("");
+//         setShowUploadModal(false);
+//         fetchAllData();
+//       } else {
+//         setUploadMessage("Failed to upload.");
+//       }
+//     } catch (err) {
+//       setUploadMessage("Error uploading prescription.");
+//     } finally {
+//       setUploadLoading(false);
+//     }
+//   };
+
+//   const handleAddToCart = (med) => {
+//     const itemToAdd = med.medicine || med;
+//     if (!itemToAdd || itemToAdd.countInStock === 0) return;
+//     dispatch(addToCart(itemToAdd._id, 1));
+//     alert(`${itemToAdd.name} added to cart!`);
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
+//         <Loader2 className="spin-animation text-primary mb-3" size={48} />
+//         <span className="text-muted fw-bold tracking-wider text-uppercase small">
+//           Loading Dashboard...
+//         </span>
+//       </div>
+//     );
+//   }
+
+//   const unreadRepliesCount = myMessages.filter(
+//     (m) => m.adminReply && !m.isReplyRead,
+//   ).length;
+//   const upcomingAppt = myAppointments
+//     .filter(
+//       (a) =>
+//         new Date(a.date) >= new Date().setHours(0, 0, 0, 0) &&
+//         a.status !== "cancelled",
+//     )
+//     .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+//   const statsCards = [
+//     {
+//       label: "Wallet Points",
+//       value: profile?.loyaltyPoints || 0,
+//       icon: CreditCard,
+//       colorClass: "text-primary",
+//       bgClass: "bg-primary",
+//       link: "/profile",
+//     },
+//     {
+//       label: "Active Orders",
+//       value: orders.filter((o) => !o.isDelivered).length,
+//       icon: Package,
+//       colorClass: "text-success",
+//       bgClass: "bg-success",
+//       link: "/orders",
+//     },
+//     {
+//       label: "Appointments",
+//       value: myAppointments.length,
+//       icon: Calendar,
+//       colorClass: "text-info",
+//       bgClass: "bg-info",
+//       link: "/appointments",
+//     },
+//     {
+//       label: "Prescriptions",
+//       value: myPrescriptions.length,
+//       icon: FileText,
+//       colorClass: "text-warning",
+//       bgClass: "bg-warning",
+//       link: "/prescriptions",
+//     },
+//   ];
+
+//   return (
+//     <div
+//       className="min-vh-100 bg-light p-3 p-md-4"
+//       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+//     >
+//       {/* 1. PROFESSIONAL HERO BANNER */}
+//       <div className="bg-white rounded-4 mb-4 p-4 p-md-5 shadow-sm border border-light-subtle d-flex justify-content-between align-items-center flex-wrap gap-4 position-relative overflow-hidden">
+//         <div
+//           className="position-absolute top-0 end-0 h-100 w-50 bg-primary opacity-10"
+//           style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)" }}
+//         ></div>
+//         <div className="position-relative z-1">
+//           <h2 className="fw-black text-dark mb-2 tracking-tight">
+//             Welcome back, {profile?.name || user?.name || "Customer"}!
+//           </h2>
+//           <p className="text-muted fs-5 mb-0 fw-medium">
+//             Here is your health and activity overview.
+//           </p>
+//         </div>
+
+//         {/* ✅ LIVE NOTIFICATION BADGE (Scrolls to tickets on click) */}
+//         {unreadRepliesCount > 0 && (
+//           <div
+//             className="position-relative z-1 bg-white p-3 rounded-4 border border-primary shadow-sm d-flex align-items-center gap-3 animate-fade-in cursor-pointer hover-lift transition-all"
+//             onClick={scrollToTickets}
+//           >
+//             <div className="bg-primary bg-opacity-10 p-3 rounded-circle text-primary position-relative">
+//               <Bell size={24} />
+//               <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-2 border-white rounded-circle"></span>
+//             </div>
+//             <div>
+//               <div className="fw-bold text-dark">Support Reply</div>
+//               <div className="small text-muted fw-medium">
+//                 You have {unreadRepliesCount} unread message(s)
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* 2. CLINICAL KPI STATS ROW */}
+//       <Row className="g-4 mb-4">
+//         {statsCards.map((item, idx) => (
+//           <Col xs={6} xl={3} key={idx}>
+//             <div
+//               className="bg-white h-100 p-4 rounded-4 shadow-sm border border-light-subtle cursor-pointer transition-all hover-lift d-flex flex-column justify-content-between"
+//               onClick={() => navigate(item.link)}
+//             >
+//               <div className="d-flex align-items-center gap-3 mb-3">
+//                 <div
+//                   className={`${item.bgClass} bg-opacity-10 p-2 rounded-circle ${item.colorClass}`}
+//                 >
+//                   <item.icon size={20} strokeWidth={2.5} />
+//                 </div>
+//                 <span className="text-muted fw-bold small text-uppercase tracking-wider">
+//                   {item.label}
+//                 </span>
+//               </div>
+//               <h2 className="fw-black mb-0 text-dark">{item.value}</h2>
+//             </div>
+//           </Col>
+//         ))}
+//       </Row>
+
+//       <Row className="g-4">
+//         <Col lg={8}>
+//           {/* 3. RECENT ORDERS TABLE */}
+//           <div className="bg-white rounded-4 shadow-sm border border-light-subtle mb-4 overflow-hidden">
+//             <div className="p-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center bg-light bg-opacity-50">
+//               <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+//                 <Package size={20} className="text-primary" /> Recent Orders
+//               </h5>
+//               <button
+//                 className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+//                 onClick={() => navigate("/orders")}
+//               >
+//                 View all <ArrowUpRight size={18} />
+//               </button>
+//             </div>
+//             <div className="table-responsive p-0">
+//               <table className="table table-hover align-middle mb-0 border-0">
+//                 <thead className="bg-white">
+//                   <tr>
+//                     <th className="ps-4 border-bottom py-3 text-muted small fw-bold text-uppercase">
+//                       Order ID
+//                     </th>
+//                     <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+//                       Date
+//                     </th>
+//                     <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+//                       Status
+//                     </th>
+//                     <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+//                       Amount
+//                     </th>
+//                     <th className="pe-4 text-end border-bottom py-3 text-muted small fw-bold text-uppercase">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {orders.slice(0, 5).map((order) => (
+//                     <tr key={order._id}>
+//                       <td className="ps-4 py-3 fw-bold font-monospace text-secondary">
+//                         #
+//                         {order._id
+//                           .substring(order._id.length - 6)
+//                           .toUpperCase()}
+//                       </td>
+//                       <td className="text-dark fw-medium">
+//                         {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                           month: "short",
+//                           day: "numeric",
+//                           year: "numeric",
+//                         })}
+//                       </td>
+//                       <td>
+//                         <span
+//                           className={`badge rounded-pill px-3 py-2 ${order.isPaid ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"}`}
+//                         >
+//                           {order.isPaid ? "Completed" : "Pending"}
+//                         </span>
+//                       </td>
+//                       <td className="text-dark fw-bold">
+//                         Rs. {Number(order.totalPrice).toLocaleString()}
+//                       </td>
+//                       <td className="text-end pe-4">
+//                         <button
+//                           className="btn btn-sm btn-light border fw-bold text-primary rounded-pill px-3 hover-lift"
+//                           onClick={() => navigate(`/orders`)}
+//                         >
+//                           Details
+//                         </button>
+//                       </td>
+//                     </tr>
+//                   ))}
+//                   {orders.length === 0 && (
+//                     <tr>
+//                       <td
+//                         colSpan="5"
+//                         className="text-center py-5 text-muted fw-medium"
+//                       >
+//                         No recent orders found.
+//                       </td>
+//                     </tr>
+//                   )}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+
+//           {/* 4. SAVED MEDICINES */}
+//           <div className="bg-white rounded-4 shadow-sm border border-light-subtle p-4 mb-4">
+//             <div className="d-flex justify-content-between align-items-center mb-4">
+//               <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+//                 <Heart size={20} className="text-danger" fill="#ef4444" /> Saved
+//                 Items
+//               </h5>
+//               <button
+//                 className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+//                 onClick={() => navigate("/customer/saved")}
+//               >
+//                 View all <ArrowUpRight size={18} />
+//               </button>
+//             </div>
+//             {savedMedicines.length > 0 ? (
+//               <Row className="g-3">
+//                 {savedMedicines.slice(0, 3).map((item) => {
+//                   const med = item.medicine;
+//                   if (!med) return null;
+//                   return (
+//                     <Col xs={12} sm={6} md={4} key={item._id}>
+//                       <div className="bg-light p-3 rounded-4 d-flex align-items-center gap-3 border border-light-subtle transition-all hover-lift h-100">
+//                         <img
+//                           src={getImageUrl(med.image)}
+//                           alt={med.name}
+//                           className="rounded-3 object-fit-cover bg-white shadow-sm border"
+//                           style={{ width: "50px", height: "50px" }}
+//                         />
+//                         <div className="flex-grow-1 overflow-hidden">
+//                           <h6
+//                             className="mb-1 fw-bold text-dark text-truncate"
+//                             title={med.name}
+//                           >
+//                             {med.name}
+//                           </h6>
+//                           <div className="text-primary fw-black small">
+//                             Rs. {med.price}
+//                           </div>
+//                         </div>
+//                         <button
+//                           className="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm"
+//                           onClick={() => handleAddToCart(item)}
+//                           title="Add to Cart"
+//                         >
+//                           <ShoppingCart size={16} className="text-white" />
+//                         </button>
+//                       </div>
+//                     </Col>
+//                   );
+//                 })}
+//               </Row>
+//             ) : (
+//               <div
+//                 className="text-center py-5 bg-light rounded-4 border border-light-subtle"
+//                 style={{ borderStyle: "dashed !important" }}
+//               >
+//                 <Heart size={32} className="mb-3 text-muted opacity-50" />
+//                 <p className="text-muted fw-medium mb-0">
+//                   Your wishlist is empty.
+//                 </p>
+//                 <button
+//                   className="btn btn-link text-primary fw-bold mt-2"
+//                   onClick={() => navigate("/medicines")}
+//                 >
+//                   Browse Catalog
+//                 </button>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* 🚀 8. DOCTOR'S RECENT PRESCRIPTIONS (NEW SECTION) */}
+//           <div className="bg-white rounded-4 shadow-sm border border-light-subtle p-4 mb-4">
+//             <div className="d-flex justify-content-between align-items-center mb-4">
+//               <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+//                 <Pill size={20} className="text-success" /> Recent Prescriptions
+//               </h5>
+//               <button
+//                 className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+//                 onClick={() => navigate("/prescriptions")}
+//               >
+//                 View all <ArrowUpRight size={18} />
+//               </button>
+//             </div>
+
+//             {myPrescriptions.length > 0 ? (
+//               <div className="d-flex flex-column gap-3">
+//                 {myPrescriptions.slice(0, 2).map((rx) => {
+//                   const isDigital = rx.items && rx.items.length > 0;
+//                   return (
+//                     <div
+//                       key={rx._id}
+//                       className="bg-light p-3 rounded-4 border border-light-subtle transition-all hover-lift"
+//                     >
+//                       <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light-subtle">
+//                         <div className="fw-bold text-dark d-flex align-items-center gap-2">
+//                           {isDigital ? (
+//                             <>
+//                               <User size={16} className="text-primary" />
+//                               Dr. {rx.doctor?.name || "Doctor"}
+//                             </>
+//                           ) : (
+//                             <>
+//                               <Upload size={16} className="text-warning" />
+//                               Uploaded Prescription
+//                             </>
+//                           )}
+//                         </div>
+//                         <span
+//                           className={`badge rounded-pill px-2 py-1 ${rx.status?.toLowerCase() === "approved" ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"}`}
+//                         >
+//                           {rx.status || "Pending"}
+//                         </span>
+//                       </div>
+
+//                       {isDigital ? (
+//                         <div>
+//                           <span className="small text-muted fw-bold text-uppercase tracking-wider">
+//                             Prescribed Medicines:
+//                           </span>
+//                           <ul className="mb-0 mt-1 small text-dark fw-medium ps-3">
+//                             {rx.items.slice(0, 3).map((item, idx) => (
+//                               <li key={idx}>
+//                                 {item.medicine} -{" "}
+//                                 <span className="text-muted">
+//                                   {item.dosageInstructions} ({item.durationDays}{" "}
+//                                   days)
+//                                 </span>
+//                               </li>
+//                             ))}
+//                             {rx.items.length > 3 && (
+//                               <li>
+//                                 <span className="text-primary">
+//                                   + {rx.items.length - 3} more
+//                                 </span>
+//                               </li>
+//                             )}
+//                           </ul>
+//                         </div>
+//                       ) : (
+//                         <p className="small text-muted mb-0 fw-medium">
+//                           You uploaded a scanned prescription image. Waiting for
+//                           review.
+//                         </p>
+//                       )}
+
+//                       <div className="text-end mt-2">
+//                         <button
+//                           className="btn btn-sm btn-white border shadow-sm rounded-pill fw-bold text-primary px-3"
+//                           onClick={() => navigate("/prescriptions")}
+//                         >
+//                           View Details
+//                         </button>
+//                       </div>
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             ) : (
+//               <div
+//                 className="text-center py-4 bg-light rounded-4 border border-light-subtle"
+//                 style={{ borderStyle: "dashed !important" }}
+//               >
+//                 <Pill size={32} className="mb-2 text-muted opacity-50" />
+//                 <p className="text-muted fw-medium mb-0 small">
+//                   No active prescriptions right now.
+//                 </p>
+//               </div>
+//             )}
+//           </div>
+//         </Col>
+
+//         {/* --- RIGHT COLUMN --- */}
+//         <Col lg={4}>
+//           {/* ✅ 5. SUPPORT TICKETS PANEL (Now with an ID for auto-scrolling) */}
+//           <div
+//             id="support-tickets-section"
+//             className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle overflow-hidden d-flex flex-column transition-all"
+//             style={{ maxHeight: "400px" }}
+//           >
+//             <div className="p-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center bg-light bg-opacity-50">
+//               <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+//                 <MessageSquare size={18} className="text-primary" /> Support
+//                 Tickets
+//               </h5>
+//             </div>
+
+//             {/* TTL Notification */}
+//             <div className="bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25 px-3 py-2 text-center">
+//               <span className="small fw-bold text-warning d-flex justify-content-center align-items-center gap-1">
+//                 <Clock size={14} /> Messages auto-delete after 48 hours.
+//               </span>
+//             </div>
+
+//             <div className="p-3 overflow-auto flex-grow-1">
+//               {myMessages.length > 0 ? (
+//                 <div className="d-flex flex-column gap-3">
+//                   {myMessages.slice(0, 5).map((msg) => (
+//                     <div
+//                       key={msg._id}
+//                       className={`p-3 rounded-4 border transition-all cursor-pointer hover-lift ${msg.adminReply && !msg.isReplyRead ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-light-subtle bg-light"}`}
+//                       onClick={() => handleReadMessage(msg)}
+//                     >
+//                       <div className="d-flex justify-content-between align-items-start mb-2">
+//                         <div
+//                           className="text-truncate fw-bold text-dark"
+//                           style={{ maxWidth: "200px", fontSize: "0.9rem" }}
+//                         >
+//                           {msg.text}
+//                         </div>
+//                         {msg.adminReply ? (
+//                           !msg.isReplyRead ? (
+//                             <span
+//                               className="badge bg-primary text-white rounded-pill shadow-sm"
+//                               style={{ fontSize: "0.6rem" }}
+//                             >
+//                               NEW REPLY
+//                             </span>
+//                           ) : (
+//                             <span
+//                               className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"
+//                               style={{ fontSize: "0.6rem" }}
+//                             >
+//                               Answered
+//                             </span>
+//                           )
+//                         ) : (
+//                           <span
+//                             className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill"
+//                             style={{ fontSize: "0.6rem" }}
+//                           >
+//                             Pending
+//                           </span>
+//                         )}
+//                       </div>
+//                       <div className="small text-muted d-flex justify-content-between align-items-center mt-2">
+//                         <span style={{ fontSize: "0.75rem" }}>
+//                           {new Date(msg.createdAt).toLocaleDateString()}
+//                         </span>
+//                         <span
+//                           className="text-primary fw-bold"
+//                           style={{ fontSize: "0.75rem" }}
+//                         >
+//                           View &rarr;
+//                         </span>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 <div className="text-center py-5 text-muted">
+//                   <MessageSquare
+//                     size={32}
+//                     className="mb-3 opacity-25 text-primary"
+//                   />
+//                   <p className="small fw-medium mb-0">
+//                     No active support tickets.
+//                   </p>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* 6. NEXT APPOINTMENT */}
+//           <div className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle p-4">
+//             <div className="d-flex justify-content-between align-items-center mb-4">
+//               <h5 className="fw-bold text-dark mb-0">Next Appointment</h5>
+//               <div
+//                 className="bg-info bg-opacity-10 p-2 rounded-circle cursor-pointer hover-lift"
+//                 onClick={() => navigate("/appointments")}
+//               >
+//                 <Calendar size={20} className="text-info" />
+//               </div>
+//             </div>
+//             {upcomingAppt ? (
+//               <div className="bg-light rounded-4 p-4 border border-light-subtle text-center">
+//                 <div className="bg-white rounded-circle shadow-sm d-inline-flex p-3 mb-3 border">
+//                   <Activity size={24} className="text-info" />
+//                 </div>
+//                 <h5 className="fw-bold text-dark mb-1">
+//                   Dr. {upcomingAppt.doctor?.name}
+//                 </h5>
+//                 <p className="text-muted small fw-medium mb-3">
+//                   {upcomingAppt.doctor?.speciality}
+//                 </p>
+//                 <div className="bg-white border rounded-3 p-2 d-flex justify-content-center align-items-center gap-2 mb-3">
+//                   <Clock size={16} className="text-info" />
+//                   <span className="fw-bold text-dark small">
+//                     {new Date(upcomingAppt.date).toDateString()}
+//                   </span>
+//                 </div>
+//                 <button
+//                   className="btn btn-outline-info w-100 fw-bold rounded-pill"
+//                   onClick={() => navigate("/appointments")}
+//                 >
+//                   View Details
+//                 </button>
+//               </div>
+//             ) : (
+//               <div
+//                 className="text-center py-5 bg-light rounded-4 border border-light-subtle"
+//                 style={{ borderStyle: "dashed !important" }}
+//               >
+//                 <p className="text-muted fw-medium mb-3">
+//                   No upcoming visits scheduled.
+//                 </p>
+//                 <button
+//                   className="btn btn-info text-white px-4 fw-bold rounded-pill shadow-sm"
+//                   onClick={() => navigate("/appointments")}
+//                 >
+//                   Book Now
+//                 </button>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* 7. UPLOAD PRESCRIPTION */}
+//           <div className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle p-4">
+//             <div className="d-flex align-items-center gap-3 mb-4">
+//               <div className="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+//                 <Upload size={24} />
+//               </div>
+//               <div>
+//                 <h5 className="fw-bold text-dark mb-0">Upload Script</h5>
+//                 <span className="text-muted small fw-medium">
+//                   Quick digital upload
+//                 </span>
+//               </div>
+//             </div>
+//             <button
+//               className="btn btn-warning w-100 fw-bold rounded-pill text-white d-flex align-items-center justify-content-center gap-2 shadow-sm"
+//               onClick={() => setShowUploadModal(true)}
+//             >
+//               <Plus size={18} /> Upload Now
+//             </button>
+//           </div>
+//         </Col>
+//       </Row>
+
+//       {/* --- UPLOAD MODAL --- */}
+//       <Modal
+//         show={showUploadModal}
+//         onHide={() => setShowUploadModal(false)}
+//         centered
+//         contentClassName="border-0 shadow-lg rounded-4"
+//       >
+//         <div className="modal-header bg-light border-bottom border-light-subtle p-4">
+//           <h5 className="modal-title fw-black text-dark d-flex align-items-center gap-2">
+//             <Upload className="text-warning" size={20} /> Upload Prescription
+//           </h5>
+//           <button
+//             type="button"
+//             className="btn-close"
+//             onClick={() => setShowUploadModal(false)}
+//           ></button>
+//         </div>
+//         <Modal.Body className="p-4 bg-white">
+//           <Form onSubmit={handleUploadPrescription}>
+//             <Form.Group className="mb-4">
+//               <Form.Label className="small fw-bold text-muted text-uppercase tracking-wider">
+//                 Prescription Image/PDF
+//               </Form.Label>
+//               <Form.Control
+//                 type="file"
+//                 className="border-light-subtle bg-light"
+//                 onChange={handlePrescriptionChange}
+//                 accept="image/*,application/pdf"
+//               />
+//               {prescriptionPreview && (
+//                 <div className="mt-3 text-center bg-light p-2 rounded-3 border border-light-subtle">
+//                   <img
+//                     src={prescriptionPreview}
+//                     alt="Preview"
+//                     className="rounded-2 img-fluid shadow-sm"
+//                     style={{ maxHeight: "150px" }}
+//                   />
+//                 </div>
+//               )}
+//             </Form.Group>
+//             <Form.Group className="mb-4">
+//               <Form.Label className="small fw-bold text-muted text-uppercase tracking-wider">
+//                 Additional Notes
+//               </Form.Label>
+//               <Form.Control
+//                 as="textarea"
+//                 rows={3}
+//                 className="border-light-subtle bg-light"
+//                 value={notes}
+//                 onChange={(e) => setNotes(e.target.value)}
+//                 placeholder="E.g. I need 2 strips of..."
+//                 style={{ resize: "none" }}
+//               />
+//             </Form.Group>
+//             <button
+//               type="submit"
+//               className="btn btn-warning w-100 rounded-pill py-2 fw-bold text-white shadow-sm d-flex align-items-center justify-content-center gap-2"
+//               disabled={uploadLoading}
+//             >
+//               {uploadLoading ? (
+//                 <>
+//                   <Loader2 size={18} className="spin-animation" /> Uploading...
+//                 </>
+//               ) : (
+//                 "Submit Prescription"
+//               )}
+//             </button>
+//           </Form>
+//         </Modal.Body>
+//       </Modal>
+
+//       {/* ✅ VIEW & REPLY MESSAGE MODAL */}
+//       <Modal
+//         show={selectedMessage !== null}
+//         onHide={() => setSelectedMessage(null)}
+//         centered
+//         contentClassName="border-0 shadow-lg rounded-4"
+//       >
+//         <div className="modal-header bg-primary text-white border-0 p-4 rounded-top-4">
+//           <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
+//             <MessageSquare size={20} /> Support Ticket
+//           </h5>
+//           <button
+//             type="button"
+//             className="btn-close btn-close-white"
+//             onClick={() => setSelectedMessage(null)}
+//           ></button>
+//         </div>
+//         <Modal.Body className="p-4 bg-white">
+//           <div className="mb-4">
+//             <h6 className="fw-bold text-muted small text-uppercase tracking-wider mb-2">
+//               You initially wrote:
+//             </h6>
+//             <div className="bg-light p-3 rounded-4 border border-light-subtle text-dark fw-medium shadow-sm">
+//               "{selectedMessage?.text}"
+//             </div>
+//             <div className="text-end text-muted small mt-2 fw-medium">
+//               Sent:{" "}
+//               {selectedMessage
+//                 ? new Date(selectedMessage.createdAt).toLocaleString()
+//                 : ""}
+//             </div>
+//           </div>
+
+//           <div className="mb-4">
+//             <h6 className="fw-bold text-primary small text-uppercase tracking-wider mb-2">
+//               Admin Response:
+//             </h6>
+//             {selectedMessage?.adminReply ? (
+//               <div className="bg-primary bg-opacity-10 border-start border-4 border-primary p-3 rounded-3 text-dark fw-bold shadow-sm">
+//                 {selectedMessage.adminReply}
+//               </div>
+//             ) : (
+//               <div
+//                 className="bg-light p-4 rounded-4 border border-light-subtle text-muted text-center"
+//                 style={{ borderStyle: "dashed" }}
+//               >
+//                 <Clock size={24} className="mb-2 opacity-50 text-primary" />
+//                 <p className="small fw-medium mb-0">
+//                   Our team is reviewing your message. We usually reply within 24
+//                   hours.
+//                 </p>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* ✅ CUSTOMER REPLY BOX */}
+//           <div className="border-top border-light-subtle pt-4">
+//             <h6 className="fw-bold text-dark small text-uppercase tracking-wider mb-2">
+//               Send a Follow-up:
+//             </h6>
+//             <Form.Control
+//               as="textarea"
+//               rows={2}
+//               className="bg-light border-light-subtle mb-3"
+//               placeholder="Need more help? Type your reply here..."
+//               value={customerReplyText}
+//               onChange={(e) => setCustomerReplyText(e.target.value)}
+//               style={{ resize: "none" }}
+//             />
+//             <button
+//               className="btn btn-primary w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
+//               onClick={handleSendCustomerReply}
+//               disabled={replyLoading || !customerReplyText.trim()}
+//             >
+//               {replyLoading ? (
+//                 <Loader2 size={16} className="spin-animation" />
+//               ) : (
+//                 <Send size={16} />
+//               )}
+//               Send Reply
+//             </button>
+//           </div>
+//         </Modal.Body>
+//       </Modal>
+
+//       <style>{`
+//         .transition-all { transition: all 0.3s ease; }
+//         .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+//         .spin-animation { animation: spin 1s linear infinite; }
+//         @keyframes spin { 100% { transform: rotate(360deg); } }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default CustomerDashboard;
+
+// import React, { useState, useEffect } from "react";
+
+// // ✅ Corrected: Only icons come from lucide-react
+// import {
+//   Package,
+//   Calendar,
+//   FileText,
+//   CreditCard,
+//   Upload,
+//   Plus,
+//   Clock,
+//   Heart,
+//   ShoppingCart,
+//   Loader2,
+//   Activity,
+//   ArrowUpRight,
+//   MessageSquare,
+//   Bell,
+//   Send,
+//   Pill,
+//   User,
+//   ShieldCheck,
+//   ChevronRight,
+// } from "lucide-react";
+
+// // ✅ Corrected: All UI components (including Button, Card, Table) MUST come from react-bootstrap
+// import {
+//   Container,
+//   Card,
+//   Button,
+//   Table,
+//   Badge,
+//   Form,
+//   Row,
+//   Col,
+//   Modal,
+// } from "react-bootstrap";
+
+// import { useNavigate, useLocation, Link } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { useAuth } from "../context/AuthContext";
+// import { addToCart } from "../redux/actions/cartActions";
+
+// const API_BASE_URL = "http://localhost:5000/api";
+
+// const CustomerDashboard = () => {
+//   const { user } = useAuth();
+//   const navigate = useNavigate();
+//   const location = useLocation();
+//   const dispatch = useDispatch();
+
+//   // --- UI State ---
+//   const [showUploadModal, setShowUploadModal] = useState(false);
+//   const [selectedMessage, setSelectedMessage] = useState(null);
+
+//   // Customer Reply State
+//   const [customerReplyText, setCustomerReplyText] = useState("");
+//   const [replyLoading, setReplyLoading] = useState(false);
+
+//   // --- Data State ---
+//   const [loading, setLoading] = useState(true);
+//   const [profile, setProfile] = useState(null);
+//   const [orders, setOrders] = useState([]);
+//   const [myAppointments, setMyAppointments] = useState([]);
+//   const [myPrescriptions, setMyPrescriptions] = useState([]);
+//   const [savedMedicines, setSavedMedicines] = useState([]);
+//   const [myMessages, setMyMessages] = useState([]);
+//   const [medicines, setMedicines] = useState([]);
+
+//   // --- Interaction State ---
+//   const [prescriptionFile, setPrescriptionFile] = useState(null);
+//   const [prescriptionPreview, setPrescriptionPreview] = useState(null);
+//   const [notes, setNotes] = useState("");
+//   const [uploadMessage, setUploadMessage] = useState("");
+//   const [uploadLoading, setUploadLoading] = useState(false);
+
+//   // --- Effects ---
+//   useEffect(() => {
+//     fetchAllData();
+
+//     const syncMessages = async () => {
+//       try {
+//         const token = localStorage.getItem("token");
+//         if (!token) return;
+//         const res = await fetch(`${API_BASE_URL}/messages/my`, {
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+//         if (res.ok) {
+//           const latestMessages = await res.json();
+//           setMyMessages(latestMessages);
+//         }
+//       } catch (err) {}
+//     };
+
+//     const interval = setInterval(syncMessages, 15000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   useEffect(() => {
+//     if (location.state?.scrollTo === "support-tickets") {
+//       scrollToTickets();
+//       window.history.replaceState({}, document.title);
+//     }
+//   }, [location]);
+
+//   const scrollToTickets = () => {
+//     const el = document.getElementById("support-tickets-section");
+//     if (el) {
+//       el.scrollIntoView({ behavior: "smooth", block: "center" });
+//       el.classList.add("border-primary", "shadow-sm");
+//       setTimeout(
+//         () => el.classList.remove("border-primary", "shadow-sm"),
+//         2000,
+//       );
+//     }
+//   };
+
+//   const safelyGetArray = (data, key) => {
+//     if (Array.isArray(data)) return data;
+//     if (data && Array.isArray(data[key])) return data[key];
+//     return [];
+//   };
+
+//   const getImageUrl = (path) => {
+//     if (!path)
+//       return "https://ui-avatars.com/api/?name=Med&background=f0f2f2&color=007185";
+//     return path.startsWith("http") ? path : `http://localhost:5000${path}`;
+//   };
+
+//   const fetchAllData = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("token");
+//       if (!token) return navigate("/login");
+//       const headers = { Authorization: `Bearer ${token}` };
+
+//       const results = await Promise.allSettled([
+//         fetch(`${API_BASE_URL}/auth/profile`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/orders`, { headers }),
+//         fetch(`${API_BASE_URL}/medicines`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/appointments`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/prescriptions`, { headers }),
+//         fetch(`${API_BASE_URL}/customer/saved-medicines`, { headers }),
+//         fetch(`${API_BASE_URL}/messages/my`, { headers }),
+//       ]);
+
+//       const [
+//         profileRes,
+//         ordersRes,
+//         medsRes,
+//         apptRes,
+//         presRes,
+//         savedRes,
+//         msgRes,
+//       ] = results;
+
+//       if (profileRes.status === "fulfilled" && profileRes.value.ok)
+//         setProfile(await profileRes.value.json());
+//       if (ordersRes.status === "fulfilled" && ordersRes.value.ok)
+//         setOrders(safelyGetArray(await ordersRes.value.json(), "orders"));
+//       if (medsRes.status === "fulfilled" && medsRes.value.ok)
+//         setMedicines(safelyGetArray(await medsRes.value.json(), "medicines"));
+//       if (apptRes.status === "fulfilled" && apptRes.value.ok)
+//         setMyAppointments(
+//           safelyGetArray(await apptRes.value.json(), "appointments"),
+//         );
+//       if (presRes.status === "fulfilled" && presRes.value.ok)
+//         setMyPrescriptions(
+//           safelyGetArray(await presRes.value.json(), "prescriptions"),
+//         );
+//       if (savedRes.status === "fulfilled" && savedRes.value.ok)
+//         setSavedMedicines(await savedRes.value.json());
+//       if (msgRes.status === "fulfilled" && msgRes.value.ok)
+//         setMyMessages(await msgRes.value.json());
+//     } catch (error) {
+//       console.error("Failed to fetch dashboard data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleReadMessage = async (msg) => {
+//     setSelectedMessage(msg);
+//     setCustomerReplyText("");
+
+//     if (msg.adminReply && !msg.isReplyRead) {
+//       try {
+//         const token = localStorage.getItem("token");
+//         await fetch(`${API_BASE_URL}/messages/${msg._id}/read-reply`, {
+//           method: "PUT",
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+
+//         setMyMessages((prev) =>
+//           prev.map((m) =>
+//             m._id === msg._id ? { ...m, isReplyRead: true } : m,
+//           ),
+//         );
+//       } catch (err) {}
+//     }
+//   };
+
+//   const handleSendCustomerReply = async () => {
+//     if (!customerReplyText.trim()) return;
+//     try {
+//       setReplyLoading(true);
+//       const token = localStorage.getItem("token");
+
+//       await fetch(`${API_BASE_URL}/messages`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           name: profile?.name || user?.name || "Customer",
+//           email: profile?.email || user?.email || "customer@example.com",
+//           text: `[Reply to previous ticket]: ${customerReplyText}`,
+//         }),
+//       });
+
+//       setCustomerReplyText("");
+//       setSelectedMessage(null);
+//       fetchAllData();
+//     } catch (err) {
+//       console.error(err);
+//       alert("Failed to send reply.");
+//     } finally {
+//       setReplyLoading(false);
+//     }
+//   };
+
+//   const handlePrescriptionChange = (e) => {
+//     const file = e.target.files?.[0];
+//     setPrescriptionFile(file || null);
+//     setPrescriptionPreview(file ? URL.createObjectURL(file) : null);
+//   };
+
+//   const handleUploadPrescription = async (e) => {
+//     e.preventDefault();
+//     if (!prescriptionFile) return;
+//     try {
+//       setUploadLoading(true);
+//       const token = localStorage.getItem("token");
+//       const formData = new FormData();
+//       formData.append("image", prescriptionFile);
+//       formData.append("notes", notes);
+//       let res = await fetch(`${API_BASE_URL}/prescriptions`, {
+//         method: "POST",
+//         headers: { Authorization: `Bearer ${token}` },
+//         body: formData,
+//       });
+//       if (!res.ok)
+//         res = await fetch(`${API_BASE_URL}/customer/prescriptions`, {
+//           method: "POST",
+//           headers: { Authorization: `Bearer ${token}` },
+//           body: formData,
+//         });
+//       if (res.ok) {
+//         setUploadMessage("Prescription uploaded successfully!");
+//         setPrescriptionFile(null);
+//         setPrescriptionPreview(null);
+//         setNotes("");
+//         setShowUploadModal(false);
+//         fetchAllData();
+//       } else {
+//         setUploadMessage("Failed to upload.");
+//       }
+//     } catch (err) {
+//       setUploadMessage("Error uploading prescription.");
+//     } finally {
+//       setUploadLoading(false);
+//     }
+//   };
+
+//   const handleAddToCart = (med) => {
+//     const itemToAdd = med.medicine || med;
+//     if (!itemToAdd || itemToAdd.countInStock === 0) return;
+//     dispatch(addToCart(itemToAdd._id, 1));
+//     alert(`${itemToAdd.name} added to cart!`);
+//   };
+
+//   if (loading) {
+//     return (
+//       <div
+//         className="d-flex flex-column align-items-center justify-content-center vh-100"
+//         style={{ backgroundColor: "#f0f2f2" }}
+//       >
+//         <Loader2
+//           className="spin-animation mb-3"
+//           style={{ color: "#007185" }}
+//           size={48}
+//         />
+//         <span className="text-muted fw-bold tracking-wider text-uppercase small">
+//           Loading Dashboard...
+//         </span>
+//       </div>
+//     );
+//   }
+
+//   const unreadRepliesCount = myMessages.filter(
+//     (m) => m.adminReply && !m.isReplyRead,
+//   ).length;
+//   const upcomingAppt = myAppointments
+//     .filter(
+//       (a) =>
+//         new Date(a.date) >= new Date().setHours(0, 0, 0, 0) &&
+//         a.status !== "cancelled",
+//     )
+//     .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+//   const statsCards = [
+//     {
+//       label: "Wallet Points",
+//       value: profile?.loyaltyPoints || 0,
+//       icon: CreditCard,
+//       link: "/profile",
+//     },
+//     {
+//       label: "Active Orders",
+//       value: orders.filter((o) => !o.isDelivered).length,
+//       icon: Package,
+//       link: "/orders",
+//     },
+//     {
+//       label: "Appointments",
+//       value: myAppointments.length,
+//       icon: Calendar,
+//       link: "/appointments",
+//     },
+//     {
+//       label: "Prescriptions",
+//       value: myPrescriptions.length,
+//       icon: FileText,
+//       link: "/prescriptions",
+//     },
+//   ];
+
+//   return (
+//     <div
+//       className="min-vh-100 p-3 p-md-4"
+//       style={{
+//         backgroundColor: "#f0f2f2",
+//         fontFamily: "'Inter', system-ui, sans-serif",
+//         paddingBottom: "50px",
+//       }}
+//     >
+//       {/* 1. PROFESSIONAL HERO BANNER */}
+//       <div
+//         className="bg-white rounded-1 mb-4 p-4 shadow-sm border d-flex justify-content-between align-items-center flex-wrap gap-4 animate-fade-in"
+//         style={{ borderColor: "#D5D9D9" }}
+//       >
+//         <div>
+//           <h3 className="fw-bold text-dark mb-1" style={{ color: "#0F1111" }}>
+//             Welcome back, {profile?.name || user?.name || "Customer"}
+//           </h3>
+//           <p className="text-muted small mb-0">
+//             Here is your health and activity overview.
+//           </p>
+//         </div>
+
+//         {/* LIVE NOTIFICATION BADGE */}
+//         {unreadRepliesCount > 0 && (
+//           <div
+//             className="bg-white p-3 rounded-1 border shadow-sm d-flex align-items-center gap-3 cursor-pointer hover-lift transition-all"
+//             style={{ borderColor: "#007185" }}
+//             onClick={scrollToTickets}
+//           >
+//             <div
+//               className="p-2 rounded-1 position-relative"
+//               style={{ backgroundColor: "#f0f2f2" }}
+//             >
+//               <Bell size={24} style={{ color: "#007185" }} />
+//               <span
+//                 className="position-absolute top-0 start-100 translate-middle p-2 rounded-circle border border-2 border-white"
+//                 style={{ backgroundColor: "#B12704" }}
+//               ></span>
+//             </div>
+//             <div>
+//               <div
+//                 className="fw-bold"
+//                 style={{ color: "#007185", fontSize: "0.95rem" }}
+//               >
+//                 Support Reply
+//               </div>
+//               <div className="small text-muted fw-medium">
+//                 You have {unreadRepliesCount} unread message(s)
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* 2. CLINICAL KPI STATS ROW */}
+//       <Row className="g-3 mb-4 animate-fade-in">
+//         {statsCards.map((item, idx) => (
+//           <Col xs={6} xl={3} key={idx}>
+//             <div
+//               className="bg-white h-100 p-3 p-md-4 rounded-1 shadow-sm border cursor-pointer transition-all hover-lift d-flex flex-column justify-content-between"
+//               style={{ borderColor: "#D5D9D9" }}
+//               onClick={() => navigate(item.link)}
+//             >
+//               <div className="d-flex align-items-center gap-2 mb-3">
+//                 <item.icon size={20} style={{ color: "#007185" }} />
+//                 <span
+//                   className="text-muted fw-bold small text-uppercase tracking-wider"
+//                   style={{ fontSize: "0.75rem" }}
+//                 >
+//                   {item.label}
+//                 </span>
+//               </div>
+//               <h3 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
+//                 {item.value}
+//               </h3>
+//             </div>
+//           </Col>
+//         ))}
+//       </Row>
+
+//       <Row className="g-4 animate-fade-in">
+//         <Col lg={8}>
+//           {/* 3. RECENT ORDERS TABLE */}
+//           <div
+//             className="bg-white rounded-1 shadow-sm border mb-4 overflow-hidden"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+//               <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+//                 <Package size={16} style={{ color: "#007185" }} /> Recent Orders
+//               </h6>
+//               <button
+//                 className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+//                 style={{ color: "#007185" }}
+//                 onClick={() => navigate("/orders")}
+//               >
+//                 View all <ArrowUpRight size={14} />
+//               </button>
+//             </div>
+//             <div className="table-responsive p-0">
+//               <table className="table align-middle mb-0 custom-saas-table">
+//                 <thead className="bg-white">
+//                   <tr>
+//                     <th className="ps-4 border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
+//                       Order ID
+//                     </th>
+//                     <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
+//                       Date
+//                     </th>
+//                     <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
+//                       Status
+//                     </th>
+//                     <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
+//                       Amount
+//                     </th>
+//                     <th className="pe-4 text-end border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {orders.slice(0, 5).map((order) => (
+//                     <tr key={order._id} className="table-row-hover">
+//                       <td
+//                         className="ps-4 py-3 fw-bold font-monospace"
+//                         style={{ color: "#007185", fontSize: "0.9rem" }}
+//                       >
+//                         #
+//                         {order.orderNumber ||
+//                           order._id
+//                             .substring(order._id.length - 6)
+//                             .toUpperCase()}
+//                       </td>
+//                       <td className="text-dark small fw-medium">
+//                         {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                           month: "short",
+//                           day: "numeric",
+//                           year: "numeric",
+//                         })}
+//                       </td>
+//                       <td>
+//                         <Badge
+//                           bg={order.isPaid ? "success" : "warning"}
+//                           text={order.isPaid ? "light" : "dark"}
+//                           className="rounded-1"
+//                         >
+//                           {order.isPaid ? "Completed" : "Pending"}
+//                         </Badge>
+//                       </td>
+//                       <td
+//                         className="fw-bold"
+//                         style={{ color: "#B12704", fontSize: "0.95rem" }}
+//                       >
+//                         Rs.{" "}
+//                         {Number(order.totalPrice).toLocaleString(undefined, {
+//                           minimumFractionDigits: 2,
+//                         })}
+//                       </td>
+//                       <td className="text-end pe-4">
+//                         <Button
+//                           variant="light"
+//                           size="sm"
+//                           className="border shadow-sm rounded-1 p-2 hover-lift"
+//                           style={{ borderColor: "#D5D9D9" }}
+//                           onClick={() =>
+//                             navigate(`/payment-success?orderId=${order._id}`)
+//                           }
+//                           title="View Order Details"
+//                         >
+//                           <ChevronRight
+//                             size={16}
+//                             style={{ color: "#007185" }}
+//                           />
+//                         </Button>
+//                       </td>
+//                     </tr>
+//                   ))}
+//                   {orders.length === 0 && (
+//                     <tr>
+//                       <td
+//                         colSpan="5"
+//                         className="text-center py-5 text-muted fw-medium"
+//                       >
+//                         No recent orders found.
+//                       </td>
+//                     </tr>
+//                   )}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+
+//           {/* 4. SAVED MEDICINES */}
+//           <div
+//             className="bg-white rounded-1 shadow-sm border p-4 mb-4"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+//               <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+//                 <Heart size={16} style={{ color: "#B12704" }} fill="#B12704" />{" "}
+//                 Saved Items
+//               </h6>
+//               <button
+//                 className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+//                 style={{ color: "#007185" }}
+//                 onClick={() => navigate("/customer/saved")}
+//               >
+//                 View all <ArrowUpRight size={14} />
+//               </button>
+//             </div>
+
+//             {savedMedicines.length > 0 ? (
+//               <Row className="g-3">
+//                 {savedMedicines.slice(0, 3).map((item) => {
+//                   const med = item.medicine;
+//                   if (!med) return null;
+//                   return (
+//                     <Col xs={12} sm={6} md={4} key={item._id}>
+//                       <div
+//                         className="bg-light p-3 rounded-1 d-flex align-items-center gap-3 border transition-all hover-lift h-100"
+//                         style={{ borderColor: "#D5D9D9" }}
+//                       >
+//                         <div
+//                           className="bg-white border rounded-1 p-1 shadow-sm"
+//                           style={{
+//                             width: "50px",
+//                             height: "50px",
+//                             borderColor: "#D5D9D9",
+//                           }}
+//                         >
+//                           <img
+//                             src={getImageUrl(med.image)}
+//                             alt={med.name}
+//                             className="h-100 w-100 object-fit-contain"
+//                           />
+//                         </div>
+//                         <div className="flex-grow-1 overflow-hidden">
+//                           <h6
+//                             className="mb-1 fw-bold text-dark text-truncate"
+//                             style={{ fontSize: "0.9rem" }}
+//                             title={med.name}
+//                           >
+//                             {med.name}
+//                           </h6>
+//                           <div
+//                             className="fw-bold small"
+//                             style={{ color: "#B12704" }}
+//                           >
+//                             Rs. {med.price}
+//                           </div>
+//                         </div>
+//                         <button
+//                           className="btn rounded-1 p-2 d-flex align-items-center justify-content-center shadow-sm hover-lift border-0"
+//                           style={{
+//                             backgroundColor: "#FFD814",
+//                             color: "#0F1111",
+//                           }}
+//                           onClick={() => handleAddToCart(item)}
+//                           title="Add to Cart"
+//                         >
+//                           <ShoppingCart size={16} />
+//                         </button>
+//                       </div>
+//                     </Col>
+//                   );
+//                 })}
+//               </Row>
+//             ) : (
+//               <div
+//                 className="text-center py-5 bg-light rounded-1 border"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <Heart size={32} className="mb-3 text-muted opacity-25" />
+//                 <p className="text-muted fw-medium mb-0 small">
+//                   Your wishlist is empty.
+//                 </p>
+//                 <button
+//                   className="btn btn-link fw-bold mt-2 hover-underline text-decoration-none"
+//                   style={{ color: "#007185" }}
+//                   onClick={() => navigate("/medicines")}
+//                 >
+//                   Browse Catalog
+//                 </button>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* 8. RECENT PRESCRIPTIONS */}
+//           <div
+//             className="bg-white rounded-1 shadow-sm border p-4 mb-4"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+//               <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+//                 <Pill size={16} style={{ color: "#067D62" }} /> Recent
+//                 Prescriptions
+//               </h6>
+//               <button
+//                 className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+//                 style={{ color: "#007185" }}
+//                 onClick={() => navigate("/prescriptions")}
+//               >
+//                 View all <ArrowUpRight size={14} />
+//               </button>
+//             </div>
+
+//             {myPrescriptions.length > 0 ? (
+//               <div className="d-flex flex-column gap-3">
+//                 {myPrescriptions.slice(0, 2).map((rx) => {
+//                   const isDigital = rx.items && rx.items.length > 0;
+//                   return (
+//                     <div
+//                       key={rx._id}
+//                       className="bg-light p-3 rounded-1 border transition-all hover-lift"
+//                       style={{ borderColor: "#D5D9D9" }}
+//                     >
+//                       <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light-subtle">
+//                         <div className="fw-bold text-dark d-flex align-items-center gap-2 small">
+//                           {isDigital ? (
+//                             <>
+//                               <User size={16} style={{ color: "#007185" }} />{" "}
+//                               Dr. {rx.doctor?.name || "Doctor"}
+//                             </>
+//                           ) : (
+//                             <>
+//                               <Upload size={16} style={{ color: "#B12704" }} />{" "}
+//                               Uploaded Prescription
+//                             </>
+//                           )}
+//                         </div>
+//                         <Badge
+//                           bg={
+//                             rx.status?.toLowerCase() === "approved"
+//                               ? "success"
+//                               : "warning"
+//                           }
+//                           text={
+//                             rx.status?.toLowerCase() === "approved"
+//                               ? "light"
+//                               : "dark"
+//                           }
+//                           className="rounded-1 px-2"
+//                         >
+//                           {rx.status || "Pending"}
+//                         </Badge>
+//                       </div>
+
+//                       {isDigital ? (
+//                         <div>
+//                           <span
+//                             className="small text-muted fw-bold text-uppercase tracking-wider"
+//                             style={{ fontSize: "0.7rem" }}
+//                           >
+//                             Prescribed Medicines:
+//                           </span>
+//                           <ul className="mb-0 mt-1 small text-dark fw-medium ps-3">
+//                             {rx.items.slice(0, 3).map((item, idx) => (
+//                               <li key={idx}>
+//                                 {item.medicine} -{" "}
+//                                 <span className="text-muted">
+//                                   {item.dosageInstructions} ({item.durationDays}{" "}
+//                                   days)
+//                                 </span>
+//                               </li>
+//                             ))}
+//                             {rx.items.length > 3 && (
+//                               <li className="mt-1">
+//                                 <span
+//                                   className="fw-bold"
+//                                   style={{ color: "#007185" }}
+//                                 >
+//                                   + {rx.items.length - 3} more
+//                                 </span>
+//                               </li>
+//                             )}
+//                           </ul>
+//                         </div>
+//                       ) : (
+//                         <p className="small text-muted mb-0 fw-medium">
+//                           You uploaded a scanned prescription image. Waiting for
+//                           review.
+//                         </p>
+//                       )}
+
+//                       <div className="text-end mt-2">
+//                         <button
+//                           className="btn btn-sm bg-white border shadow-sm rounded-1 fw-bold px-3 hover-lift"
+//                           style={{ color: "#007185", borderColor: "#D5D9D9" }}
+//                           onClick={() => navigate("/prescriptions")}
+//                         >
+//                           View Details
+//                         </button>
+//                       </div>
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             ) : (
+//               <div
+//                 className="text-center py-4 bg-light rounded-1 border"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <Pill size={32} className="mb-2 text-muted opacity-25" />
+//                 <p className="text-muted fw-medium mb-0 small">
+//                   No active prescriptions right now.
+//                 </p>
+//               </div>
+//             )}
+//           </div>
+//         </Col>
+
+//         {/* --- RIGHT COLUMN --- */}
+//         <Col lg={4}>
+//           {/* 5. SUPPORT TICKETS */}
+//           <div
+//             id="support-tickets-section"
+//             className="bg-white rounded-1 mb-4 shadow-sm border overflow-hidden d-flex flex-column transition-all"
+//             style={{ maxHeight: "400px", borderColor: "#D5D9D9" }}
+//           >
+//             <div className="p-3 border-bottom bg-light">
+//               <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+//                 <MessageSquare size={16} style={{ color: "#007185" }} /> Support
+//                 Tickets
+//               </h6>
+//             </div>
+
+//             <div
+//               className="px-3 py-2 text-center"
+//               style={{
+//                 backgroundColor: "#fff9e6",
+//                 borderBottom: "1px solid #f5c6cb",
+//               }}
+//             >
+//               <span
+//                 className="small fw-bold d-flex justify-content-center align-items-center gap-1"
+//                 style={{ color: "#B12704" }}
+//               >
+//                 <Clock size={14} /> Messages auto-delete after 48 hours.
+//               </span>
+//             </div>
+
+//             <div className="p-3 overflow-auto flex-grow-1 custom-scrollbar">
+//               {myMessages.length > 0 ? (
+//                 <div className="d-flex flex-column gap-2">
+//                   {myMessages.slice(0, 5).map((msg) => (
+//                     <div
+//                       key={msg._id}
+//                       className={`p-3 rounded-1 border transition-all cursor-pointer hover-lift ${msg.adminReply && !msg.isReplyRead ? "bg-light shadow-sm" : "bg-white"}`}
+//                       style={{
+//                         borderColor:
+//                           msg.adminReply && !msg.isReplyRead
+//                             ? "#007185"
+//                             : "#D5D9D9",
+//                       }}
+//                       onClick={() => handleReadMessage(msg)}
+//                     >
+//                       <div className="d-flex justify-content-between align-items-start mb-1">
+//                         <div
+//                           className="text-truncate fw-bold text-dark"
+//                           style={{ maxWidth: "180px", fontSize: "0.85rem" }}
+//                         >
+//                           {msg.text}
+//                         </div>
+//                         {msg.adminReply ? (
+//                           !msg.isReplyRead ? (
+//                             <Badge
+//                               bg="danger"
+//                               className="rounded-1"
+//                               style={{ fontSize: "0.6rem" }}
+//                             >
+//                               NEW REPLY
+//                             </Badge>
+//                           ) : (
+//                             <Badge
+//                               bg="success"
+//                               className="rounded-1"
+//                               style={{ fontSize: "0.6rem" }}
+//                             >
+//                               Answered
+//                             </Badge>
+//                           )
+//                         ) : (
+//                           <Badge
+//                             bg="secondary"
+//                             className="rounded-1"
+//                             style={{ fontSize: "0.6rem" }}
+//                           >
+//                             Pending
+//                           </Badge>
+//                         )}
+//                       </div>
+//                       <div className="small text-muted d-flex justify-content-between align-items-center mt-2">
+//                         <span style={{ fontSize: "0.75rem" }}>
+//                           {new Date(msg.createdAt).toLocaleDateString()}
+//                         </span>
+//                         <span
+//                           className="fw-bold hover-underline"
+//                           style={{ color: "#007185", fontSize: "0.75rem" }}
+//                         >
+//                           View &rarr;
+//                         </span>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 <div className="text-center py-5 text-muted">
+//                   <MessageSquare
+//                     size={32}
+//                     className="mb-3 opacity-25"
+//                     style={{ color: "#007185" }}
+//                   />
+//                   <p className="small fw-medium mb-0">
+//                     No active support tickets.
+//                   </p>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* 6. NEXT APPOINTMENT */}
+//           <div
+//             className="bg-white rounded-1 mb-4 shadow-sm border p-4"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+//               <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+//                 <Calendar size={16} style={{ color: "#007185" }} /> Next
+//                 Appointment
+//               </h6>
+//             </div>
+//             {upcomingAppt ? (
+//               <div
+//                 className="bg-light rounded-1 p-3 border text-center"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <h6 className="fw-bold text-dark mb-1">
+//                   Dr. {upcomingAppt.doctor?.name}
+//                 </h6>
+//                 <p className="text-muted small fw-medium mb-3">
+//                   {upcomingAppt.doctor?.speciality}
+//                 </p>
+//                 <div
+//                   className="bg-white border rounded-1 p-2 d-flex justify-content-center align-items-center gap-2 mb-3"
+//                   style={{ borderColor: "#D5D9D9" }}
+//                 >
+//                   <Clock size={16} style={{ color: "#007185" }} />
+//                   <span className="fw-bold text-dark small">
+//                     {new Date(upcomingAppt.date).toDateString()}
+//                   </span>
+//                 </div>
+//                 <button
+//                   className="btn w-100 fw-bold rounded-1 border shadow-sm hover-lift bg-white text-dark"
+//                   style={{ borderColor: "#D5D9D9" }}
+//                   onClick={() => navigate("/appointments")}
+//                 >
+//                   View Details
+//                 </button>
+//               </div>
+//             ) : (
+//               <div
+//                 className="text-center py-4 bg-light rounded-1 border"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <p className="text-muted fw-medium mb-3 small">
+//                   No upcoming visits scheduled.
+//                 </p>
+//                 <button
+//                   className="btn rounded-1 px-4 fw-bold shadow-sm border-0"
+//                   style={{ backgroundColor: "#007185", color: "white" }}
+//                   onClick={() => navigate("/appointments")}
+//                 >
+//                   Book Now
+//                 </button>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* 7. UPLOAD PRESCRIPTION */}
+//           <div
+//             className="bg-white rounded-1 mb-4 shadow-sm border p-4"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <div className="d-flex align-items-center gap-3 mb-4">
+//               <div
+//                 className="p-2 rounded-1"
+//                 style={{ backgroundColor: "#f0f2f2" }}
+//               >
+//                 <Upload size={24} style={{ color: "#007185" }} />
+//               </div>
+//               <div>
+//                 <h6 className="fw-bold text-dark mb-0 text-uppercase tracking-wider small">
+//                   Upload Script
+//                 </h6>
+//                 <span className="text-muted small fw-medium">
+//                   Quick digital upload
+//                 </span>
+//               </div>
+//             </div>
+//             <button
+//               className="btn w-100 fw-bold rounded-1 text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm border-0 hover-lift"
+//               style={{ backgroundColor: "#FFD814" }}
+//               onClick={() => setShowUploadModal(true)}
+//             >
+//               <Plus size={18} /> Upload Now
+//             </button>
+//           </div>
+//         </Col>
+//       </Row>
+
+//       {/* --- UPLOAD MODAL --- */}
+//       <Modal
+//         show={showUploadModal}
+//         onHide={() => setShowUploadModal(false)}
+//         centered
+//       >
+//         <div
+//           className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+//           style={{ borderColor: "#D5D9D9 !important" }}
+//         >
+//           <div className="modal-header bg-light border-bottom p-4 pb-3">
+//             <h5 className="modal-title fw-bold text-dark d-flex align-items-center gap-2 fs-5">
+//               <Upload style={{ color: "#007185" }} size={20} /> Upload
+//               Prescription
+//             </h5>
+//             <button
+//               type="button"
+//               className="btn-close shadow-none"
+//               onClick={() => setShowUploadModal(false)}
+//             ></button>
+//           </div>
+//           <Modal.Body className="p-4 bg-white">
+//             <Form onSubmit={handleUploadPrescription}>
+//               <Form.Group className="mb-3">
+//                 <Form.Label className="small fw-bold text-dark mb-1">
+//                   Prescription Image/PDF
+//                 </Form.Label>
+//                 <Form.Control
+//                   type="file"
+//                   className="shadow-none rounded-1 border modern-input"
+//                   style={{ borderColor: "#D5D9D9" }}
+//                   onChange={handlePrescriptionChange}
+//                   accept="image/*,application/pdf"
+//                 />
+//                 {prescriptionPreview && (
+//                   <div
+//                     className="mt-3 text-center bg-light p-2 rounded-1 border"
+//                     style={{ borderColor: "#D5D9D9" }}
+//                   >
+//                     <img
+//                       src={prescriptionPreview}
+//                       alt="Preview"
+//                       className="rounded-1 img-fluid shadow-sm"
+//                       style={{ maxHeight: "150px" }}
+//                     />
+//                   </div>
+//                 )}
+//               </Form.Group>
+//               <Form.Group className="mb-4">
+//                 <Form.Label className="small fw-bold text-dark mb-1">
+//                   Additional Notes
+//                 </Form.Label>
+//                 <Form.Control
+//                   as="textarea"
+//                   rows={3}
+//                   className="shadow-none rounded-1 border modern-input"
+//                   style={{ borderColor: "#D5D9D9", resize: "none" }}
+//                   value={notes}
+//                   onChange={(e) => setNotes(e.target.value)}
+//                   placeholder="E.g. I need 2 strips of..."
+//                 />
+//               </Form.Group>
+//               <button
+//                 type="submit"
+//                 className="btn w-100 rounded-1 py-2 fw-bold text-dark shadow-sm d-flex align-items-center justify-content-center gap-2 border-0 hover-lift"
+//                 style={{ backgroundColor: "#FFD814" }}
+//                 disabled={uploadLoading}
+//               >
+//                 {uploadLoading ? (
+//                   <>
+//                     <Loader2 size={18} className="spin-animation" />{" "}
+//                     Uploading...
+//                   </>
+//                 ) : (
+//                   "Submit Prescription"
+//                 )}
+//               </button>
+//             </Form>
+//           </Modal.Body>
+//         </div>
+//       </Modal>
+
+//       {/* ✅ VIEW & REPLY MESSAGE MODAL */}
+//       <Modal
+//         show={selectedMessage !== null}
+//         onHide={() => setSelectedMessage(null)}
+//         centered
+//       >
+//         <div
+//           className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+//           style={{ borderColor: "#D5D9D9 !important" }}
+//         >
+//           <div className="modal-header bg-light border-bottom p-4 pb-3">
+//             <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5 text-dark">
+//               <MessageSquare size={20} style={{ color: "#007185" }} /> Support
+//               Ticket
+//             </h5>
+//             <button
+//               type="button"
+//               className="btn-close shadow-none"
+//               onClick={() => setSelectedMessage(null)}
+//             ></button>
+//           </div>
+//           <Modal.Body className="p-4 bg-white">
+//             <div className="mb-4">
+//               <h6 className="fw-bold text-muted small text-uppercase tracking-wider mb-2">
+//                 You initially wrote:
+//               </h6>
+//               <div
+//                 className="bg-light p-3 rounded-1 border text-dark fw-medium shadow-sm"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 "{selectedMessage?.text}"
+//               </div>
+//               <div className="text-end text-muted small mt-2 fw-medium">
+//                 Sent:{" "}
+//                 {selectedMessage
+//                   ? new Date(selectedMessage.createdAt).toLocaleString()
+//                   : ""}
+//               </div>
+//             </div>
+
+//             <div className="mb-4">
+//               <h6
+//                 className="fw-bold small text-uppercase tracking-wider mb-2"
+//                 style={{ color: "#007185" }}
+//               >
+//                 Admin Response:
+//               </h6>
+//               {selectedMessage?.adminReply ? (
+//                 <div
+//                   className="p-3 rounded-1 text-dark fw-medium shadow-sm"
+//                   style={{
+//                     backgroundColor: "#f0f2f2",
+//                     borderLeft: "4px solid #007185",
+//                   }}
+//                 >
+//                   {selectedMessage.adminReply}
+//                 </div>
+//               ) : (
+//                 <div
+//                   className="bg-light p-4 rounded-1 border text-muted text-center"
+//                   style={{
+//                     borderColor: "#D5D9D9",
+//                     borderStyle: "dashed !important",
+//                   }}
+//                 >
+//                   <Clock
+//                     size={24}
+//                     className="mb-2 opacity-50"
+//                     style={{ color: "#007185" }}
+//                   />
+//                   <p className="small fw-medium mb-0">
+//                     Our team is reviewing your message. We usually reply within
+//                     24 hours.
+//                   </p>
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* CUSTOMER REPLY BOX */}
+//             <div className="border-top pt-4" style={{ borderColor: "#D5D9D9" }}>
+//               <h6 className="fw-bold text-dark small text-uppercase tracking-wider mb-2">
+//                 Send a Follow-up:
+//               </h6>
+//               <Form.Control
+//                 as="textarea"
+//                 rows={2}
+//                 className="mb-3 shadow-none rounded-1 border modern-input"
+//                 style={{ borderColor: "#D5D9D9", resize: "none" }}
+//                 placeholder="Need more help? Type your reply here..."
+//                 value={customerReplyText}
+//                 onChange={(e) => setCustomerReplyText(e.target.value)}
+//               />
+//               <button
+//                 className="btn w-100 rounded-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm border-0 hover-lift"
+//                 style={{ backgroundColor: "#007185", color: "white" }}
+//                 onClick={handleSendCustomerReply}
+//                 disabled={replyLoading || !customerReplyText.trim()}
+//               >
+//                 {replyLoading ? (
+//                   <Loader2 size={16} className="spin-animation" />
+//                 ) : (
+//                   <Send size={16} />
+//                 )}
+//                 Send Reply
+//               </button>
+//             </div>
+//           </Modal.Body>
+//         </div>
+//       </Modal>
+
+//       <style>{`
+//         .tracking-wider { letter-spacing: 0.05em; }
+//         .transition-all { transition: all 0.3s ease; }
+//         .hover-lift { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+//         .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
+//         .spin-animation { animation: spin 1s linear infinite; }
+//         @keyframes spin { 100% { transform: rotate(360deg); } }
+//         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//         .table-row-hover:hover { background-color: #f8f9fa; }
+//         .hover-underline:hover { text-decoration: underline !important; cursor: pointer; }
+//         .modern-input:focus { border-color: #e47911 !important; box-shadow: 0 0 3px 2px rgba(228, 121, 17, .5) !important; outline: none; }
+//         .cursor-pointer { cursor: pointer; }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default CustomerDashboard;
 import React, { useState, useEffect } from "react";
+
+// ✅ Corrected: Only icons come from lucide-react
 import {
   Package,
   Calendar,
@@ -4017,7 +6168,6 @@ import {
   Upload,
   Plus,
   Clock,
-  Ticket,
   Heart,
   ShoppingCart,
   Loader2,
@@ -4025,13 +6175,33 @@ import {
   ArrowUpRight,
   MessageSquare,
   Bell,
-  CheckCircle2,
   Send,
   Pill,
   User,
+  ShieldCheck,
+  ChevronRight,
+  Eye,
+  Trash2,
+  MapPin,
+  XCircle,
+  Image as ImageIcon,
 } from "lucide-react";
-import { Form, Row, Col, Modal } from "react-bootstrap";
-import { useNavigate, useLocation } from "react-router-dom";
+
+// ✅ Corrected: Added 'Spinner' to react-bootstrap imports
+import {
+  Container,
+  Card,
+  Button,
+  Table,
+  Badge,
+  Form,
+  Row,
+  Col,
+  Modal,
+  Spinner,
+} from "react-bootstrap";
+
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useAuth } from "../context/AuthContext";
 import { addToCart } from "../redux/actions/cartActions";
@@ -4048,7 +6218,14 @@ const CustomerDashboard = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
 
-  // ✅ Customer Reply State
+  // --- Order Details & Cancellation State ---
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Customer Reply State
   const [customerReplyText, setCustomerReplyText] = useState("");
   const [replyLoading, setReplyLoading] = useState(false);
 
@@ -4073,7 +6250,6 @@ const CustomerDashboard = () => {
   useEffect(() => {
     fetchAllData();
 
-    // Background Sync
     const syncMessages = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -4092,23 +6268,20 @@ const CustomerDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Auto-scroll if navigated from the Layout Notification Bell
   useEffect(() => {
     if (location.state?.scrollTo === "support-tickets") {
       scrollToTickets();
-      // Clear the state so it doesn't keep scrolling on every re-render
       window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  // Helper function to scroll to tickets and highlight
   const scrollToTickets = () => {
     const el = document.getElementById("support-tickets-section");
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("border-primary", "shadow-lg");
+      el.classList.add("border-primary", "shadow-sm");
       setTimeout(
-        () => el.classList.remove("border-primary", "shadow-lg"),
+        () => el.classList.remove("border-primary", "shadow-sm"),
         2000,
       );
     }
@@ -4122,7 +6295,7 @@ const CustomerDashboard = () => {
 
   const getImageUrl = (path) => {
     if (!path)
-      return "https://ui-avatars.com/api/?name=Med&background=eff6ff&color=2563eb";
+      return "https://ui-avatars.com/api/?name=Med&background=f0f2f2&color=007185";
     return path.startsWith("http") ? path : `http://localhost:5000${path}`;
   };
 
@@ -4178,10 +6351,56 @@ const CustomerDashboard = () => {
     }
   };
 
-  // Mark Message Reply as Read
+  // --- Order Actions ---
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setShowOrderModal(true);
+  };
+
+  const confirmDelete = (id) => {
+    setOrderToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  // ✅ FIXED: Guaranteed Modal Closure
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/orders/${orderToDelete}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || "Server refused to cancel the order.",
+        );
+      }
+
+      // Update UI Instantly
+      setOrders((prev) => prev.filter((order) => order._id !== orderToDelete));
+    } catch (err) {
+      console.error("Cancel Error:", err);
+      alert(err.message || "Failed to cancel order.");
+    } finally {
+      // ALWAYS CLOSE MODAL & RESET STATE
+      setShowDeleteModal(false);
+      setDeleteLoading(false);
+      setOrderToDelete(null);
+    }
+  };
+
   const handleReadMessage = async (msg) => {
     setSelectedMessage(msg);
-    setCustomerReplyText(""); // Reset reply box when opening
+    setCustomerReplyText("");
 
     if (msg.adminReply && !msg.isReplyRead) {
       try {
@@ -4200,14 +6419,12 @@ const CustomerDashboard = () => {
     }
   };
 
-  // ✅ Send a Customer Reply back to Admin
   const handleSendCustomerReply = async () => {
     if (!customerReplyText.trim()) return;
     try {
       setReplyLoading(true);
       const token = localStorage.getItem("token");
 
-      // We trigger the standard create message endpoint so it shows as a new ticket for admin
       await fetch(`${API_BASE_URL}/messages`, {
         method: "POST",
         headers: {
@@ -4223,7 +6440,7 @@ const CustomerDashboard = () => {
 
       setCustomerReplyText("");
       setSelectedMessage(null);
-      fetchAllData(); // Refresh list to show the new outgoing message
+      fetchAllData();
     } catch (err) {
       console.error(err);
       alert("Failed to send reply.");
@@ -4232,7 +6449,6 @@ const CustomerDashboard = () => {
     }
   };
 
-  // ... (Upload Prescription Logic remains the same)
   const handlePrescriptionChange = (e) => {
     const file = e.target.files?.[0];
     setPrescriptionFile(file || null);
@@ -4283,10 +6499,27 @@ const CustomerDashboard = () => {
     alert(`${itemToAdd.name} added to cart!`);
   };
 
+  // Safely calculate subtotal for the modal
+  const itemsPriceNum = Number(selectedOrder?.itemsPrice);
+  const calculatedSubtotal =
+    itemsPriceNum > 0
+      ? itemsPriceNum
+      : selectedOrder?.orderItems?.reduce(
+          (acc, item) => acc + Number(item.price) * Number(item.qty),
+          0,
+        ) || 0;
+
   if (loading) {
     return (
-      <div className="d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
-        <Loader2 className="spin-animation text-primary mb-3" size={48} />
+      <div
+        className="d-flex flex-column align-items-center justify-content-center vh-100"
+        style={{ backgroundColor: "#f0f2f2" }}
+      >
+        <Loader2
+          className="spin-animation mb-3"
+          style={{ color: "#007185" }}
+          size={48}
+        />
         <span className="text-muted fw-bold tracking-wider text-uppercase small">
           Loading Dashboard...
         </span>
@@ -4310,68 +6543,75 @@ const CustomerDashboard = () => {
       label: "Wallet Points",
       value: profile?.loyaltyPoints || 0,
       icon: CreditCard,
-      colorClass: "text-primary",
-      bgClass: "bg-primary",
       link: "/profile",
     },
     {
       label: "Active Orders",
       value: orders.filter((o) => !o.isDelivered).length,
       icon: Package,
-      colorClass: "text-success",
-      bgClass: "bg-success",
       link: "/orders",
     },
     {
       label: "Appointments",
       value: myAppointments.length,
       icon: Calendar,
-      colorClass: "text-info",
-      bgClass: "bg-info",
       link: "/appointments",
     },
     {
       label: "Prescriptions",
       value: myPrescriptions.length,
       icon: FileText,
-      colorClass: "text-warning",
-      bgClass: "bg-warning",
       link: "/prescriptions",
     },
   ];
 
   return (
     <div
-      className="min-vh-100 bg-light p-3 p-md-4"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      className="min-vh-100 p-3 p-md-4"
+      style={{
+        backgroundColor: "#f0f2f2",
+        fontFamily: "'Inter', system-ui, sans-serif",
+        paddingBottom: "50px",
+      }}
     >
       {/* 1. PROFESSIONAL HERO BANNER */}
-      <div className="bg-white rounded-4 mb-4 p-4 p-md-5 shadow-sm border border-light-subtle d-flex justify-content-between align-items-center flex-wrap gap-4 position-relative overflow-hidden">
-        <div
-          className="position-absolute top-0 end-0 h-100 w-50 bg-primary opacity-10"
-          style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)" }}
-        ></div>
-        <div className="position-relative z-1">
-          <h2 className="fw-black text-dark mb-2 tracking-tight">
-            Welcome back, {profile?.name || user?.name || "Customer"}!
-          </h2>
-          <p className="text-muted fs-5 mb-0 fw-medium">
+      <div
+        className="bg-white rounded-1 mb-4 p-4 shadow-sm border d-flex justify-content-between align-items-center flex-wrap gap-4 animate-fade-in"
+        style={{ borderColor: "#D5D9D9" }}
+      >
+        <div>
+          <h3 className="fw-bold text-dark mb-1" style={{ color: "#0F1111" }}>
+            Welcome back, {profile?.name || user?.name || "Customer"}
+          </h3>
+          <p className="text-muted small mb-0">
             Here is your health and activity overview.
           </p>
         </div>
 
-        {/* ✅ LIVE NOTIFICATION BADGE (Scrolls to tickets on click) */}
+        {/* LIVE NOTIFICATION BADGE */}
         {unreadRepliesCount > 0 && (
           <div
-            className="position-relative z-1 bg-white p-3 rounded-4 border border-primary shadow-sm d-flex align-items-center gap-3 animate-fade-in cursor-pointer hover-lift transition-all"
+            className="bg-white p-3 rounded-1 border shadow-sm d-flex align-items-center gap-3 cursor-pointer hover-lift transition-all"
+            style={{ borderColor: "#007185" }}
             onClick={scrollToTickets}
           >
-            <div className="bg-primary bg-opacity-10 p-3 rounded-circle text-primary position-relative">
-              <Bell size={24} />
-              <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-2 border-white rounded-circle"></span>
+            <div
+              className="p-2 rounded-1 position-relative"
+              style={{ backgroundColor: "#f0f2f2" }}
+            >
+              <Bell size={24} style={{ color: "#007185" }} />
+              <span
+                className="position-absolute top-0 start-100 translate-middle p-2 rounded-circle border border-2 border-white"
+                style={{ backgroundColor: "#B12704" }}
+              ></span>
             </div>
             <div>
-              <div className="fw-bold text-dark">Support Reply</div>
+              <div
+                className="fw-bold"
+                style={{ color: "#007185", fontSize: "0.95rem" }}
+              >
+                Support Reply
+              </div>
               <div className="small text-muted fw-medium">
                 You have {unreadRepliesCount} unread message(s)
               </div>
@@ -4381,101 +6621,151 @@ const CustomerDashboard = () => {
       </div>
 
       {/* 2. CLINICAL KPI STATS ROW */}
-      <Row className="g-4 mb-4">
+      <Row className="g-3 mb-4 animate-fade-in">
         {statsCards.map((item, idx) => (
           <Col xs={6} xl={3} key={idx}>
             <div
-              className="bg-white h-100 p-4 rounded-4 shadow-sm border border-light-subtle cursor-pointer transition-all hover-lift d-flex flex-column justify-content-between"
+              className="bg-white h-100 p-3 p-md-4 rounded-1 shadow-sm border cursor-pointer transition-all hover-lift d-flex flex-column justify-content-between"
+              style={{ borderColor: "#D5D9D9" }}
               onClick={() => navigate(item.link)}
             >
-              <div className="d-flex align-items-center gap-3 mb-3">
-                <div
-                  className={`${item.bgClass} bg-opacity-10 p-2 rounded-circle ${item.colorClass}`}
+              <div className="d-flex align-items-center gap-2 mb-3">
+                <item.icon size={20} style={{ color: "#007185" }} />
+                <span
+                  className="text-muted fw-bold small text-uppercase tracking-wider"
+                  style={{ fontSize: "0.75rem" }}
                 >
-                  <item.icon size={20} strokeWidth={2.5} />
-                </div>
-                <span className="text-muted fw-bold small text-uppercase tracking-wider">
                   {item.label}
                 </span>
               </div>
-              <h2 className="fw-black mb-0 text-dark">{item.value}</h2>
+              <h3 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
+                {item.value}
+              </h3>
             </div>
           </Col>
         ))}
       </Row>
 
-      <Row className="g-4">
+      <Row className="g-4 animate-fade-in">
         <Col lg={8}>
           {/* 3. RECENT ORDERS TABLE */}
-          <div className="bg-white rounded-4 shadow-sm border border-light-subtle mb-4 overflow-hidden">
-            <div className="p-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center bg-light bg-opacity-50">
-              <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <Package size={20} className="text-primary" /> Recent Orders
-              </h5>
+          <div
+            className="bg-white rounded-1 shadow-sm border mb-4 overflow-hidden"
+            style={{ borderColor: "#D5D9D9" }}
+          >
+            <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+              <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+                <Package size={16} style={{ color: "#007185" }} /> Recent Orders
+              </h6>
               <button
-                className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+                className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+                style={{ color: "#007185" }}
                 onClick={() => navigate("/orders")}
               >
-                View all <ArrowUpRight size={18} />
+                View all <ArrowUpRight size={14} />
               </button>
             </div>
             <div className="table-responsive p-0">
-              <table className="table table-hover align-middle mb-0 border-0">
+              <table className="table align-middle mb-0 custom-saas-table">
                 <thead className="bg-white">
                   <tr>
-                    <th className="ps-4 border-bottom py-3 text-muted small fw-bold text-uppercase">
+                    <th className="ps-4 border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
                       Order ID
                     </th>
-                    <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+                    <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+                    <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="border-bottom py-3 text-muted small fw-bold text-uppercase">
+                    <th className="border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="pe-4 text-end border-bottom py-3 text-muted small fw-bold text-uppercase">
+                    <th className="pe-4 text-end border-bottom py-2 text-muted small fw-bold text-uppercase tracking-wider">
                       Action
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.slice(0, 5).map((order) => (
-                    <tr key={order._id}>
-                      <td className="ps-4 py-3 fw-bold font-monospace text-secondary">
-                        #
-                        {order._id
-                          .substring(order._id.length - 6)
-                          .toUpperCase()}
-                      </td>
-                      <td className="text-dark fw-medium">
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge rounded-pill px-3 py-2 ${order.isPaid ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"}`}
+                  {orders.slice(0, 5).map((order) => {
+                    const status =
+                      order.orderStatus ||
+                      (order.isDelivered ? "Delivered" : "Processing");
+
+                    return (
+                      <tr key={order._id} className="table-row-hover">
+                        <td className="ps-4 py-3">
+                          {/* ✅ CLICKABLE ORDER ID */}
+                          <button
+                            className="btn btn-link p-0 fw-bold font-monospace shadow-none text-decoration-none hover-underline"
+                            style={{ color: "#007185", fontSize: "0.95rem" }}
+                            onClick={() => handleViewDetails(order)}
+                          >
+                            #
+                            {order.orderNumber ||
+                              order._id
+                                .substring(order._id.length - 6)
+                                .toUpperCase()}
+                          </button>
+                        </td>
+                        <td className="text-dark small fw-medium">
+                          {new Date(order.createdAt).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric", year: "numeric" },
+                          )}
+                        </td>
+                        <td>
+                          <Badge
+                            bg={order.isPaid ? "success" : "warning"}
+                            text={order.isPaid ? "light" : "dark"}
+                            className="rounded-1"
+                          >
+                            {order.isPaid ? "Paid" : "Pending"}
+                          </Badge>
+                        </td>
+                        <td
+                          className="fw-bold"
+                          style={{ color: "#B12704", fontSize: "0.95rem" }}
                         >
-                          {order.isPaid ? "Completed" : "Pending"}
-                        </span>
-                      </td>
-                      <td className="text-dark fw-bold">
-                        Rs. {Number(order.totalPrice).toLocaleString()}
-                      </td>
-                      <td className="text-end pe-4">
-                        <button
-                          className="btn btn-sm btn-light border fw-bold text-primary rounded-pill px-3 hover-lift"
-                          onClick={() => navigate(`/orders`)}
-                        >
-                          Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          Rs.{" "}
+                          {Number(order.totalPrice).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td className="text-end pe-4">
+                          <div className="d-flex justify-content-end gap-2">
+                            {/* ✅ VIEW DETAILS ACTION */}
+                            <Button
+                              variant="light"
+                              size="sm"
+                              className="border shadow-sm rounded-1 p-2 hover-lift"
+                              style={{ borderColor: "#D5D9D9" }}
+                              onClick={() => handleViewDetails(order)}
+                              title="View Order Details"
+                            >
+                              <Eye size={16} style={{ color: "#007185" }} />
+                            </Button>
+
+                            {/* ✅ CANCEL ORDER ACTION */}
+                            {(status === "Processing" ||
+                              status === "Pending Verification") &&
+                              !order.isPaid && (
+                                <Button
+                                  variant="light"
+                                  size="sm"
+                                  className="border shadow-sm rounded-1 text-danger hover-bg-danger p-2"
+                                  style={{ borderColor: "#D5D9D9" }}
+                                  onClick={() => confirmDelete(order._id)}
+                                  title="Cancel Order"
+                                >
+                                  <Trash2 size={16} />
+                                </Button>
+                              )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {orders.length === 0 && (
                     <tr>
                       <td
@@ -4492,19 +6782,24 @@ const CustomerDashboard = () => {
           </div>
 
           {/* 4. SAVED MEDICINES */}
-          <div className="bg-white rounded-4 shadow-sm border border-light-subtle p-4 mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <Heart size={20} className="text-danger" fill="#ef4444" /> Saved
-                Items
-              </h5>
+          <div
+            className="bg-white rounded-1 shadow-sm border p-4 mb-4"
+            style={{ borderColor: "#D5D9D9" }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+              <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+                <Heart size={16} style={{ color: "#B12704" }} fill="#B12704" />{" "}
+                Saved Items
+              </h6>
               <button
-                className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+                className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+                style={{ color: "#007185" }}
                 onClick={() => navigate("/customer/saved")}
               >
-                View all <ArrowUpRight size={18} />
+                View all <ArrowUpRight size={14} />
               </button>
             </div>
+
             {savedMedicines.length > 0 ? (
               <Row className="g-3">
                 {savedMedicines.slice(0, 3).map((item) => {
@@ -4512,30 +6807,49 @@ const CustomerDashboard = () => {
                   if (!med) return null;
                   return (
                     <Col xs={12} sm={6} md={4} key={item._id}>
-                      <div className="bg-light p-3 rounded-4 d-flex align-items-center gap-3 border border-light-subtle transition-all hover-lift h-100">
-                        <img
-                          src={getImageUrl(med.image)}
-                          alt={med.name}
-                          className="rounded-3 object-fit-cover bg-white shadow-sm border"
-                          style={{ width: "50px", height: "50px" }}
-                        />
+                      <div
+                        className="bg-light p-3 rounded-1 d-flex align-items-center gap-3 border transition-all hover-lift h-100"
+                        style={{ borderColor: "#D5D9D9" }}
+                      >
+                        <div
+                          className="bg-white border rounded-1 p-1 shadow-sm"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderColor: "#D5D9D9",
+                          }}
+                        >
+                          <img
+                            src={getImageUrl(med.image)}
+                            alt={med.name}
+                            className="h-100 w-100 object-fit-contain"
+                          />
+                        </div>
                         <div className="flex-grow-1 overflow-hidden">
                           <h6
                             className="mb-1 fw-bold text-dark text-truncate"
+                            style={{ fontSize: "0.9rem" }}
                             title={med.name}
                           >
                             {med.name}
                           </h6>
-                          <div className="text-primary fw-black small">
+                          <div
+                            className="fw-bold small"
+                            style={{ color: "#B12704" }}
+                          >
                             Rs. {med.price}
                           </div>
                         </div>
                         <button
-                          className="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm"
+                          className="btn rounded-1 p-2 d-flex align-items-center justify-content-center shadow-sm hover-lift border-0"
+                          style={{
+                            backgroundColor: "#FFD814",
+                            color: "#0F1111",
+                          }}
                           onClick={() => handleAddToCart(item)}
                           title="Add to Cart"
                         >
-                          <ShoppingCart size={16} className="text-white" />
+                          <ShoppingCart size={16} />
                         </button>
                       </div>
                     </Col>
@@ -4544,15 +6858,16 @@ const CustomerDashboard = () => {
               </Row>
             ) : (
               <div
-                className="text-center py-5 bg-light rounded-4 border border-light-subtle"
-                style={{ borderStyle: "dashed !important" }}
+                className="text-center py-5 bg-light rounded-1 border"
+                style={{ borderColor: "#D5D9D9" }}
               >
-                <Heart size={32} className="mb-3 text-muted opacity-50" />
-                <p className="text-muted fw-medium mb-0">
+                <Heart size={32} className="mb-3 text-muted opacity-25" />
+                <p className="text-muted fw-medium mb-0 small">
                   Your wishlist is empty.
                 </p>
                 <button
-                  className="btn btn-link text-primary fw-bold mt-2"
+                  className="btn btn-link fw-bold mt-2 hover-underline text-decoration-none"
+                  style={{ color: "#007185" }}
                   onClick={() => navigate("/medicines")}
                 >
                   Browse Catalog
@@ -4561,17 +6876,22 @@ const CustomerDashboard = () => {
             )}
           </div>
 
-          {/* 🚀 8. DOCTOR'S RECENT PRESCRIPTIONS (NEW SECTION) */}
-          <div className="bg-white rounded-4 shadow-sm border border-light-subtle p-4 mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <Pill size={20} className="text-success" /> Recent Prescriptions
-              </h5>
+          {/* 8. RECENT PRESCRIPTIONS */}
+          <div
+            className="bg-white rounded-1 shadow-sm border p-4 mb-4"
+            style={{ borderColor: "#D5D9D9" }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+              <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+                <Pill size={16} style={{ color: "#067D62" }} /> Recent
+                Prescriptions
+              </h6>
               <button
-                className="btn btn-link text-primary text-decoration-none fw-bold p-0 d-flex align-items-center gap-1"
+                className="btn btn-link text-decoration-none fw-medium p-0 d-flex align-items-center gap-1 small hover-underline"
+                style={{ color: "#007185" }}
                 onClick={() => navigate("/prescriptions")}
               >
-                View all <ArrowUpRight size={18} />
+                View all <ArrowUpRight size={14} />
               </button>
             </div>
 
@@ -4582,32 +6902,46 @@ const CustomerDashboard = () => {
                   return (
                     <div
                       key={rx._id}
-                      className="bg-light p-3 rounded-4 border border-light-subtle transition-all hover-lift"
+                      className="bg-light p-3 rounded-1 border transition-all hover-lift"
+                      style={{ borderColor: "#D5D9D9" }}
                     >
                       <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light-subtle">
-                        <div className="fw-bold text-dark d-flex align-items-center gap-2">
+                        <div className="fw-bold text-dark d-flex align-items-center gap-2 small">
                           {isDigital ? (
                             <>
-                              <User size={16} className="text-primary" />
+                              <User size={16} style={{ color: "#007185" }} />{" "}
                               Dr. {rx.doctor?.name || "Doctor"}
                             </>
                           ) : (
                             <>
-                              <Upload size={16} className="text-warning" />
+                              <Upload size={16} style={{ color: "#B12704" }} />{" "}
                               Uploaded Prescription
                             </>
                           )}
                         </div>
-                        <span
-                          className={`badge rounded-pill px-2 py-1 ${rx.status?.toLowerCase() === "approved" ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"}`}
+                        <Badge
+                          bg={
+                            rx.status?.toLowerCase() === "approved"
+                              ? "success"
+                              : "warning"
+                          }
+                          text={
+                            rx.status?.toLowerCase() === "approved"
+                              ? "light"
+                              : "dark"
+                          }
+                          className="rounded-1 px-2"
                         >
                           {rx.status || "Pending"}
-                        </span>
+                        </Badge>
                       </div>
 
                       {isDigital ? (
                         <div>
-                          <span className="small text-muted fw-bold text-uppercase tracking-wider">
+                          <span
+                            className="small text-muted fw-bold text-uppercase tracking-wider"
+                            style={{ fontSize: "0.7rem" }}
+                          >
                             Prescribed Medicines:
                           </span>
                           <ul className="mb-0 mt-1 small text-dark fw-medium ps-3">
@@ -4621,8 +6955,11 @@ const CustomerDashboard = () => {
                               </li>
                             ))}
                             {rx.items.length > 3 && (
-                              <li>
-                                <span className="text-primary">
+                              <li className="mt-1">
+                                <span
+                                  className="fw-bold"
+                                  style={{ color: "#007185" }}
+                                >
                                   + {rx.items.length - 3} more
                                 </span>
                               </li>
@@ -4638,7 +6975,8 @@ const CustomerDashboard = () => {
 
                       <div className="text-end mt-2">
                         <button
-                          className="btn btn-sm btn-white border shadow-sm rounded-pill fw-bold text-primary px-3"
+                          className="btn btn-sm bg-white border shadow-sm rounded-1 fw-bold px-3 hover-lift"
+                          style={{ color: "#007185", borderColor: "#D5D9D9" }}
                           onClick={() => navigate("/prescriptions")}
                         >
                           View Details
@@ -4650,10 +6988,10 @@ const CustomerDashboard = () => {
               </div>
             ) : (
               <div
-                className="text-center py-4 bg-light rounded-4 border border-light-subtle"
-                style={{ borderStyle: "dashed !important" }}
+                className="text-center py-4 bg-light rounded-1 border"
+                style={{ borderColor: "#D5D9D9" }}
               >
-                <Pill size={32} className="mb-2 text-muted opacity-50" />
+                <Pill size={32} className="mb-2 text-muted opacity-25" />
                 <p className="text-muted fw-medium mb-0 small">
                   No active prescriptions right now.
                 </p>
@@ -4664,65 +7002,82 @@ const CustomerDashboard = () => {
 
         {/* --- RIGHT COLUMN --- */}
         <Col lg={4}>
-          {/* ✅ 5. SUPPORT TICKETS PANEL (Now with an ID for auto-scrolling) */}
+          {/* 5. SUPPORT TICKETS */}
           <div
             id="support-tickets-section"
-            className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle overflow-hidden d-flex flex-column transition-all"
-            style={{ maxHeight: "400px" }}
+            className="bg-white rounded-1 mb-4 shadow-sm border overflow-hidden d-flex flex-column transition-all"
+            style={{ maxHeight: "400px", borderColor: "#D5D9D9" }}
           >
-            <div className="p-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center bg-light bg-opacity-50">
-              <h5 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <MessageSquare size={18} className="text-primary" /> Support
+            <div className="p-3 border-bottom bg-light">
+              <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+                <MessageSquare size={16} style={{ color: "#007185" }} /> Support
                 Tickets
-              </h5>
+              </h6>
             </div>
 
-            {/* TTL Notification */}
-            <div className="bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25 px-3 py-2 text-center">
-              <span className="small fw-bold text-warning d-flex justify-content-center align-items-center gap-1">
+            <div
+              className="px-3 py-2 text-center"
+              style={{
+                backgroundColor: "#fff9e6",
+                borderBottom: "1px solid #f5c6cb",
+              }}
+            >
+              <span
+                className="small fw-bold d-flex justify-content-center align-items-center gap-1"
+                style={{ color: "#B12704" }}
+              >
                 <Clock size={14} /> Messages auto-delete after 48 hours.
               </span>
             </div>
 
-            <div className="p-3 overflow-auto flex-grow-1">
+            <div className="p-3 overflow-auto flex-grow-1 custom-scrollbar">
               {myMessages.length > 0 ? (
-                <div className="d-flex flex-column gap-3">
+                <div className="d-flex flex-column gap-2">
                   {myMessages.slice(0, 5).map((msg) => (
                     <div
                       key={msg._id}
-                      className={`p-3 rounded-4 border transition-all cursor-pointer hover-lift ${msg.adminReply && !msg.isReplyRead ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-light-subtle bg-light"}`}
+                      className={`p-3 rounded-1 border transition-all cursor-pointer hover-lift ${msg.adminReply && !msg.isReplyRead ? "bg-light shadow-sm" : "bg-white"}`}
+                      style={{
+                        borderColor:
+                          msg.adminReply && !msg.isReplyRead
+                            ? "#007185"
+                            : "#D5D9D9",
+                      }}
                       onClick={() => handleReadMessage(msg)}
                     >
-                      <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div className="d-flex justify-content-between align-items-start mb-1">
                         <div
                           className="text-truncate fw-bold text-dark"
-                          style={{ maxWidth: "200px", fontSize: "0.9rem" }}
+                          style={{ maxWidth: "180px", fontSize: "0.85rem" }}
                         >
                           {msg.text}
                         </div>
                         {msg.adminReply ? (
                           !msg.isReplyRead ? (
-                            <span
-                              className="badge bg-primary text-white rounded-pill shadow-sm"
+                            <Badge
+                              bg="danger"
+                              className="rounded-1"
                               style={{ fontSize: "0.6rem" }}
                             >
                               NEW REPLY
-                            </span>
+                            </Badge>
                           ) : (
-                            <span
-                              className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"
+                            <Badge
+                              bg="success"
+                              className="rounded-1"
                               style={{ fontSize: "0.6rem" }}
                             >
                               Answered
-                            </span>
+                            </Badge>
                           )
                         ) : (
-                          <span
-                            className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill"
+                          <Badge
+                            bg="secondary"
+                            className="rounded-1"
                             style={{ fontSize: "0.6rem" }}
                           >
                             Pending
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <div className="small text-muted d-flex justify-content-between align-items-center mt-2">
@@ -4730,8 +7085,8 @@ const CustomerDashboard = () => {
                           {new Date(msg.createdAt).toLocaleDateString()}
                         </span>
                         <span
-                          className="text-primary fw-bold"
-                          style={{ fontSize: "0.75rem" }}
+                          className="fw-bold hover-underline"
+                          style={{ color: "#007185", fontSize: "0.75rem" }}
                         >
                           View &rarr;
                         </span>
@@ -4743,7 +7098,8 @@ const CustomerDashboard = () => {
                 <div className="text-center py-5 text-muted">
                   <MessageSquare
                     size={32}
-                    className="mb-3 opacity-25 text-primary"
+                    className="mb-3 opacity-25"
+                    style={{ color: "#007185" }}
                   />
                   <p className="small fw-medium mb-0">
                     No active support tickets.
@@ -4754,35 +7110,39 @@ const CustomerDashboard = () => {
           </div>
 
           {/* 6. NEXT APPOINTMENT */}
-          <div className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle p-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="fw-bold text-dark mb-0">Next Appointment</h5>
-              <div
-                className="bg-info bg-opacity-10 p-2 rounded-circle cursor-pointer hover-lift"
-                onClick={() => navigate("/appointments")}
-              >
-                <Calendar size={20} className="text-info" />
-              </div>
+          <div
+            className="bg-white rounded-1 mb-4 shadow-sm border p-4"
+            style={{ borderColor: "#D5D9D9" }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+              <h6 className="mb-0 fw-bold d-flex align-items-center gap-2 text-uppercase tracking-wider text-muted small">
+                <Calendar size={16} style={{ color: "#007185" }} /> Next
+                Appointment
+              </h6>
             </div>
             {upcomingAppt ? (
-              <div className="bg-light rounded-4 p-4 border border-light-subtle text-center">
-                <div className="bg-white rounded-circle shadow-sm d-inline-flex p-3 mb-3 border">
-                  <Activity size={24} className="text-info" />
-                </div>
-                <h5 className="fw-bold text-dark mb-1">
+              <div
+                className="bg-light rounded-1 p-3 border text-center"
+                style={{ borderColor: "#D5D9D9" }}
+              >
+                <h6 className="fw-bold text-dark mb-1">
                   Dr. {upcomingAppt.doctor?.name}
-                </h5>
+                </h6>
                 <p className="text-muted small fw-medium mb-3">
                   {upcomingAppt.doctor?.speciality}
                 </p>
-                <div className="bg-white border rounded-3 p-2 d-flex justify-content-center align-items-center gap-2 mb-3">
-                  <Clock size={16} className="text-info" />
+                <div
+                  className="bg-white border rounded-1 p-2 d-flex justify-content-center align-items-center gap-2 mb-3"
+                  style={{ borderColor: "#D5D9D9" }}
+                >
+                  <Clock size={16} style={{ color: "#007185" }} />
                   <span className="fw-bold text-dark small">
                     {new Date(upcomingAppt.date).toDateString()}
                   </span>
                 </div>
                 <button
-                  className="btn btn-outline-info w-100 fw-bold rounded-pill"
+                  className="btn w-100 fw-bold rounded-1 border shadow-sm hover-lift bg-white text-dark"
+                  style={{ borderColor: "#D5D9D9" }}
                   onClick={() => navigate("/appointments")}
                 >
                   View Details
@@ -4790,14 +7150,15 @@ const CustomerDashboard = () => {
               </div>
             ) : (
               <div
-                className="text-center py-5 bg-light rounded-4 border border-light-subtle"
-                style={{ borderStyle: "dashed !important" }}
+                className="text-center py-4 bg-light rounded-1 border"
+                style={{ borderColor: "#D5D9D9" }}
               >
-                <p className="text-muted fw-medium mb-3">
+                <p className="text-muted fw-medium mb-3 small">
                   No upcoming visits scheduled.
                 </p>
                 <button
-                  className="btn btn-info text-white px-4 fw-bold rounded-pill shadow-sm"
+                  className="btn rounded-1 px-4 fw-bold shadow-sm border-0"
+                  style={{ backgroundColor: "#007185", color: "white" }}
                   onClick={() => navigate("/appointments")}
                 >
                   Book Now
@@ -4807,20 +7168,29 @@ const CustomerDashboard = () => {
           </div>
 
           {/* 7. UPLOAD PRESCRIPTION */}
-          <div className="bg-white rounded-4 mb-4 shadow-sm border border-light-subtle p-4">
+          <div
+            className="bg-white rounded-1 mb-4 shadow-sm border p-4"
+            style={{ borderColor: "#D5D9D9" }}
+          >
             <div className="d-flex align-items-center gap-3 mb-4">
-              <div className="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
-                <Upload size={24} />
+              <div
+                className="p-2 rounded-1"
+                style={{ backgroundColor: "#f0f2f2" }}
+              >
+                <Upload size={24} style={{ color: "#007185" }} />
               </div>
               <div>
-                <h5 className="fw-bold text-dark mb-0">Upload Script</h5>
+                <h6 className="fw-bold text-dark mb-0 text-uppercase tracking-wider small">
+                  Upload Script
+                </h6>
                 <span className="text-muted small fw-medium">
                   Quick digital upload
                 </span>
               </div>
             </div>
             <button
-              className="btn btn-warning w-100 fw-bold rounded-pill text-white d-flex align-items-center justify-content-center gap-2 shadow-sm"
+              className="btn w-100 fw-bold rounded-1 text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm border-0 hover-lift"
+              style={{ backgroundColor: "#FFD814" }}
               onClick={() => setShowUploadModal(true)}
             >
               <Plus size={18} /> Upload Now
@@ -4829,75 +7199,407 @@ const CustomerDashboard = () => {
         </Col>
       </Row>
 
+      {/* ============================================================================== */}
+      {/* ✅ ORDER DETAILS MODAL (Added from Order History) */}
+      {/* ============================================================================== */}
+      <Modal
+        show={showOrderModal}
+        onHide={() => setShowOrderModal(false)}
+        centered
+        size="lg"
+        className="animate-fade-in"
+      >
+        {selectedOrder && (
+          <div
+            className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+            style={{ borderColor: "#D5D9D9 !important" }}
+          >
+            <Modal.Header className="bg-light border-bottom p-4 pb-3">
+              <div>
+                <Modal.Title className="fw-bold text-dark d-flex align-items-center gap-2 fs-5 mb-1">
+                  Order Summary
+                </Modal.Title>
+                <div className="small text-muted font-monospace">
+                  Reference: #
+                  {selectedOrder.orderNumber ||
+                    selectedOrder._id
+                      .substring(selectedOrder._id.length - 6)
+                      .toUpperCase()}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close shadow-none"
+                onClick={() => setShowOrderModal(false)}
+              ></button>
+            </Modal.Header>
+
+            <Modal.Body className="p-4 bg-white">
+              <Row className="g-3 mb-4">
+                {/* Delivery Info */}
+                <Col md={6}>
+                  <div
+                    className="p-3 bg-light rounded-1 border h-100"
+                    style={{ borderColor: "#D5D9D9" }}
+                  >
+                    <h6 className="fw-bold small text-uppercase text-muted mb-2 d-flex align-items-center gap-2">
+                      <MapPin size={14} /> Delivery Details
+                    </h6>
+                    <div className="fw-bold text-dark">
+                      {selectedOrder.user?.name || user?.name || "Customer"}
+                    </div>
+                    <div className="small text-dark mt-1">
+                      {selectedOrder.shippingAddress?.address}
+                      <br />
+                      {selectedOrder.shippingAddress?.city},{" "}
+                      {selectedOrder.shippingAddress?.country}
+                      <br />
+                      Postal Code: {selectedOrder.shippingAddress?.postalCode}
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Status Info */}
+                <Col md={6}>
+                  <div
+                    className="p-3 bg-light rounded-1 border h-100"
+                    style={{ borderColor: "#D5D9D9" }}
+                  >
+                    <h6 className="fw-bold small text-uppercase text-muted mb-2 d-flex align-items-center gap-2">
+                      <Clock size={14} /> Order Status
+                    </h6>
+
+                    <div className="d-flex justify-content-between mb-2 small">
+                      <span className="text-muted">Placed On:</span>
+                      <span className="fw-bold text-dark">
+                        {new Date(selectedOrder.createdAt).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric", year: "numeric" },
+                        )}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-2 small">
+                      <span className="text-muted">Payment Method:</span>
+                      <span className="fw-bold text-dark">
+                        {selectedOrder.paymentMethod}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-2 small">
+                      <span className="text-muted">Payment Status:</span>
+                      <Badge
+                        bg={selectedOrder.isPaid ? "success" : "warning"}
+                        text={selectedOrder.isPaid ? "light" : "dark"}
+                      >
+                        {selectedOrder.isPaid ? "PAID" : "PENDING"}
+                      </Badge>
+                    </div>
+                    <div className="d-flex justify-content-between small">
+                      <span className="text-muted">Fulfillment:</span>
+                      <span className="fw-bold text-dark">
+                        {selectedOrder.orderStatus ||
+                          selectedOrder.status ||
+                          "Processing"}
+                      </span>
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+
+              {/* Items Purchased */}
+              <h6 className="fw-bold border-bottom pb-2 mb-3 d-flex align-items-center gap-2 text-dark">
+                <Package size={18} style={{ color: "#007185" }} /> Items
+                Purchased
+              </h6>
+              <div className="table-responsive mb-4">
+                <Table size="sm" bordered className="mb-0">
+                  <thead className="bg-light text-muted small text-uppercase tracking-wider">
+                    <tr>
+                      <th className="py-2 px-3">Item Name</th>
+                      <th className="text-center py-2">Qty</th>
+                      <th className="text-end py-2">Unit Price</th>
+                      <th className="text-end py-2 px-3">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="small">
+                    {selectedOrder.orderItems?.map((item, index) => (
+                      <tr key={index}>
+                        <td className="py-2 px-3 fw-medium text-dark">
+                          {item.name}
+                          <div
+                            className="text-muted"
+                            style={{ fontSize: "0.7rem" }}
+                          >
+                            Unit: {item.unit || "Pack"}
+                          </div>
+                        </td>
+                        <td className="text-center py-2 align-middle">
+                          {item.qty}
+                        </td>
+                        <td className="text-end py-2 align-middle text-muted">
+                          Rs. {Number(item.price).toFixed(2)}
+                        </td>
+                        <td className="text-end py-2 px-3 align-middle fw-bold text-dark">
+                          Rs. {(item.qty * item.price).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+
+              {/* Financials Breakdown */}
+              <div className="d-flex justify-content-end mb-4">
+                <div
+                  style={{ width: "250px" }}
+                  className="p-3 bg-light rounded-1 border"
+                >
+                  <div className="d-flex justify-content-between small text-muted mb-1">
+                    <span>Subtotal:</span>
+                    <span className="text-dark fw-medium">
+                      Rs. {Number(calculatedSubtotal).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between small text-muted mb-1">
+                    <span>Shipping:</span>
+                    <span className="text-dark fw-medium">
+                      {selectedOrder.shippingPrice === 0
+                        ? "FREE"
+                        : `Rs. ${Number(selectedOrder.shippingPrice).toFixed(2)}`}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between small text-muted mb-2">
+                    <span>Tax (13%):</span>
+                    <span className="text-dark fw-medium">
+                      Rs. {Number(selectedOrder.taxPrice || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div
+                    className="d-flex justify-content-between fw-bold fs-6 text-dark border-top pt-2"
+                    style={{ borderColor: "#D5D9D9" }}
+                  >
+                    <span>Total:</span>
+                    <span style={{ color: "#B12704" }}>
+                      Rs.{" "}
+                      {selectedOrder.totalPrice?.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prescription Image */}
+              {selectedOrder.prescriptionImage && (
+                <>
+                  <h6 className="fw-bold border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+                    <ImageIcon size={18} style={{ color: "#007185" }} /> Your
+                    Uploaded Prescription
+                  </h6>
+                  <div
+                    className="p-3 border rounded-1 text-center bg-light"
+                    style={{ borderColor: "#D5D9D9" }}
+                  >
+                    <div className="mb-2 d-flex justify-content-center gap-2">
+                      <Badge
+                        bg={
+                          selectedOrder.prescriptionStatus === "Approved"
+                            ? "success"
+                            : selectedOrder.prescriptionStatus === "Rejected"
+                              ? "danger"
+                              : "warning"
+                        }
+                        text={
+                          selectedOrder.prescriptionStatus ===
+                          "Pending Verification"
+                            ? "dark"
+                            : "light"
+                        }
+                      >
+                        Rx Status: {selectedOrder.prescriptionStatus}
+                      </Badge>
+                    </div>
+                    <a
+                      href={
+                        selectedOrder.prescriptionImage.startsWith("http")
+                          ? selectedOrder.prescriptionImage
+                          : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src={
+                          selectedOrder.prescriptionImage.startsWith("http")
+                            ? selectedOrder.prescriptionImage
+                            : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                        }
+                        alt="Prescription"
+                        className="img-fluid rounded border shadow-sm mt-2 cursor-pointer"
+                        style={{
+                          maxHeight: "200px",
+                          objectFit: "contain",
+                          transition: "transform 0.2s",
+                        }}
+                        onMouseOver={(e) =>
+                          (e.currentTarget.style.transform = "scale(1.02)")
+                        }
+                        onMouseOut={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }
+                      />
+                    </a>
+                  </div>
+                </>
+              )}
+            </Modal.Body>
+            <Modal.Footer className="bg-light border-top p-3 d-flex justify-content-between">
+              <Link
+                to={`/payment-success?orderId=${selectedOrder._id}`}
+                className="btn btn-outline-dark rounded-1 fw-medium small"
+              >
+                Open Full Receipt
+              </Link>
+              <Button
+                variant="primary"
+                className="rounded-1 fw-medium border-0"
+                style={{ backgroundColor: "#007185" }}
+                onClick={() => setShowOrderModal(false)}
+              >
+                Close Summary
+              </Button>
+            </Modal.Footer>
+          </div>
+        )}
+      </Modal>
+
+      {/* ✅ CANCEL ORDER MODAL (Added from Order History) */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+        className="animate-fade-in"
+      >
+        <div
+          className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+          style={{ borderColor: "#D5D9D9 !important" }}
+        >
+          <Modal.Header className="bg-light border-bottom p-4 pb-3">
+            <Modal.Title className="fw-bold text-dark d-flex align-items-center gap-2 fs-5">
+              <XCircle size={20} className="text-danger" /> Cancel Order
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4 bg-white">
+            <p className="text-dark mb-0">
+              Are you sure you want to cancel and remove this order from your
+              history? This action cannot be undone.
+            </p>
+          </Modal.Body>
+          <Modal.Footer className="bg-light border-top p-3 d-flex justify-content-end gap-2">
+            <Button
+              variant="light"
+              className="rounded-1 px-4 fw-medium border shadow-sm hover-lift"
+              style={{ borderColor: "#D5D9D9", color: "#0F1111" }}
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Keep Order
+            </Button>
+            <Button
+              variant="danger"
+              className="rounded-1 px-4 shadow-sm fw-medium border-0 hover-lift"
+              disabled={deleteLoading}
+              onClick={handleDeleteOrder}
+            >
+              {deleteLoading ? (
+                <Spinner size="sm" animation="border" />
+              ) : (
+                "Yes, Cancel Order"
+              )}
+            </Button>
+          </Modal.Footer>
+        </div>
+      </Modal>
+
       {/* --- UPLOAD MODAL --- */}
       <Modal
         show={showUploadModal}
         onHide={() => setShowUploadModal(false)}
         centered
-        contentClassName="border-0 shadow-lg rounded-4"
       >
-        <div className="modal-header bg-light border-bottom border-light-subtle p-4">
-          <h5 className="modal-title fw-black text-dark d-flex align-items-center gap-2">
-            <Upload className="text-warning" size={20} /> Upload Prescription
-          </h5>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={() => setShowUploadModal(false)}
-          ></button>
-        </div>
-        <Modal.Body className="p-4 bg-white">
-          <Form onSubmit={handleUploadPrescription}>
-            <Form.Group className="mb-4">
-              <Form.Label className="small fw-bold text-muted text-uppercase tracking-wider">
-                Prescription Image/PDF
-              </Form.Label>
-              <Form.Control
-                type="file"
-                className="border-light-subtle bg-light"
-                onChange={handlePrescriptionChange}
-                accept="image/*,application/pdf"
-              />
-              {prescriptionPreview && (
-                <div className="mt-3 text-center bg-light p-2 rounded-3 border border-light-subtle">
-                  <img
-                    src={prescriptionPreview}
-                    alt="Preview"
-                    className="rounded-2 img-fluid shadow-sm"
-                    style={{ maxHeight: "150px" }}
-                  />
-                </div>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Label className="small fw-bold text-muted text-uppercase tracking-wider">
-                Additional Notes
-              </Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                className="border-light-subtle bg-light"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="E.g. I need 2 strips of..."
-                style={{ resize: "none" }}
-              />
-            </Form.Group>
+        <div
+          className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+          style={{ borderColor: "#D5D9D9 !important" }}
+        >
+          <div className="modal-header bg-light border-bottom p-4 pb-3">
+            <h5 className="modal-title fw-bold text-dark d-flex align-items-center gap-2 fs-5">
+              <Upload style={{ color: "#007185" }} size={20} /> Upload
+              Prescription
+            </h5>
             <button
-              type="submit"
-              className="btn btn-warning w-100 rounded-pill py-2 fw-bold text-white shadow-sm d-flex align-items-center justify-content-center gap-2"
-              disabled={uploadLoading}
-            >
-              {uploadLoading ? (
-                <>
-                  <Loader2 size={18} className="spin-animation" /> Uploading...
-                </>
-              ) : (
-                "Submit Prescription"
-              )}
-            </button>
-          </Form>
-        </Modal.Body>
+              type="button"
+              className="btn-close shadow-none"
+              onClick={() => setShowUploadModal(false)}
+            ></button>
+          </div>
+          <Modal.Body className="p-4 bg-white">
+            <Form onSubmit={handleUploadPrescription}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold text-dark mb-1">
+                  Prescription Image/PDF
+                </Form.Label>
+                <Form.Control
+                  type="file"
+                  className="shadow-none rounded-1 border modern-input"
+                  style={{ borderColor: "#D5D9D9" }}
+                  onChange={handlePrescriptionChange}
+                  accept="image/*,application/pdf"
+                />
+                {prescriptionPreview && (
+                  <div
+                    className="mt-3 text-center bg-light p-2 rounded-1 border"
+                    style={{ borderColor: "#D5D9D9" }}
+                  >
+                    <img
+                      src={prescriptionPreview}
+                      alt="Preview"
+                      className="rounded-1 img-fluid shadow-sm"
+                      style={{ maxHeight: "150px" }}
+                    />
+                  </div>
+                )}
+              </Form.Group>
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-dark mb-1">
+                  Additional Notes
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  className="shadow-none rounded-1 border modern-input"
+                  style={{ borderColor: "#D5D9D9", resize: "none" }}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="E.g. I need 2 strips of..."
+                />
+              </Form.Group>
+              <button
+                type="submit"
+                className="btn w-100 rounded-1 py-2 fw-bold text-dark shadow-sm d-flex align-items-center justify-content-center gap-2 border-0 hover-lift"
+                style={{ backgroundColor: "#FFD814" }}
+                disabled={uploadLoading}
+              >
+                {uploadLoading ? (
+                  <>
+                    <Loader2 size={18} className="spin-animation" />{" "}
+                    Uploading...
+                  </>
+                ) : (
+                  "Submit Prescription"
+                )}
+              </button>
+            </Form>
+          </Modal.Body>
+        </div>
       </Modal>
 
       {/* ✅ VIEW & REPLY MESSAGE MODAL */}
@@ -4905,91 +7607,125 @@ const CustomerDashboard = () => {
         show={selectedMessage !== null}
         onHide={() => setSelectedMessage(null)}
         centered
-        contentClassName="border-0 shadow-lg rounded-4"
       >
-        <div className="modal-header bg-primary text-white border-0 p-4 rounded-top-4">
-          <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
-            <MessageSquare size={20} /> Support Ticket
-          </h5>
-          <button
-            type="button"
-            className="btn-close btn-close-white"
-            onClick={() => setSelectedMessage(null)}
-          ></button>
-        </div>
-        <Modal.Body className="p-4 bg-white">
-          <div className="mb-4">
-            <h6 className="fw-bold text-muted small text-uppercase tracking-wider mb-2">
-              You initially wrote:
-            </h6>
-            <div className="bg-light p-3 rounded-4 border border-light-subtle text-dark fw-medium shadow-sm">
-              "{selectedMessage?.text}"
-            </div>
-            <div className="text-end text-muted small mt-2 fw-medium">
-              Sent:{" "}
-              {selectedMessage
-                ? new Date(selectedMessage.createdAt).toLocaleString()
-                : ""}
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <h6 className="fw-bold text-primary small text-uppercase tracking-wider mb-2">
-              Admin Response:
-            </h6>
-            {selectedMessage?.adminReply ? (
-              <div className="bg-primary bg-opacity-10 border-start border-4 border-primary p-3 rounded-3 text-dark fw-bold shadow-sm">
-                {selectedMessage.adminReply}
-              </div>
-            ) : (
-              <div
-                className="bg-light p-4 rounded-4 border border-light-subtle text-muted text-center"
-                style={{ borderStyle: "dashed" }}
-              >
-                <Clock size={24} className="mb-2 opacity-50 text-primary" />
-                <p className="small fw-medium mb-0">
-                  Our team is reviewing your message. We usually reply within 24
-                  hours.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* ✅ CUSTOMER REPLY BOX */}
-          <div className="border-top border-light-subtle pt-4">
-            <h6 className="fw-bold text-dark small text-uppercase tracking-wider mb-2">
-              Send a Follow-up:
-            </h6>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              className="bg-light border-light-subtle mb-3"
-              placeholder="Need more help? Type your reply here..."
-              value={customerReplyText}
-              onChange={(e) => setCustomerReplyText(e.target.value)}
-              style={{ resize: "none" }}
-            />
+        <div
+          className="modal-content border-0 shadow-lg rounded-1 overflow-hidden"
+          style={{ borderColor: "#D5D9D9 !important" }}
+        >
+          <div className="modal-header bg-light border-bottom p-4 pb-3">
+            <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5 text-dark">
+              <MessageSquare size={20} style={{ color: "#007185" }} /> Support
+              Ticket
+            </h5>
             <button
-              className="btn btn-primary w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-              onClick={handleSendCustomerReply}
-              disabled={replyLoading || !customerReplyText.trim()}
-            >
-              {replyLoading ? (
-                <Loader2 size={16} className="spin-animation" />
-              ) : (
-                <Send size={16} />
-              )}
-              Send Reply
-            </button>
+              type="button"
+              className="btn-close shadow-none"
+              onClick={() => setSelectedMessage(null)}
+            ></button>
           </div>
-        </Modal.Body>
+          <Modal.Body className="p-4 bg-white">
+            <div className="mb-4">
+              <h6 className="fw-bold text-muted small text-uppercase tracking-wider mb-2">
+                You initially wrote:
+              </h6>
+              <div
+                className="bg-light p-3 rounded-1 border text-dark fw-medium shadow-sm"
+                style={{ borderColor: "#D5D9D9" }}
+              >
+                "{selectedMessage?.text}"
+              </div>
+              <div className="text-end text-muted small mt-2 fw-medium">
+                Sent:{" "}
+                {selectedMessage
+                  ? new Date(selectedMessage.createdAt).toLocaleString()
+                  : ""}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h6
+                className="fw-bold small text-uppercase tracking-wider mb-2"
+                style={{ color: "#007185" }}
+              >
+                Admin Response:
+              </h6>
+              {selectedMessage?.adminReply ? (
+                <div
+                  className="p-3 rounded-1 text-dark fw-medium shadow-sm"
+                  style={{
+                    backgroundColor: "#f0f2f2",
+                    borderLeft: "4px solid #007185",
+                  }}
+                >
+                  {selectedMessage.adminReply}
+                </div>
+              ) : (
+                <div
+                  className="bg-light p-4 rounded-1 border text-muted text-center"
+                  style={{
+                    borderColor: "#D5D9D9",
+                    borderStyle: "dashed !important",
+                  }}
+                >
+                  <Clock
+                    size={24}
+                    className="mb-2 opacity-50"
+                    style={{ color: "#007185" }}
+                  />
+                  <p className="small fw-medium mb-0">
+                    Our team is reviewing your message. We usually reply within
+                    24 hours.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* CUSTOMER REPLY BOX */}
+            <div className="border-top pt-4" style={{ borderColor: "#D5D9D9" }}>
+              <h6 className="fw-bold text-dark small text-uppercase tracking-wider mb-2">
+                Send a Follow-up:
+              </h6>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                className="mb-3 shadow-none rounded-1 border modern-input"
+                style={{ borderColor: "#D5D9D9", resize: "none" }}
+                placeholder="Need more help? Type your reply here..."
+                value={customerReplyText}
+                onChange={(e) => setCustomerReplyText(e.target.value)}
+              />
+              <button
+                className="btn w-100 rounded-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm border-0 hover-lift"
+                style={{ backgroundColor: "#007185", color: "white" }}
+                onClick={handleSendCustomerReply}
+                disabled={replyLoading || !customerReplyText.trim()}
+              >
+                {replyLoading ? (
+                  <Loader2 size={16} className="spin-animation" />
+                ) : (
+                  <Send size={16} />
+                )}
+                Send Reply
+              </button>
+            </div>
+          </Modal.Body>
+        </div>
       </Modal>
 
       <style>{`
+        .tracking-wider { letter-spacing: 0.05em; }
         .transition-all { transition: all 0.3s ease; }
-        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+        .hover-lift { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
+        .hover-bg-danger:hover { background-color: #fef0f0; color: #B12704 !important; border-color: #f5c6cb !important; }
         .spin-animation { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .table-row-hover:hover { background-color: #f8f9fa; }
+        .hover-underline:hover { text-decoration: underline !important; cursor: pointer; }
+        .modern-input:focus { border-color: #e47911 !important; box-shadow: 0 0 3px 2px rgba(228, 121, 17, .5) !important; outline: none; }
+        .cursor-pointer { cursor: pointer; }
       `}</style>
     </div>
   );

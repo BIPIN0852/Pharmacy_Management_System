@@ -1,355 +1,3 @@
-// import React from "react";
-// import { Container, Card, Button, Badge } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import { CheckCircle, Download, ArrowRight, Home } from "lucide-react";
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-//   const orderId = searchParams.get("id");
-//   const method = searchParams.get("method");
-//   const date = new Date().toLocaleDateString();
-
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 text-center p-5"
-//         style={{ maxWidth: "500px", width: "100%" }}
-//       >
-//         <div className="mb-4">
-//           <div className="bg-success bg-opacity-10 rounded-circle d-inline-flex p-4">
-//             <CheckCircle size={64} className="text-success" />
-//           </div>
-//         </div>
-
-//         <h2 className="fw-bold mb-2">
-//           {method === "COD"
-//             ? "Order Placed Successfully!"
-//             : "Payment Successful!"}
-//         </h2>
-//         <p className="text-muted mb-4">
-//           {method === "COD"
-//             ? "Your order has been received. Please pay cash upon delivery."
-//             : "Thank you for your purchase. Your payment has been confirmed."}
-//         </p>
-
-//         <div className="bg-light p-3 rounded-3 mb-4 text-start">
-//           <div className="d-flex justify-content-between mb-2">
-//             <span className="text-muted small">Transaction ID</span>
-//             <span className="fw-bold small text-dark">
-//               TXN-{Math.floor(Math.random() * 1000000)}
-//             </span>
-//           </div>
-//           <div className="d-flex justify-content-between mb-2">
-//             <span className="text-muted small">Order ID</span>
-//             <span className="fw-bold small text-primary">
-//               {orderId && orderId !== "new"
-//                 ? `#${orderId.slice(-6).toUpperCase()}`
-//                 : "Processing..."}
-//             </span>
-//           </div>
-//           <div className="d-flex justify-content-between mb-2">
-//             <span className="text-muted small">Payment Method</span>
-//             <Badge bg="info" className="text-uppercase">
-//               {method || "Online"}
-//             </Badge>
-//           </div>
-//           <div className="d-flex justify-content-between">
-//             <span className="text-muted small">Date</span>
-//             <span className="fw-bold small">{date}</span>
-//           </div>
-//         </div>
-
-//         <div className="d-grid gap-2">
-//           <Button variant="outline-dark" className="rounded-pill">
-//             <Download size={18} className="me-2" /> Download Invoice
-//           </Button>
-//           <Link
-//             to="/customer-dashboard"
-//             className="btn btn-primary rounded-pill fw-bold"
-//           >
-//             Go to Dashboard <ArrowRight size={18} className="ms-2" />
-//           </Link>
-//           <Link to="/" className="btn btn-link text-decoration-none text-muted">
-//             <Home size={16} className="me-1" /> Return Home
-//           </Link>
-//         </div>
-//       </Card>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
-// import React, { useEffect } from "react";
-// import { Container, Card, Button, Badge } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import { CheckCircle, Download, ArrowRight, Home, Receipt } from "lucide-react";
-// import confetti from "canvas-confetti"; // Optional: adds celebration effect
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-//   const orderId = searchParams.get("id");
-//   const method = searchParams.get("method");
-//   const date = new Date().toLocaleDateString(undefined, {
-//     weekday: "long",
-//     year: "numeric",
-//     month: "long",
-//     day: "numeric",
-//   });
-
-//   useEffect(() => {
-//     // Trigger confetti on mount
-//     confetti({
-//       particleCount: 100,
-//       spread: 70,
-//       origin: { y: 0.6 },
-//     });
-//   }, []);
-
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 fade-in">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 text-center p-4 p-md-5 position-relative overflow-hidden"
-//         style={{ maxWidth: "500px", width: "100%" }}
-//       >
-//         {/* Decorative background circle */}
-//         <div
-//           className="position-absolute top-0 start-50 translate-middle rounded-circle bg-success opacity-10"
-//           style={{ width: "300px", height: "300px", marginTop: "-100px" }}
-//         />
-
-//         <div className="position-relative z-1">
-//           <div className="mb-4">
-//             <div className="bg-success text-white rounded-circle d-inline-flex p-3 shadow-sm">
-//               <CheckCircle size={48} strokeWidth={3} />
-//             </div>
-//           </div>
-
-//           <h2 className="fw-bold mb-2 text-dark">
-//             {method === "COD" ? "Order Placed!" : "Payment Successful!"}
-//           </h2>
-//           <p className="text-muted mb-4 px-3">
-//             {method === "COD"
-//               ? "Your order has been confirmed. Please keep cash ready upon delivery."
-//               : "Thank you for your purchase. A confirmation email has been sent to you."}
-//           </p>
-
-//           {/* Receipt Details Card */}
-//           <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 text-start shadow-sm">
-//             <div className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-10">
-//               <span className="text-muted small text-uppercase fw-bold tracking-wider">
-//                 Order Receipt
-//               </span>
-//               <Receipt size={16} className="text-muted opacity-50" />
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Order ID</span>
-//               <span className="fw-bold text-dark font-monospace">
-//                 {orderId && orderId !== "new"
-//                   ? `#${orderId.slice(-6).toUpperCase()}`
-//                   : "PROCESSING"}
-//               </span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Date</span>
-//               <span className="fw-medium small text-dark">{date}</span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Payment Method</span>
-//               <Badge
-//                 bg={method === "COD" ? "warning" : "success"}
-//                 text={method === "COD" ? "dark" : "white"}
-//                 className="fw-medium px-2"
-//               >
-//                 {method === "COD"
-//                   ? "Cash on Delivery"
-//                   : method || "Online Payment"}
-//               </Badge>
-//             </div>
-
-//             <div className="d-flex justify-content-between">
-//               <span className="text-muted small">Transaction ID</span>
-//               <span className="text-muted small font-monospace">
-//                 TXN-{Math.floor(Math.random() * 10000000)}
-//               </span>
-//             </div>
-//           </div>
-
-//           {/* Action Buttons */}
-//           <div className="d-grid gap-3">
-//             <Button
-//               variant="outline-secondary"
-//               className="rounded-pill border-opacity-25 hover-bg-light"
-//             >
-//               <Download size={18} className="me-2" /> Download Receipt
-//             </Button>
-
-//             <Link
-//               to="/customer-dashboard"
-//               className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
-//             >
-//               Go to Dashboard <ArrowRight size={18} className="ms-2" />
-//             </Link>
-
-//             <Link
-//               to="/"
-//               className="btn btn-link text-decoration-none text-muted small mt-2"
-//             >
-//               <Home size={14} className="me-1" /> Return to Home
-//             </Link>
-//           </div>
-//         </div>
-//       </Card>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
-// import React, { useEffect } from "react";
-// import { Container, Card, Button, Badge } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import { CheckCircle, Download, ArrowRight, Home, Receipt } from "lucide-react";
-
-// // Optional: If you installed 'canvas-confetti', uncomment the import and useEffect below
-// // import confetti from "canvas-confetti";
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-//   const orderId = searchParams.get("id") || searchParams.get("order_id"); // Handle both param names
-//   const method = searchParams.get("method");
-
-//   const date = new Date().toLocaleDateString("en-US", {
-//     weekday: "long",
-//     year: "numeric",
-//     month: "long",
-//     day: "numeric",
-//   });
-
-//   /* // Uncomment if you installed canvas-confetti
-//   useEffect(() => {
-//     confetti({
-//       particleCount: 100,
-//       spread: 70,
-//       origin: { y: 0.6 },
-//     });
-//   }, []);
-//   */
-
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 animate-fade-in">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 text-center p-4 p-md-5 position-relative overflow-hidden"
-//         style={{ maxWidth: "500px", width: "100%" }}
-//       >
-//         {/* Decorative Background Circle */}
-//         <div
-//           className="position-absolute top-0 start-50 translate-middle rounded-circle bg-success opacity-10"
-//           style={{ width: "300px", height: "300px", marginTop: "-100px", opacity: 0.1 }}
-//         />
-
-//         <div className="position-relative z-1">
-//           {/* Success Icon */}
-//           <div className="mb-4">
-//             <div className="bg-success text-white rounded-circle d-inline-flex p-3 shadow-sm">
-//               <CheckCircle size={48} strokeWidth={3} />
-//             </div>
-//           </div>
-
-//           {/* Heading */}
-//           <h2 className="fw-bold mb-2 text-dark">
-//             {method === "COD" ? "Order Placed!" : "Payment Successful!"}
-//           </h2>
-//           <p className="text-muted mb-4 px-3">
-//             {method === "COD"
-//               ? "Your order has been confirmed. Please keep cash ready upon delivery."
-//               : "Thank you for your purchase. A confirmation email has been sent to you."}
-//           </p>
-
-//           {/* Receipt Details Card */}
-//           <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 text-start shadow-sm">
-//             <div className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-10">
-//               <span className="text-muted small text-uppercase fw-bold tracking-wider">
-//                 Order Receipt
-//               </span>
-//               <Receipt size={16} className="text-muted opacity-50" />
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Order ID</span>
-//               <span className="fw-bold text-dark font-monospace">
-//                 {orderId && orderId !== "new"
-//                   ? `#${orderId.slice(-6).toUpperCase()}`
-//                   : "PROCESSING"}
-//               </span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Date</span>
-//               <span className="fw-medium small text-dark">{date}</span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Payment Method</span>
-//               <Badge
-//                 bg={method === "COD" ? "warning" : "success"}
-//                 text={method === "COD" ? "dark" : "white"}
-//                 className="fw-medium px-2"
-//               >
-//                 {method === "COD"
-//                   ? "Cash on Delivery"
-//                   : method || "Online Payment"}
-//               </Badge>
-//             </div>
-
-//             <div className="d-flex justify-content-between">
-//               <span className="text-muted small">Transaction ID</span>
-//               <span className="text-muted small font-monospace">
-//                 TXN-{Math.floor(10000000 + Math.random() * 90000000)}
-//               </span>
-//             </div>
-//           </div>
-
-//           {/* Action Buttons */}
-//           <div className="d-grid gap-3">
-//             <Button
-//               variant="outline-secondary"
-//               className="rounded-pill border-opacity-25 hover-bg-light"
-//               onClick={() => window.print()} // Simple print functionality
-//             >
-//               <Download size={18} className="me-2" /> Download Receipt
-//             </Button>
-
-//             <Link
-//               to="/customer-dashboard"
-//               className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
-//             >
-//               Go to Dashboard <ArrowRight size={18} className="ms-2" />
-//             </Link>
-
-//             <Link
-//               to="/"
-//               className="btn btn-link text-decoration-none text-muted small mt-2"
-//             >
-//               <Home size={14} className="me-1" /> Return to Home
-//             </Link>
-//           </div>
-//         </div>
-//       </Card>
-
-//       <style>{`
-//         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-//         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-//       `}</style>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
 // import React, { useEffect, useState } from "react";
 // import {
 //   Container,
@@ -357,7 +5,8 @@
 //   Button,
 //   Badge,
 //   Spinner,
-//   Alert,
+//   Row,
+//   Col,
 // } from "react-bootstrap";
 // import { Link, useSearchParams } from "react-router-dom";
 // import {
@@ -365,273 +14,11 @@
 //   XCircle,
 //   Download,
 //   ArrowRight,
-//   Home,
 //   Receipt,
-// } from "lucide-react";
-// import axios from "axios";
-
-// // Optional: If you installed 'canvas-confetti', uncomment the import and useEffect below
-// // import confetti from "canvas-confetti";
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-
-//   // State for handling verification status
-//   const [isVerifying, setIsVerifying] = useState(false);
-//   const [error, setError] = useState(null);
-//   const [verifiedOrder, setVerifiedOrder] = useState(null);
-
-//   // Get params from URL
-//   const pidx = searchParams.get("pidx"); // Khalti Transaction ID
-//   const method = searchParams.get("method"); // 'COD', 'Stripe', or 'Khalti'
-//   // Khalti returns 'purchase_order_id', Stripe/COD might send 'id'
-//   const urlOrderId =
-//     searchParams.get("id") ||
-//     searchParams.get("order_id") ||
-//     searchParams.get("purchase_order_id");
-
-//   // Use the verified order ID if available, otherwise fallback to URL param
-//   const finalOrderId = verifiedOrder?._id || urlOrderId;
-
-//   const date = new Date().toLocaleDateString("en-US", {
-//     weekday: "long",
-//     year: "numeric",
-//     month: "long",
-//     day: "numeric",
-//   });
-
-//   // --- 1. VERIFICATION EFFECT ---
-//   useEffect(() => {
-//     const verifyPayment = async () => {
-//       // If we have a pidx (Khalti) and haven't verified yet
-//       if (pidx && !verifiedOrder) {
-//         setIsVerifying(true);
-//         try {
-//           const token = localStorage.getItem("token");
-//           const config = {
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`,
-//             },
-//           };
-
-//           // Call your Backend Lookup Route
-//           const { data } = await axios.post(
-//             "http://localhost:5000/api/payments/khalti-lookup",
-//             { pidx },
-//             config,
-//           );
-
-//           if (data.success) {
-//             setVerifiedOrder(data.order); // Save verified order details
-//             // Optional: Trigger confetti here on success
-//             // confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-//           } else {
-//             setError(data.message || "Payment verification failed.");
-//           }
-//         } catch (err) {
-//           console.error(err);
-//           setError(
-//             err.response?.data?.message || "Server error during verification.",
-//           );
-//         } finally {
-//           setIsVerifying(false);
-//         }
-//       }
-//       // Handle Stripe Redirect Status
-//       else if (searchParams.get("redirect_status") === "failed") {
-//         setError("Payment failed or was cancelled.");
-//       }
-//     };
-
-//     // Only run verification if not COD (COD is already confirmed)
-//     if (method !== "COD") {
-//       verifyPayment();
-//     }
-//   }, [pidx, method, searchParams, verifiedOrder]);
-
-//   // --- 2. RENDER: LOADING STATE ---
-//   if (isVerifying) {
-//     return (
-//       <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
-//         <Spinner
-//           animation="border"
-//           variant="primary"
-//           style={{ width: "3rem", height: "3rem" }}
-//         />
-//         <h5 className="mt-3 text-muted animate-pulse">
-//           Verifying your payment...
-//         </h5>
-//         <p className="text-muted small">Please do not close this window.</p>
-//       </Container>
-//     );
-//   }
-
-//   // --- 3. RENDER: ERROR STATE ---
-//   if (error) {
-//     return (
-//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
-//         <Card
-//           className="border-0 shadow-lg rounded-4 text-center p-5"
-//           style={{ maxWidth: "500px" }}
-//         >
-//           <div className="mb-3 text-danger">
-//             <XCircle size={64} />
-//           </div>
-//           <h3 className="fw-bold text-danger mb-3">Payment Failed</h3>
-//           <p className="text-muted mb-4">{error}</p>
-//           <div className="d-grid gap-2">
-//             <Link to="/payment" className="btn btn-primary rounded-pill">
-//               Try Again
-//             </Link>
-//             <Link to="/" className="btn btn-outline-secondary rounded-pill">
-//               Go Home
-//             </Link>
-//           </div>
-//         </Card>
-//       </Container>
-//     );
-//   }
-
-//   // --- 4. RENDER: SUCCESS STATE (Your Original UI) ---
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 animate-fade-in">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 text-center p-4 p-md-5 position-relative overflow-hidden"
-//         style={{ maxWidth: "500px", width: "100%" }}
-//       >
-//         {/* Decorative Background Circle */}
-//         <div
-//           className="position-absolute top-0 start-50 translate-middle rounded-circle bg-success opacity-10"
-//           style={{
-//             width: "300px",
-//             height: "300px",
-//             marginTop: "-100px",
-//             opacity: 0.1,
-//           }}
-//         />
-
-//         <div className="position-relative z-1">
-//           {/* Success Icon */}
-//           <div className="mb-4">
-//             <div className="bg-success text-white rounded-circle d-inline-flex p-3 shadow-sm">
-//               <CheckCircle size={48} strokeWidth={3} />
-//             </div>
-//           </div>
-
-//           {/* Heading */}
-//           <h2 className="fw-bold mb-2 text-dark">
-//             {method === "COD" ? "Order Placed!" : "Payment Successful!"}
-//           </h2>
-//           <p className="text-muted mb-4 px-3">
-//             {method === "COD"
-//               ? "Your order has been confirmed. Please keep cash ready upon delivery."
-//               : "Thank you for your purchase. A confirmation email has been sent to you."}
-//           </p>
-
-//           {/* Receipt Details Card */}
-//           <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 text-start shadow-sm">
-//             <div className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-10">
-//               <span className="text-muted small text-uppercase fw-bold tracking-wider">
-//                 Order Receipt
-//               </span>
-//               <Receipt size={16} className="text-muted opacity-50" />
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Order ID</span>
-//               <span className="fw-bold text-dark font-monospace">
-//                 {finalOrderId && finalOrderId !== "new"
-//                   ? `#${finalOrderId.slice(-6).toUpperCase()}`
-//                   : "PROCESSING..."}
-//               </span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Date</span>
-//               <span className="fw-medium small text-dark">{date}</span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Payment Method</span>
-//               <Badge
-//                 bg={method === "COD" ? "warning" : "success"}
-//                 text={method === "COD" ? "dark" : "white"}
-//                 className="fw-medium px-2"
-//               >
-//                 {method === "COD"
-//                   ? "Cash on Delivery"
-//                   : pidx
-//                     ? "Khalti Wallet"
-//                     : "Online Payment"}
-//               </Badge>
-//             </div>
-
-//             <div className="d-flex justify-content-between">
-//               <span className="text-muted small">Transaction ID</span>
-//               <span className="text-muted small font-monospace">
-//                 {pidx ||
-//                   `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`}
-//               </span>
-//             </div>
-//           </div>
-
-//           {/* Action Buttons */}
-//           <div className="d-grid gap-3">
-//             <Button
-//               variant="outline-secondary"
-//               className="rounded-pill border-opacity-25 hover-bg-light"
-//               onClick={() => window.print()}
-//             >
-//               <Download size={18} className="me-2" /> Download Receipt
-//             </Button>
-
-//             <Link
-//               to="/orders" // Updated to standard orders page
-//               className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
-//             >
-//               Go to Dashboard <ArrowRight size={18} className="ms-2" />
-//             </Link>
-
-//             <Link
-//               to="/"
-//               className="btn btn-link text-decoration-none text-muted small mt-2"
-//             >
-//               <Home size={14} className="me-1" /> Return to Home
-//             </Link>
-//           </div>
-//         </div>
-//       </Card>
-
-//       <style>{`
-//         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-//         .animate-pulse { animation: pulse 2s infinite; }
-//         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-//       `}</style>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   Container,
-//   Card,
-//   Button,
-//   Badge,
-//   Spinner,
-//   Alert,
-// } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import {
-//   CheckCircle,
-//   XCircle,
-//   Download,
-//   ArrowRight,
-//   Home,
-//   Receipt,
+//   MapPin,
+//   User,
+//   Clock,
+//   Building,
 // } from "lucide-react";
 // import axios from "axios";
 
@@ -639,327 +26,102 @@
 //   const [searchParams] = useSearchParams();
 
 //   // State for handling verification status
-//   const [isVerifying, setIsVerifying] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
 //   const [error, setError] = useState(null);
-//   const [verifiedOrder, setVerifiedOrder] = useState(null);
+//   const [order, setOrder] = useState(null);
 
 //   // Get params from URL
 //   const pidx = searchParams.get("pidx"); // Khalti Transaction ID
-//   const method = searchParams.get("method"); // 'COD', 'Stripe', or 'Khalti'
-
-//   // ✅ Robust ID Recovery: Checks all possible keys Khalti or Stripe might send
 //   const urlOrderId =
 //     searchParams.get("id") ||
 //     searchParams.get("order_id") ||
 //     searchParams.get("purchase_order_id");
 
-//   // Use the verified order ID if available, otherwise fallback to URL param
-//   const finalOrderId = verifiedOrder?._id || urlOrderId;
-
-//   const date = new Date().toLocaleDateString("en-US", {
-//     weekday: "long",
-//     year: "numeric",
-//     month: "long",
-//     day: "numeric",
-//   });
-
-//   // --- 1. VERIFICATION EFFECT ---
+//   // --- 1. FETCH & VERIFY EFFECT ---
 //   useEffect(() => {
 //     let isMounted = true;
 
-//     const verifyPayment = async () => {
-//       // ✅ Only verify if it's Khalti and we haven't verified it in this session yet
-//       if (pidx && !verifiedOrder && !error) {
-//         setIsVerifying(true);
-//         try {
-//           const token = localStorage.getItem("token");
-//           const config = {
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`,
-//             },
-//           };
+//     const fetchOrVerifyOrder = async () => {
+//       try {
+//         setIsLoading(true);
+//         setError(null);
+//         const token = localStorage.getItem("token");
+//         const config = {
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         };
 
-//           // ✅ Fix: Ensure this matches the backend route in paymentRoutes.js
-//           const { data } = await axios.post(
-//             "http://localhost:5000/api/payments/khalti-lookup",
-//             { pidx },
-//             config,
-//           );
-
-//           if (isMounted) {
-//             if (data.success) {
-//               setVerifiedOrder(data.order);
-//             } else {
-//               // If we have a URL ID, we don't show a hard error to avoid flickering
-//               if (!urlOrderId) setError(data.message || "Verification failed.");
-//             }
-//           }
-//         } catch (err) {
-//           console.error("Verification Error:", err);
-//           // Only show error screen if we have absolutely no order context
-//           if (isMounted && !urlOrderId) {
-//             setError(
-//               err.response?.data?.message ||
-//                 "Server error during verification.",
+//         // Scenario A: Coming back from Khalti Payment
+//         if (pidx) {
+//           try {
+//             const { data } = await axios.post(
+//               "http://localhost:5000/api/payments/khalti-lookup",
+//               { pidx },
+//               config,
 //             );
+
+//             if (data.success && data.order && isMounted) {
+//               setOrder(data.order);
+//             } else if (urlOrderId && isMounted) {
+//               // Fallback: Khalti failed, but we have the order ID, so just fetch the order
+//               const orderRes = await axios.get(
+//                 `http://localhost:5000/api/orders/${urlOrderId}`,
+//                 config,
+//               );
+//               setOrder(orderRes.data);
+//             } else if (isMounted) {
+//               setError(data.message || "Payment verification failed.");
+//             }
+//           } catch (khaltiErr) {
+//             console.error("Khalti Error:", khaltiErr);
+//             // If Khalti lookup fails completely, try to load the order anyway if we have the ID
+//             if (urlOrderId && isMounted) {
+//               const orderRes = await axios.get(
+//                 `http://localhost:5000/api/orders/${urlOrderId}`,
+//                 config,
+//               );
+//               setOrder(orderRes.data);
+//             } else if (isMounted) {
+//               setError("Failed to verify payment with Khalti.");
+//             }
 //           }
-//         } finally {
-//           if (isMounted) setIsVerifying(false);
 //         }
+//         // Scenario B: Viewing an existing order (from Order History)
+//         else if (urlOrderId) {
+//           const { data } = await axios.get(
+//             `http://localhost:5000/api/orders/${urlOrderId}`,
+//             config,
+//           );
+//           if (isMounted) {
+//             setOrder(data);
+//           }
+//         } else {
+//           if (isMounted) setError("No order reference found in URL.");
+//         }
+//       } catch (err) {
+//         console.error("Fetch Error:", err);
+//         if (isMounted) {
+//           // ✅ FIX: Now it will ALWAYS set an error if it fails, preventing a blank page
+//           setError(
+//             err.response?.data?.message ||
+//               err.message ||
+//               "Failed to load receipt.",
+//           );
+//         }
+//       } finally {
+//         if (isMounted) setIsLoading(false);
 //       }
 //     };
 
-//     // Skip verification for Cash on Delivery as it is confirmed on the previous page
-//     if (method !== "COD") {
-//       verifyPayment();
+//     if (!order) {
+//       fetchOrVerifyOrder();
 //     }
 
 //     return () => {
 //       isMounted = false;
 //     };
-//   }, [pidx, method, urlOrderId, verifiedOrder, error]);
-
-//   // --- 2. RENDER: LOADING STATE ---
-//   if (isVerifying && !urlOrderId) {
-//     return (
-//       <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
-//         <Spinner
-//           animation="border"
-//           variant="primary"
-//           style={{ width: "3rem", height: "3rem" }}
-//         />
-//         <h5 className="mt-3 text-muted animate-pulse">
-//           Verifying your payment...
-//         </h5>
-//         <p className="text-muted small">Please do not close this window.</p>
-//       </Container>
-//     );
-//   }
-
-//   // --- 3. RENDER: ERROR STATE ---
-//   if (error && !urlOrderId) {
-//     return (
-//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
-//         <Card
-//           className="border-0 shadow-lg rounded-4 text-center p-5"
-//           style={{ maxWidth: "500px" }}
-//         >
-//           <div className="mb-3 text-danger">
-//             <XCircle size={64} />
-//           </div>
-//           <h3 className="fw-bold text-danger mb-3">Payment Failed</h3>
-//           <p className="text-muted mb-4">{error}</p>
-//           <div className="d-grid gap-2">
-//             <Link to="/placeorder" className="btn btn-primary rounded-pill">
-//               Try Again
-//             </Link>
-//             <Link to="/" className="btn btn-outline-secondary rounded-pill">
-//               Go Home
-//             </Link>
-//           </div>
-//         </Card>
-//       </Container>
-//     );
-//   }
-
-//   // --- 4. RENDER: SUCCESS STATE ---
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 animate-fade-in">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 text-center p-4 p-md-5 position-relative overflow-hidden"
-//         style={{ maxWidth: "500px", width: "100%" }}
-//       >
-//         <div className="position-relative z-1">
-//           <div className="mb-4">
-//             <div className="bg-success text-white rounded-circle d-inline-flex p-3 shadow-sm">
-//               <CheckCircle size={48} strokeWidth={3} />
-//             </div>
-//           </div>
-
-//           <h2 className="fw-bold mb-2 text-dark">
-//             {method === "COD" ? "Order Placed!" : "Payment Successful!"}
-//           </h2>
-//           <p className="text-muted mb-4 px-3">
-//             {method === "COD"
-//               ? "Your order has been confirmed. Please keep cash ready upon delivery."
-//               : "Thank you for your purchase. Your order is being processed."}
-//           </p>
-
-//           {/* Receipt Details */}
-//           <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 text-start shadow-sm">
-//             <div className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-10">
-//               <span className="text-muted small text-uppercase fw-bold">
-//                 Order Receipt
-//               </span>
-//               <Receipt size={16} className="text-muted opacity-50" />
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Order ID</span>
-//               <span className="fw-bold text-dark font-monospace">
-//                 {finalOrderId
-//                   ? `#${finalOrderId.slice(-6).toUpperCase()}`
-//                   : "..."}
-//               </span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Date</span>
-//               <span className="fw-medium small text-dark">{date}</span>
-//             </div>
-
-//             <div className="d-flex justify-content-between mb-2">
-//               <span className="text-muted small">Payment Method</span>
-//               <Badge
-//                 bg={method === "COD" ? "warning" : "success"}
-//                 text={method === "COD" ? "dark" : "white"}
-//                 className="fw-medium px-2"
-//               >
-//                 {method === "COD"
-//                   ? "Cash on Delivery"
-//                   : pidx
-//                     ? "Khalti Wallet"
-//                     : "Stripe/Card"}
-//               </Badge>
-//             </div>
-
-//             <div className="d-flex justify-content-between">
-//               <span className="text-muted small">Status</span>
-//               <span className="text-success small fw-bold">
-//                 {isVerifying ? "VERIFYING..." : "CONFIRMED"}
-//               </span>
-//             </div>
-//           </div>
-
-//           <div className="d-grid gap-3">
-//             <Button
-//               variant="outline-secondary"
-//               className="rounded-pill border-opacity-25"
-//               onClick={() => window.print()}
-//             >
-//               <Download size={18} className="me-2" /> Download Receipt
-//             </Button>
-
-//             <Link
-//               to="/orders"
-//               className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
-//             >
-//               View Order History <ArrowRight size={18} className="ms-2" />
-//             </Link>
-//           </div>
-//         </div>
-//       </Card>
-
-//       <style>{`
-//         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-//         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-//         .animate-pulse { animation: pulse 2s infinite; }
-//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-//       `}</style>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   Container,
-//   Card,
-//   Button,
-//   Badge,
-//   Spinner,
-//   Alert,
-//   Row,
-//   Col,
-// } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import {
-//   CheckCircle,
-//   XCircle,
-//   Download,
-//   ArrowRight,
-//   Receipt,
-//   MapPin,
-//   User,
-//   Clock,
-//   Building,
-// } from "lucide-react";
-// import axios from "axios";
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-
-//   // State for handling verification status
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [order, setOrder] = useState(null);
-
-//   // Get params from URL
-//   const pidx = searchParams.get("pidx"); // Khalti Transaction ID
-//   const urlOrderId =
-//     searchParams.get("id") ||
-//     searchParams.get("order_id") ||
-//     searchParams.get("purchase_order_id");
-
-//   // --- 1. FETCH & VERIFY EFFECT ---
-//   useEffect(() => {
-//     let isMounted = true;
-
-//     const fetchOrVerifyOrder = async () => {
-//       try {
-//         setIsLoading(true);
-//         const token = localStorage.getItem("token");
-//         const config = {
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         };
-
-//         // Scenario A: Coming back from Khalti Payment
-//         if (pidx && !order) {
-//           const { data } = await axios.post(
-//             "http://localhost:5000/api/payments/khalti-lookup",
-//             { pidx },
-//             config,
-//           );
-//           if (isMounted) {
-//             if (data.success) {
-//               setOrder(data.order);
-//             } else {
-//               if (!urlOrderId) setError(data.message || "Verification failed.");
-//             }
-//           }
-//         }
-//         // Scenario B: Viewing an existing order (from Order History)
-//         else if (urlOrderId && !order) {
-//           const { data } = await axios.get(
-//             `http://localhost:5000/api/orders/${urlOrderId}`,
-//             config,
-//           );
-//           if (isMounted) {
-//             setOrder(data);
-//           }
-//         } else {
-//           if (isMounted) setError("No order reference found.");
-//         }
-//       } catch (err) {
-//         console.error("Fetch Error:", err);
-//         if (isMounted && !urlOrderId) {
-//           setError(err.response?.data?.message || "Failed to load receipt.");
-//         }
-//       } finally {
-//         if (isMounted) setIsLoading(false);
-//       }
-//     };
-
-//     fetchOrVerifyOrder();
-
-//     return () => {
-//       isMounted = false;
-//     };
 //   }, [pidx, urlOrderId, order]);
 
 //   // --- 2. RENDER: LOADING STATE ---
@@ -999,7 +161,14 @@
 //     );
 //   }
 
-//   if (!order) return null;
+//   // Fallback Catch-all for blank page prevention
+//   if (!order) {
+//     return (
+//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
+//         <h5 className="text-muted">Order details could not be loaded.</h5>
+//       </Container>
+//     );
+//   }
 
 //   // --- DYNAMIC UI LOGIC based on actual DB status ---
 //   const isPaid = order.isPaid;
@@ -1013,7 +182,7 @@
 //   if (!isPaid && !isCOD) {
 //     statusIcon = <Clock size={48} strokeWidth={3} />;
 //     statusColor = "bg-warning text-dark";
-//     title = "Payment Pending!";
+//     title = "Payment Pending / Failed!";
 //     subtitle = "Your order is placed but awaiting payment confirmation.";
 //   } else if (!isPaid && isCOD) {
 //     title = "Order Confirmed!";
@@ -1084,319 +253,6 @@
 //               <Col xs={6}>
 //                 <span className="text-muted small d-block">Order ID</span>
 //                 <span className="fw-bold font-monospace">
-//                   #{order._id.slice(-6).toUpperCase()}
-//                 </span>
-//               </Col>
-//               <Col xs={6}>
-//                 <span className="text-muted small d-block">Date</span>
-//                 <span className="fw-bold small">
-//                   {new Date(order.createdAt).toLocaleDateString("en-US", {
-//                     year: "numeric",
-//                     month: "short",
-//                     day: "numeric",
-//                   })}
-//                 </span>
-//               </Col>
-//               <Col xs={6}>
-//                 <span className="text-muted small d-block">Payment Method</span>
-//                 <span className="fw-bold">{order.paymentMethod}</span>
-//               </Col>
-//               <Col xs={6}>
-//                 <span className="text-muted small d-block">Total Amount</span>
-//                 <span className="fw-bold text-primary fs-5">
-//                   Rs. {order.totalPrice?.toLocaleString()}
-//                 </span>
-//               </Col>
-//             </Row>
-//           </div>
-
-//           <Row className="g-3">
-//             <Col xs={6}>
-//               <span className="text-muted small d-block mb-1">
-//                 Payment Status
-//               </span>
-//               <Badge
-//                 bg={isPaid ? "success" : "warning"}
-//                 text={isPaid ? "white" : "dark"}
-//                 className="px-3 py-2"
-//               >
-//                 {isPaid ? "PAID" : "PENDING"}
-//               </Badge>
-//             </Col>
-//             <Col xs={6}>
-//               <span className="text-muted small d-block mb-1">
-//                 Fulfillment Status
-//               </span>
-//               <Badge
-//                 bg={order.isDelivered ? "info" : "secondary"}
-//                 className="px-3 py-2"
-//               >
-//                 {order.orderStatus ||
-//                   (order.isDelivered ? "Delivered" : "Processing")}
-//               </Badge>
-//             </Col>
-//           </Row>
-//         </div>
-
-//         {/* Action Buttons */}
-//         <div className="d-grid gap-3">
-//           <Button
-//             variant="outline-secondary"
-//             className="rounded-pill border-opacity-25"
-//             onClick={() => window.print()}
-//           >
-//             <Download size={18} className="me-2" /> Download Full Receipt
-//           </Button>
-
-//           <Link
-//             to="/orders"
-//             className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
-//           >
-//             View Order History <ArrowRight size={18} className="ms-2" />
-//           </Link>
-//         </div>
-//       </Card>
-
-//       <style>{`
-//         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
-//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-//         .animate-pulse { animation: pulse 2s infinite; }
-//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-//         @media print {
-//           body * { visibility: hidden; }
-//           .card, .card * { visibility: visible; }
-//           .card { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
-//           .btn { display: none !important; }
-//         }
-//       `}</style>
-//     </Container>
-//   );
-// };
-
-// export default PaymentSuccess;
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   Container,
-//   Card,
-//   Button,
-//   Badge,
-//   Spinner,
-//   Alert,
-//   Row,
-//   Col,
-// } from "react-bootstrap";
-// import { Link, useSearchParams } from "react-router-dom";
-// import {
-//   CheckCircle,
-//   XCircle,
-//   Download,
-//   ArrowRight,
-//   Receipt,
-//   MapPin,
-//   User,
-//   Clock,
-//   Building,
-// } from "lucide-react";
-// import axios from "axios";
-
-// const PaymentSuccess = () => {
-//   const [searchParams] = useSearchParams();
-
-//   // State for handling verification status
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [order, setOrder] = useState(null);
-
-//   // Get params from URL
-//   const pidx = searchParams.get("pidx"); // Khalti Transaction ID
-//   const urlOrderId =
-//     searchParams.get("id") ||
-//     searchParams.get("order_id") ||
-//     searchParams.get("purchase_order_id");
-
-//   // --- 1. FETCH & VERIFY EFFECT ---
-//   useEffect(() => {
-//     let isMounted = true;
-
-//     const fetchOrVerifyOrder = async () => {
-//       try {
-//         setIsLoading(true);
-//         const token = localStorage.getItem("token");
-//         const config = {
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         };
-
-//         // Scenario A: Coming back from Khalti Payment
-//         if (pidx && !order) {
-//           const { data } = await axios.post(
-//             "http://localhost:5000/api/payments/khalti-lookup",
-//             { pidx },
-//             config,
-//           );
-//           if (isMounted) {
-//             if (data.success) {
-//               setOrder(data.order);
-//             } else {
-//               if (!urlOrderId) setError(data.message || "Verification failed.");
-//             }
-//           }
-//         }
-//         // Scenario B: Viewing an existing order (from Order History)
-//         else if (urlOrderId && !order) {
-//           const { data } = await axios.get(
-//             `http://localhost:5000/api/orders/${urlOrderId}`,
-//             config,
-//           );
-//           if (isMounted) {
-//             setOrder(data);
-//           }
-//         } else {
-//           if (isMounted) setError("No order reference found.");
-//         }
-//       } catch (err) {
-//         console.error("Fetch Error:", err);
-//         if (isMounted && !urlOrderId) {
-//           setError(err.response?.data?.message || "Failed to load receipt.");
-//         }
-//       } finally {
-//         if (isMounted) setIsLoading(false);
-//       }
-//     };
-
-//     fetchOrVerifyOrder();
-
-//     return () => {
-//       isMounted = false;
-//     };
-//   }, [pidx, urlOrderId, order]);
-
-//   // --- 2. RENDER: LOADING STATE ---
-//   if (isLoading) {
-//     return (
-//       <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
-//         <Spinner
-//           animation="border"
-//           variant="primary"
-//           style={{ width: "3rem", height: "3rem" }}
-//         />
-//         <h5 className="mt-3 text-muted animate-pulse">Loading Receipt...</h5>
-//       </Container>
-//     );
-//   }
-
-//   // --- 3. RENDER: ERROR STATE ---
-//   if (error && !order) {
-//     return (
-//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
-//         <Card
-//           className="border-0 shadow-lg rounded-4 text-center p-5"
-//           style={{ maxWidth: "500px" }}
-//         >
-//           <div className="mb-3 text-danger">
-//             <XCircle size={64} />
-//           </div>
-//           <h3 className="fw-bold text-danger mb-3">Error</h3>
-//           <p className="text-muted mb-4">{error}</p>
-//           <div className="d-grid gap-2">
-//             <Link to="/orders" className="btn btn-primary rounded-pill">
-//               View My Orders
-//             </Link>
-//           </div>
-//         </Card>
-//       </Container>
-//     );
-//   }
-
-//   if (!order) return null;
-
-//   // --- DYNAMIC UI LOGIC based on actual DB status ---
-//   const isPaid = order.isPaid;
-//   const isCOD = order.paymentMethod === "COD";
-
-//   let statusIcon = <CheckCircle size={48} strokeWidth={3} />;
-//   let statusColor = "bg-success";
-//   let title = "Payment Successful!";
-//   let subtitle = "Thank you for your purchase. Your order is being processed.";
-
-//   if (!isPaid && !isCOD) {
-//     statusIcon = <Clock size={48} strokeWidth={3} />;
-//     statusColor = "bg-warning text-dark";
-//     title = "Payment Pending!";
-//     subtitle = "Your order is placed but awaiting payment confirmation.";
-//   } else if (!isPaid && isCOD) {
-//     title = "Order Confirmed!";
-//     subtitle = "Your order is placed. Please keep cash ready upon delivery.";
-//   }
-
-//   // --- 4. RENDER: RECEIPT STATE ---
-//   return (
-//     <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 animate-fade-in">
-//       <Card
-//         className="border-0 shadow-lg rounded-4 p-4 p-md-5 position-relative overflow-hidden"
-//         style={{ maxWidth: "600px", width: "100%" }}
-//       >
-//         {/* Dynamic Header */}
-//         <div className="text-center mb-4">
-//           <div
-//             className={`${statusColor} ${!isPaid && !isCOD ? "" : "text-white"} rounded-circle d-inline-flex p-3 shadow-sm mb-3`}
-//           >
-//             {statusIcon}
-//           </div>
-//           <h2 className="fw-bold mb-2 text-dark">{title}</h2>
-//           <p className="text-muted px-3">{subtitle}</p>
-//         </div>
-
-//         {/* Detailed Receipt Card */}
-//         <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 shadow-sm">
-//           {/* Company Header */}
-//           <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-10">
-//             <div className="d-flex align-items-center gap-2 text-primary">
-//               <Building size={24} />
-//               <span className="fw-bold fs-5 tracking-wider">PharmaStore</span>
-//             </div>
-//             <Receipt size={24} className="text-muted opacity-50" />
-//           </div>
-
-//           {/* Customer & Address Info */}
-//           <Row className="mb-4 g-3">
-//             <Col sm={6}>
-//               <div className="small text-muted text-uppercase fw-bold mb-1">
-//                 Billed To:
-//               </div>
-//               <div className="fw-bold text-dark d-flex align-items-center gap-2">
-//                 <User size={14} className="text-muted" />{" "}
-//                 {order.user?.name || "Customer"}
-//               </div>
-//               <div className="small text-muted ms-4">{order.user?.email}</div>
-//             </Col>
-//             <Col sm={6}>
-//               <div className="small text-muted text-uppercase fw-bold mb-1">
-//                 Shipped To:
-//               </div>
-//               <div className="small text-dark d-flex align-start gap-2">
-//                 <MapPin size={14} className="text-muted mt-1 flex-shrink-0" />
-//                 <span>
-//                   {order.shippingAddress?.address}
-//                   <br />
-//                   {order.shippingAddress?.city},{" "}
-//                   {order.shippingAddress?.country}
-//                   <br />
-//                   {order.shippingAddress?.postalCode}
-//                 </span>
-//               </div>
-//             </Col>
-//           </Row>
-
-//           <div className="bg-white p-3 rounded-3 border mb-3">
-//             <Row className="g-3">
-//               <Col xs={6}>
-//                 <span className="text-muted small d-block">Order ID</span>
-//                 <span className="fw-bold font-monospace">
-//                   {/* ✅ UPDATED: Uses Real-World Order ID if available */}
 //                   {order.orderNumber || `#${order._id.slice(-6).toUpperCase()}`}
 //                 </span>
 //               </Col>
@@ -1488,6 +344,1686 @@
 
 // export default PaymentSuccess;
 
+// import React, { useEffect, useState } from "react";
+// import {
+//   Container,
+//   Card,
+//   Button,
+//   Badge,
+//   Spinner,
+//   Row,
+//   Col,
+//   Table,
+// } from "react-bootstrap";
+// import { Link, useSearchParams, useNavigate } from "react-router-dom";
+// import {
+//   CheckCircle,
+//   XCircle,
+//   Download,
+//   ArrowRight,
+//   Clock,
+//   Building,
+// } from "lucide-react";
+// import axios from "axios";
+
+// const PaymentSuccess = () => {
+//   const navigate = useNavigate();
+//   const [searchParams] = useSearchParams();
+
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [order, setOrder] = useState(null);
+//   const [countdown, setCountdown] = useState(15);
+
+//   const pidx = searchParams.get("pidx");
+//   const khaltiStatus = searchParams.get("status");
+//   const transactionId = searchParams.get("transaction_id");
+//   const urlOrderId =
+//     searchParams.get("id") ||
+//     searchParams.get("order_id") ||
+//     searchParams.get("purchase_order_id") ||
+//     searchParams.get("orderId");
+
+//   useEffect(() => {
+//     let isMounted = true;
+
+//     const processPaymentAndFetchOrder = async () => {
+//       try {
+//         setIsLoading(true);
+//         setError(null);
+//         const token = localStorage.getItem("token");
+//         const config = {
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         };
+
+//         if (pidx) {
+//           if (khaltiStatus === "Completed") {
+//             try {
+//               await axios.post(
+//                 "http://localhost:5000/api/payments/khalti-lookup",
+//                 { pidx },
+//                 config,
+//               );
+
+//               await axios.put(
+//                 `http://localhost:5000/api/orders/${urlOrderId}/pay`,
+//                 {
+//                   id: transactionId || pidx,
+//                   status: "COMPLETED",
+//                   update_time: new Date().toISOString(),
+//                   email_address: "khalti_wallet_user",
+//                 },
+//                 config,
+//               );
+
+//               const finalOrderRes = await axios.get(
+//                 `http://localhost:5000/api/orders/${urlOrderId}`,
+//                 config,
+//               );
+//               if (isMounted) setOrder(finalOrderRes.data);
+//             } catch (khaltiErr) {
+//               console.error("Khalti Verification Error:", khaltiErr);
+//               if (isMounted)
+//                 setError(
+//                   "Payment successful, but failed to update receipt. Please contact support.",
+//                 );
+//             }
+//           } else {
+//             if (isMounted)
+//               setError(
+//                 `Khalti Payment Status: ${khaltiStatus || "Failed/Cancelled"}`,
+//               );
+//           }
+//         } else if (urlOrderId) {
+//           const { data } = await axios.get(
+//             `http://localhost:5000/api/orders/${urlOrderId}`,
+//             config,
+//           );
+//           if (isMounted) setOrder(data);
+//         } else {
+//           if (isMounted) setError("No order reference found in URL.");
+//         }
+//       } catch (err) {
+//         console.error("Fetch Error:", err);
+//         if (isMounted) {
+//           setError(
+//             err.response?.data?.message ||
+//               err.message ||
+//               "Failed to load receipt.",
+//           );
+//         }
+//       } finally {
+//         if (isMounted) setIsLoading(false);
+//       }
+//     };
+
+//     if (!order) {
+//       processPaymentAndFetchOrder();
+//     }
+
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [pidx, khaltiStatus, transactionId, urlOrderId, order]);
+
+//   useEffect(() => {
+//     if (order && !error && !isLoading) {
+//       const timer = setInterval(() => {
+//         setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+//       }, 1000);
+
+//       const redirect = setTimeout(() => {
+//         navigate("/orders");
+//       }, 15000);
+
+//       return () => {
+//         clearInterval(timer);
+//         clearTimeout(redirect);
+//       };
+//     }
+//   }, [order, error, isLoading, navigate]);
+
+//   if (isLoading) {
+//     return (
+//       <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
+//         <Spinner
+//           animation="border"
+//           style={{ color: "#007185", width: "3rem", height: "3rem" }}
+//         />
+//         <h5 className="mt-3 text-muted animate-pulse">
+//           Securing your receipt...
+//         </h5>
+//       </Container>
+//     );
+//   }
+
+//   if (error && !order) {
+//     return (
+//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
+//         <Card
+//           className="border-0 shadow-lg rounded-4 text-center p-5"
+//           style={{ maxWidth: "500px" }}
+//         >
+//           <div className="mb-3 text-danger">
+//             <XCircle size={64} />
+//           </div>
+//           <h3 className="fw-bold text-danger mb-3">Payment Notice</h3>
+//           <p className="text-muted mb-4">{error}</p>
+//           <div className="d-grid gap-2">
+//             <Link to="/orders" className="btn btn-primary rounded-1">
+//               View My Orders
+//             </Link>
+//           </div>
+//         </Card>
+//       </Container>
+//     );
+//   }
+
+//   if (!order) return null;
+
+//   const isPaid = order.isPaid;
+//   const isCOD = order.paymentMethod === "COD";
+
+//   let statusIcon = <CheckCircle size={48} strokeWidth={3} />;
+//   let statusColor = "text-success";
+//   let title = "Payment Successful!";
+//   let subtitle = "Thank you for your purchase. Your order is being processed.";
+
+//   if (!isPaid && !isCOD) {
+//     statusIcon = <Clock size={48} strokeWidth={3} />;
+//     statusColor = "text-warning";
+//     title = "Payment Pending / Failed";
+//     subtitle = "Your order is placed but awaiting payment confirmation.";
+//   } else if (!isPaid && isCOD) {
+//     title = "Order Confirmed!";
+//     subtitle = "Your order is placed. Please keep cash ready upon delivery.";
+//   }
+
+//   return (
+//     <div
+//       className="print-page-bg"
+//       style={{
+//         backgroundColor: "#f0f2f2",
+//         minHeight: "100vh",
+//         padding: "40px 0",
+//       }}
+//     >
+//       {/* Success Notice Header (Hidden on Print) */}
+//       <div className="text-center mb-4 d-print-none animate-fade-in">
+//         <div className={`${statusColor} mb-3`}>{statusIcon}</div>
+//         <h2 className="fw-bold mb-2 text-dark">{title}</h2>
+//         <p className="text-muted px-3 mb-3">{subtitle}</p>
+
+//         <div className="d-inline-block px-3 py-1 rounded-pill bg-white border shadow-sm text-muted small">
+//           Redirecting to orders in{" "}
+//           <span className="fw-bold text-danger">{countdown}</span>s
+//         </div>
+//       </div>
+
+//       <Container className="d-flex justify-content-center animate-fade-in print-container">
+//         {/* ✅ REAL WORLD RECEIPT/INVOICE UI */}
+//         <div
+//           className="bg-white border p-4 p-md-5 shadow-sm printable-receipt w-100"
+//           style={{ maxWidth: "800px", borderColor: "#D5D9D9" }}
+//         >
+//           {/* Invoice Header */}
+//           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start border-bottom pb-4 mb-4">
+//             <div className="mb-3 mb-sm-0">
+//               <h2
+//                 className="fw-bold mb-1 d-flex align-items-center gap-2"
+//                 style={{ color: "#0F1111", letterSpacing: "-0.5px" }}
+//               >
+//                 <Building size={28} style={{ color: "#007185" }} />{" "}
+//                 SmartPharmacy
+//               </h2>
+//               <p className="text-muted small mb-0 mt-2">
+//                 123 Health Avenue, Medical District
+//               </p>
+//               <p className="text-muted small mb-0">Bagmati Province, Nepal</p>
+//               <p className="text-muted small mb-0">
+//                 support@smartpharmacy.com | +977-1234567890
+//               </p>
+//             </div>
+//             <div className="text-sm-end text-start">
+//               <h1
+//                 className="fw-bold text-uppercase mb-1"
+//                 style={{
+//                   color: "#565959",
+//                   letterSpacing: "2px",
+//                   fontSize: "2rem",
+//                 }}
+//               >
+//                 Receipt
+//               </h1>
+//               <p className="mb-1 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Order #:</span>
+//                 <span className="font-monospace">
+//                   {order.orderNumber || order._id.slice(-8).toUpperCase()}
+//                 </span>
+//               </p>
+//               <p className="mb-0 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Date:</span>
+//                 {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                   year: "numeric",
+//                   month: "short",
+//                   day: "numeric",
+//                 })}
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Customer & Address Grid */}
+//           <Row className="mb-5 g-4">
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Billed To:
+//               </h6>
+//               <div className="fw-bold text-dark fs-6">
+//                 {order.user?.name || "Customer"}
+//               </div>
+//               <div className="small text-muted">{order.user?.email}</div>
+//             </Col>
+
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Shipped To:
+//               </h6>
+//               <div className="small text-dark lh-base">
+//                 <span className="fw-bold">
+//                   {order.user?.name || "Customer"}
+//                 </span>
+//                 <br />
+//                 {order.shippingAddress?.address}
+//                 <br />
+//                 {order.shippingAddress?.city}, {order.shippingAddress?.country}
+//                 <br />
+//                 {order.shippingAddress?.postalCode}
+//               </div>
+//             </Col>
+
+//             <Col sm={4} className="text-sm-end mt-4 mt-sm-0">
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Payment Details:
+//               </h6>
+//               <div className="small mb-2">
+//                 <span className="text-muted me-2">Method:</span>
+//                 <span className="fw-bold text-dark">{order.paymentMethod}</span>
+//               </div>
+//               <div className="small">
+//                 <span className="text-muted me-2">Status:</span>
+//                 <Badge
+//                   bg={isPaid ? "success" : isCOD ? "info" : "secondary"}
+//                   text={isPaid || isCOD ? "white" : "dark"}
+//                   className="rounded-1 print-badge"
+//                 >
+//                   {isPaid ? "PAID" : isCOD ? "PENDING (COD)" : "UNPAID"}
+//                 </Badge>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           {/* Itemized Table */}
+//           <Table
+//             bordered
+//             hover
+//             responsive
+//             size="sm"
+//             className="mb-4 print-table border-secondary-subtle"
+//           >
+//             <thead style={{ backgroundColor: "#f8f9fa" }}>
+//               <tr className="text-uppercase small text-muted">
+//                 <th className="py-2 px-3 fw-bold">Description</th>
+//                 <th className="py-2 text-center fw-bold" width="12%">
+//                   Qty
+//                 </th>
+//                 <th className="py-2 text-end fw-bold" width="20%">
+//                   Unit Price
+//                 </th>
+//                 <th className="py-2 text-end pe-3 fw-bold" width="20%">
+//                   Amount
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody className="small align-middle">
+//               {order.orderItems?.map((item, index) => (
+//                 <tr key={index} className="print-row">
+//                   <td className="py-3 px-3">
+//                     <span
+//                       className="fw-bold d-block text-dark"
+//                       style={{ fontSize: "0.9rem" }}
+//                     >
+//                       {item.name}
+//                     </span>
+//                     <span
+//                       className="text-muted"
+//                       style={{ fontSize: "0.75rem" }}
+//                     >
+//                       Unit: {item.unit || "Pack"}
+//                       {item.batchNumber ? ` | Batch: ${item.batchNumber}` : ""}
+//                     </span>
+//                   </td>
+//                   <td className="text-center py-3">{item.qty}</td>
+//                   <td className="text-end py-3 text-muted">
+//                     Rs. {Number(item.price).toFixed(2)}
+//                   </td>
+//                   <td className="text-end py-3 pe-3 fw-bold text-dark">
+//                     Rs. {(item.qty * item.price).toFixed(2)}
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </Table>
+
+//           {/* Financials & Footer Notes */}
+//           <Row className="print-avoid-break mt-2">
+//             <Col sm={6}>
+//               <div
+//                 className="p-3 bg-light rounded-1 h-100 border text-muted small lh-base"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <strong className="text-dark d-block mb-1">
+//                   Important Information:
+//                 </strong>
+//                 Please retain this receipt for your records. For any return or
+//                 exchange, this invoice is mandatory. Note that consumable or
+//                 unsealed medicines cannot be returned as per company policy.
+//               </div>
+//             </Col>
+//             <Col sm={6}>
+//               <div
+//                 className="ms-auto"
+//                 style={{ width: "100%", maxWidth: "300px" }}
+//               >
+//                 <Table borderless size="sm" className="text-end mb-0 small">
+//                   <tbody>
+//                     <tr>
+//                       <td className="text-muted pb-2">Items Subtotal:</td>
+//                       <td className="pb-2 text-dark fw-medium">
+//                         Rs. {order.itemsPrice?.toFixed(2)}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-2">Shipping & Handling:</td>
+//                       <td className="pb-2 text-dark fw-medium">
+//                         {order.shippingPrice === 0
+//                           ? "FREE"
+//                           : `Rs. ${order.shippingPrice?.toFixed(2)}`}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-3 border-bottom">
+//                         Tax (13%):
+//                       </td>
+//                       <td className="pb-3 border-bottom text-dark fw-medium">
+//                         Rs. {order.taxPrice?.toFixed(2)}
+//                       </td>
+//                     </tr>
+//                     <tr className="fs-5">
+//                       <td className="pt-3 fw-bold text-dark">Grand Total:</td>
+//                       <td className="pt-3 fw-bold" style={{ color: "#B12704" }}>
+//                         Rs. {order.totalPrice?.toLocaleString()}
+//                       </td>
+//                     </tr>
+//                   </tbody>
+//                 </Table>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           <div className="text-center mt-5 pt-4 border-top text-muted small d-print-block">
+//             Thank you for trusting SmartPharmacy! Wishing you good health.
+//           </div>
+//         </div>
+
+//         {/* Action Buttons (Hidden on Print) */}
+//         <div
+//           className="d-grid gap-3 d-print-none mt-4 mx-auto"
+//           style={{ maxWidth: "400px" }}
+//         >
+//           <Button
+//             variant="outline-dark"
+//             className="rounded-1 fw-bold py-2 d-flex justify-content-center align-items-center bg-white shadow-sm"
+//             style={{ borderColor: "#D5D9D9" }}
+//             onClick={() => window.print()}
+//           >
+//             <Download size={18} className="me-2" /> Download / Print Invoice
+//           </Button>
+
+//           <Button
+//             className="rounded-1 fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center border-0"
+//             style={{ backgroundColor: "#FFD814", color: "#0F1111" }}
+//             onClick={() => navigate("/orders")}
+//           >
+//             Return to My Orders <ArrowRight size={18} className="ms-2" />
+//           </Button>
+//         </div>
+//       </Container>
+
+//       <style>{`
+//         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//         .animate-pulse { animation: pulse 2s infinite; }
+//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+//         /* ✅ BULLETPROOF PRINT STYLES */
+//         @media print {
+//           /* Force colors to print (fixes missing background on badges/headers) */
+//           * {
+//             -webkit-print-color-adjust: exact !important;
+//             print-color-adjust: exact !important;
+//           }
+
+//           /* Hide navigation bars, footers, headers, and our custom action buttons */
+//           nav, header, footer, .d-print-none, .navbar {
+//             display: none !important;
+//           }
+
+//           /* Reset the background color of the whole page so it doesn't waste ink */
+//           body, html, .print-page-bg {
+//             background-color: white !important;
+//             margin: 0 !important;
+//             padding: 0 !important;
+//           }
+
+//           /* Remove container constraints so the receipt naturally fills the paper */
+//           .print-container {
+//             max-width: 100% !important;
+//             width: 100% !important;
+//             padding: 0 !important;
+//             margin: 0 !important;
+//           }
+
+//           /* Strip outer padding and borders on print to look exactly like an A4 document */
+//           .printable-receipt {
+//             border: none !important;
+//             box-shadow: none !important;
+//             padding: 0 !important;
+//             margin: 0 auto !important;
+//             width: 100% !important;
+//             max-width: none !important;
+//           }
+
+//           /* Maintain the internal borders for the table */
+//           .print-table {
+//             border: 1px solid #dee2e6 !important;
+//           }
+
+//           /* Prevent table rows and the final total block from splitting across pages */
+//           tr, .print-avoid-break {
+//             page-break-inside: avoid !important;
+//           }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default PaymentSuccess;
+
+// import React, { useEffect, useState } from "react";
+// import {
+//   Container,
+//   Card,
+//   Button,
+//   Badge,
+//   Spinner,
+//   Row,
+//   Col,
+//   Table,
+// } from "react-bootstrap";
+// import { Link, useSearchParams, useNavigate } from "react-router-dom";
+// import {
+//   CheckCircle,
+//   XCircle,
+//   Download,
+//   ArrowRight,
+//   Clock,
+//   Building,
+// } from "lucide-react";
+// import axios from "axios";
+
+// const PaymentSuccess = () => {
+//   const navigate = useNavigate();
+//   const [searchParams] = useSearchParams();
+
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [order, setOrder] = useState(null);
+//   const [countdown, setCountdown] = useState(15);
+
+//   const pidx = searchParams.get("pidx");
+//   const khaltiStatus = searchParams.get("status");
+//   const transactionId = searchParams.get("transaction_id");
+//   const urlOrderId =
+//     searchParams.get("id") ||
+//     searchParams.get("order_id") ||
+//     searchParams.get("purchase_order_id") ||
+//     searchParams.get("orderId");
+
+//   useEffect(() => {
+//     let isMounted = true;
+
+//     const processPaymentAndFetchOrder = async () => {
+//       try {
+//         setIsLoading(true);
+//         setError(null);
+//         const token = localStorage.getItem("token");
+//         const config = {
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         };
+
+//         if (pidx) {
+//           if (khaltiStatus === "Completed") {
+//             try {
+//               await axios.post(
+//                 "http://localhost:5000/api/payments/khalti-lookup",
+//                 { pidx },
+//                 config,
+//               );
+
+//               await axios.put(
+//                 `http://localhost:5000/api/orders/${urlOrderId}/pay`,
+//                 {
+//                   id: transactionId || pidx,
+//                   status: "COMPLETED",
+//                   update_time: new Date().toISOString(),
+//                   email_address: "khalti_wallet_user",
+//                 },
+//                 config,
+//               );
+
+//               const finalOrderRes = await axios.get(
+//                 `http://localhost:5000/api/orders/${urlOrderId}`,
+//                 config,
+//               );
+//               if (isMounted) setOrder(finalOrderRes.data);
+//             } catch (khaltiErr) {
+//               console.error("Khalti Verification Error:", khaltiErr);
+//               if (isMounted)
+//                 setError(
+//                   "Payment successful, but failed to update receipt. Please contact support.",
+//                 );
+//             }
+//           } else {
+//             if (isMounted)
+//               setError(
+//                 `Khalti Payment Status: ${khaltiStatus || "Failed/Cancelled"}`,
+//               );
+//           }
+//         } else if (urlOrderId) {
+//           const { data } = await axios.get(
+//             `http://localhost:5000/api/orders/${urlOrderId}`,
+//             config,
+//           );
+//           if (isMounted) setOrder(data);
+//         } else {
+//           if (isMounted) setError("No order reference found in URL.");
+//         }
+//       } catch (err) {
+//         console.error("Fetch Error:", err);
+//         if (isMounted) {
+//           setError(
+//             err.response?.data?.message ||
+//               err.message ||
+//               "Failed to load receipt.",
+//           );
+//         }
+//       } finally {
+//         if (isMounted) setIsLoading(false);
+//       }
+//     };
+
+//     if (!order) {
+//       processPaymentAndFetchOrder();
+//     }
+
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [pidx, khaltiStatus, transactionId, urlOrderId, order]);
+
+//   useEffect(() => {
+//     if (order && !error && !isLoading) {
+//       const timer = setInterval(() => {
+//         setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+//       }, 1000);
+
+//       const redirect = setTimeout(() => {
+//         navigate("/orders");
+//       }, 15000);
+
+//       return () => {
+//         clearInterval(timer);
+//         clearTimeout(redirect);
+//       };
+//     }
+//   }, [order, error, isLoading, navigate]);
+
+//   if (isLoading) {
+//     return (
+//       <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
+//         <Spinner
+//           animation="border"
+//           style={{ color: "#007185", width: "3rem", height: "3rem" }}
+//         />
+//         <h5 className="mt-3 text-muted animate-pulse">
+//           Securing your receipt...
+//         </h5>
+//       </Container>
+//     );
+//   }
+
+//   if (error && !order) {
+//     return (
+//       <Container className="d-flex justify-content-center align-items-center min-vh-100">
+//         <Card
+//           className="border-0 shadow-lg rounded-4 text-center p-5"
+//           style={{ maxWidth: "500px" }}
+//         >
+//           <div className="mb-3 text-danger">
+//             <XCircle size={64} />
+//           </div>
+//           <h3 className="fw-bold text-danger mb-3">Payment Notice</h3>
+//           <p className="text-muted mb-4">{error}</p>
+//           <div className="d-grid gap-2">
+//             <Link to="/orders" className="btn btn-primary rounded-1">
+//               View My Orders
+//             </Link>
+//           </div>
+//         </Card>
+//       </Container>
+//     );
+//   }
+
+//   if (!order) return null;
+
+//   const isPaid = order.isPaid;
+//   const isCOD = order.paymentMethod === "COD";
+
+//   // ✅ SAFELY CALCULATE SUBTOTAL IF BACKEND MISSES IT
+//   const calculatedSubtotal =
+//     order.itemsPrice ||
+//     order.orderItems?.reduce((acc, item) => acc + item.price * item.qty, 0) ||
+//     0;
+
+//   let statusIcon = <CheckCircle size={48} strokeWidth={3} />;
+//   let statusColor = "text-success";
+//   let title = "Payment Successful!";
+//   let subtitle = "Thank you for your purchase. Your order is being processed.";
+
+//   if (!isPaid && !isCOD) {
+//     statusIcon = <Clock size={48} strokeWidth={3} />;
+//     statusColor = "text-warning";
+//     title = "Payment Pending / Failed";
+//     subtitle = "Your order is placed but awaiting payment confirmation.";
+//   } else if (!isPaid && isCOD) {
+//     title = "Order Confirmed!";
+//     subtitle = "Your order is placed. Please keep cash ready upon delivery.";
+//   }
+
+//   return (
+//     <div
+//       className="print-page-bg"
+//       style={{
+//         backgroundColor: "#f0f2f2",
+//         minHeight: "100vh",
+//         padding: "40px 0",
+//       }}
+//     >
+//       {/* ✅ FIXED LAYOUT: Changed to flex-column so elements stack vertically */}
+//       <Container className="d-flex flex-column align-items-center animate-fade-in print-container">
+//         {/* Success Notice Header (Hidden on Print) */}
+//         <div className="text-center mb-4 d-print-none">
+//           <div className={`${statusColor} mb-3`}>{statusIcon}</div>
+//           <h2 className="fw-bold mb-2 text-dark">{title}</h2>
+//           <p className="text-muted px-3 mb-3">{subtitle}</p>
+
+//           <div className="d-inline-block px-4 py-2 rounded-pill bg-white border shadow-sm text-muted small fw-medium">
+//             Redirecting to orders in{" "}
+//             <span className="fw-bold text-danger fs-6 mx-1">{countdown}</span>{" "}
+//             seconds
+//           </div>
+//         </div>
+
+//         {/* REAL WORLD RECEIPT/INVOICE UI */}
+//         <div
+//           className="bg-white border p-4 p-md-5 shadow-sm printable-receipt w-100"
+//           style={{ maxWidth: "800px", borderColor: "#D5D9D9" }}
+//         >
+//           {/* Invoice Header */}
+//           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start border-bottom pb-4 mb-4">
+//             <div className="mb-3 mb-sm-0">
+//               <h2
+//                 className="fw-bold mb-1 d-flex align-items-center gap-2"
+//                 style={{ color: "#0F1111", letterSpacing: "-0.5px" }}
+//               >
+//                 <Building size={28} style={{ color: "#007185" }} />{" "}
+//                 SmartPharmacy
+//               </h2>
+//               <p className="text-muted small mb-0 mt-2">
+//                 123 Health Avenue, Medical District
+//               </p>
+//               <p className="text-muted small mb-0">Bagmati Province, Nepal</p>
+//               <p className="text-muted small mb-0">
+//                 support@smartpharmacy.com | +977-1234567890
+//               </p>
+//             </div>
+//             <div className="text-sm-end text-start">
+//               <h1
+//                 className="fw-bold text-uppercase mb-1"
+//                 style={{
+//                   color: "#565959",
+//                   letterSpacing: "2px",
+//                   fontSize: "2rem",
+//                 }}
+//               >
+//                 Receipt
+//               </h1>
+//               <p className="mb-1 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Order #:</span>
+//                 <span className="font-monospace">
+//                   {order.orderNumber || order._id.slice(-8).toUpperCase()}
+//                 </span>
+//               </p>
+//               <p className="mb-0 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Date:</span>
+//                 {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                   year: "numeric",
+//                   month: "short",
+//                   day: "numeric",
+//                 })}
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Customer & Address Grid */}
+//           <Row className="mb-5 g-4">
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Billed To:
+//               </h6>
+//               <div className="fw-bold text-dark fs-6">
+//                 {order.user?.name || "Customer"}
+//               </div>
+//               <div className="small text-muted">{order.user?.email}</div>
+//             </Col>
+
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Shipped To:
+//               </h6>
+//               <div className="small text-dark lh-base">
+//                 <span className="fw-bold">
+//                   {order.user?.name || "Customer"}
+//                 </span>
+//                 <br />
+//                 {order.shippingAddress?.address}
+//                 <br />
+//                 {order.shippingAddress?.city}, {order.shippingAddress?.country}
+//                 <br />
+//                 {order.shippingAddress?.postalCode}
+//               </div>
+//             </Col>
+
+//             <Col sm={4} className="text-sm-end mt-4 mt-sm-0">
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Payment Details:
+//               </h6>
+//               <div className="small mb-2">
+//                 <span className="text-muted me-2">Method:</span>
+//                 <span className="fw-bold text-dark">{order.paymentMethod}</span>
+//               </div>
+//               <div className="small">
+//                 <span className="text-muted me-2">Status:</span>
+//                 <Badge
+//                   bg={isPaid ? "success" : isCOD ? "info" : "secondary"}
+//                   text={isPaid || isCOD ? "white" : "dark"}
+//                   className="rounded-1 print-badge px-2 py-1"
+//                 >
+//                   {isPaid ? "PAID" : isCOD ? "PENDING (COD)" : "UNPAID"}
+//                 </Badge>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           {/* Itemized Table */}
+//           <Table
+//             bordered
+//             hover
+//             responsive
+//             size="sm"
+//             className="mb-4 print-table border-secondary-subtle"
+//           >
+//             <thead style={{ backgroundColor: "#f8f9fa" }}>
+//               <tr className="text-uppercase small text-muted">
+//                 <th className="py-2 px-3 fw-bold border-bottom-0">
+//                   Description
+//                 </th>
+//                 <th
+//                   className="py-2 text-center fw-bold border-bottom-0"
+//                   width="12%"
+//                 >
+//                   Qty
+//                 </th>
+//                 <th
+//                   className="py-2 text-end fw-bold border-bottom-0"
+//                   width="20%"
+//                 >
+//                   Unit Price
+//                 </th>
+//                 <th
+//                   className="py-2 text-end pe-3 fw-bold border-bottom-0"
+//                   width="20%"
+//                 >
+//                   Amount
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody className="small align-middle">
+//               {order.orderItems?.map((item, index) => (
+//                 <tr key={index} className="print-row">
+//                   <td className="py-3 px-3">
+//                     <span
+//                       className="fw-bold d-block text-dark"
+//                       style={{ fontSize: "0.9rem" }}
+//                     >
+//                       {item.name}
+//                     </span>
+//                     <span
+//                       className="text-muted"
+//                       style={{ fontSize: "0.75rem" }}
+//                     >
+//                       Unit: {item.unit || "Pack"}
+//                       {item.batchNumber ? ` | Batch: ${item.batchNumber}` : ""}
+//                     </span>
+//                   </td>
+//                   <td className="text-center py-3">{item.qty}</td>
+//                   <td className="text-end py-3 text-muted">
+//                     Rs. {Number(item.price).toFixed(2)}
+//                   </td>
+//                   <td className="text-end py-3 pe-3 fw-bold text-dark">
+//                     Rs. {(item.qty * item.price).toFixed(2)}
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </Table>
+
+//           {/* Financials & Footer Notes */}
+//           <Row className="print-avoid-break mt-2">
+//             <Col sm={6}>
+//               <div
+//                 className="p-3 bg-light rounded-1 h-100 border text-muted small lh-base"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <strong className="text-dark d-block mb-1">
+//                   Important Information:
+//                 </strong>
+//                 Please retain this receipt for your records. For any return or
+//                 exchange, this invoice is mandatory. Note that consumable or
+//                 unsealed medicines cannot be returned as per company policy.
+//               </div>
+//             </Col>
+//             <Col sm={6}>
+//               <div
+//                 className="ms-auto mt-4 mt-sm-0"
+//                 style={{ width: "100%", maxWidth: "300px" }}
+//               >
+//                 <Table borderless size="sm" className="text-end mb-0 small">
+//                   <tbody>
+//                     <tr>
+//                       <td className="text-muted pb-2">Items Subtotal:</td>
+//                       {/* ✅ Fixed: Shows actual calculated subtotal */}
+//                       <td className="pb-2 text-dark fw-medium">
+//                         Rs. {calculatedSubtotal.toFixed(2)}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-2">Shipping & Handling:</td>
+//                       <td className="pb-2 text-dark fw-medium">
+//                         {order.shippingPrice === 0
+//                           ? "FREE"
+//                           : `Rs. ${order.shippingPrice?.toFixed(2) || "0.00"}`}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-3 border-bottom">
+//                         Tax (13%):
+//                       </td>
+//                       <td className="pb-3 border-bottom text-dark fw-medium">
+//                         Rs. {order.taxPrice?.toFixed(2) || "0.00"}
+//                       </td>
+//                     </tr>
+//                     <tr className="fs-5">
+//                       <td className="pt-3 fw-bold text-dark">Grand Total:</td>
+//                       {/* ✅ Fixed: Strictly enforces 2 decimal places */}
+//                       <td className="pt-3 fw-bold" style={{ color: "#B12704" }}>
+//                         Rs.{" "}
+//                         {order.totalPrice?.toLocaleString("en-US", {
+//                           minimumFractionDigits: 2,
+//                           maximumFractionDigits: 2,
+//                         })}
+//                       </td>
+//                     </tr>
+//                   </tbody>
+//                 </Table>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           <div className="text-center mt-5 pt-4 border-top text-muted small d-print-block">
+//             Thank you for trusting SmartPharmacy! Wishing you good health.
+//           </div>
+//         </div>
+
+//         {/* Action Buttons - Now properly stacked below the receipt! */}
+//         <div
+//           className="d-flex flex-column flex-sm-row justify-content-center gap-3 d-print-none mt-2 w-100"
+//           style={{ maxWidth: "800px" }}
+//         >
+//           <Button
+//             variant="outline-dark"
+//             className="rounded-1 fw-bold px-4 py-2 bg-white shadow-sm border"
+//             style={{ borderColor: "#D5D9D9" }}
+//             onClick={() => window.print()}
+//           >
+//             <Download size={18} className="me-2" /> Download Invoice
+//           </Button>
+
+//           <Button
+//             className="rounded-1 fw-bold px-4 py-2 shadow-sm border-0 d-flex align-items-center justify-content-center"
+//             style={{ backgroundColor: "#FFD814", color: "#0F1111" }}
+//             onClick={() => navigate("/orders")}
+//           >
+//             Return to My Orders <ArrowRight size={18} className="ms-2" />
+//           </Button>
+//         </div>
+//       </Container>
+
+//       <style>{`
+//         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//         .animate-pulse { animation: pulse 2s infinite; }
+//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+//         /* ✅ BULLETPROOF PRINT STYLES */
+//         @media print {
+//           * {
+//             -webkit-print-color-adjust: exact !important;
+//             print-color-adjust: exact !important;
+//           }
+
+//           nav, header, footer, .d-print-none, .navbar {
+//             display: none !important;
+//           }
+
+//           body, html, .print-page-bg {
+//             background-color: white !important;
+//             margin: 0 !important;
+//             padding: 0 !important;
+//           }
+
+//           .print-container {
+//             max-width: 100% !important;
+//             width: 100% !important;
+//             padding: 0 !important;
+//             margin: 0 !important;
+//             display: block !important; /* Disables flexbox for printing to prevent shrinking */
+//           }
+
+//           .printable-receipt {
+//             border: none !important;
+//             box-shadow: none !important;
+//             padding: 0 !important;
+//             margin: 0 auto !important;
+//             width: 100% !important;
+//             max-width: none !important;
+//           }
+
+//           .print-table {
+//             border: 1px solid #dee2e6 !important;
+//           }
+
+//           tr, .print-avoid-break {
+//             page-break-inside: avoid !important;
+//           }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default PaymentSuccess;
+
+// import React, { useEffect, useState } from "react";
+// import {
+//   Container,
+//   Card,
+//   Button,
+//   Badge,
+//   Spinner,
+//   Row,
+//   Col,
+//   Table,
+// } from "react-bootstrap";
+// import { Link, useSearchParams, useNavigate } from "react-router-dom";
+// import {
+//   CheckCircle,
+//   XCircle,
+//   Download,
+//   ArrowRight,
+//   Receipt,
+//   MapPin,
+//   User,
+//   Clock,
+//   Building,
+// } from "lucide-react";
+// import axios from "axios";
+
+// const PaymentSuccess = () => {
+//   const navigate = useNavigate();
+//   const [searchParams] = useSearchParams();
+
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [order, setOrder] = useState(null);
+//   const [countdown, setCountdown] = useState(15);
+
+//   // Safely extract all possible URL parameters
+//   const pidx = searchParams.get("pidx");
+//   const khaltiStatus = searchParams.get("status");
+//   const transactionId = searchParams.get("transaction_id");
+//   const urlOrderId =
+//     searchParams.get("id") ||
+//     searchParams.get("order_id") ||
+//     searchParams.get("purchase_order_id") ||
+//     searchParams.get("orderId");
+
+//   useEffect(() => {
+//     let isMounted = true;
+
+//     const processPaymentAndFetchOrder = async () => {
+//       try {
+//         setIsLoading(true);
+//         setError(null);
+//         const token = localStorage.getItem("token");
+//         const config = {
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         };
+
+//         // --- SCENARIO A: KHALTI REDIRECT ---
+//         if (pidx) {
+//           if (khaltiStatus === "Completed" || !khaltiStatus) {
+//             try {
+//               // 1. Lookup Khalti Payment
+//               const { data } = await axios.post(
+//                 "http://localhost:5000/api/payments/khalti-lookup",
+//                 { pidx },
+//                 config,
+//               );
+
+//               // 2. Identify the Order ID (Fallback to data.order._id if URL misses it)
+//               const actualOrderId =
+//                 urlOrderId || (data.order && data.order._id) || data.orderId;
+
+//               if (actualOrderId) {
+//                 // 3. Mark as Paid in Database
+//                 await axios.put(
+//                   `http://localhost:5000/api/orders/${actualOrderId}/pay`,
+//                   {
+//                     id: transactionId || pidx,
+//                     status: "COMPLETED",
+//                     update_time: new Date().toISOString(),
+//                     email_address: "khalti_wallet_user",
+//                   },
+//                   config,
+//                 );
+
+//                 // 4. Fetch the fully updated order for the receipt
+//                 const finalOrderRes = await axios.get(
+//                   `http://localhost:5000/api/orders/${actualOrderId}`,
+//                   config,
+//                 );
+//                 if (isMounted) setOrder(finalOrderRes.data);
+//               } else {
+//                 if (isMounted)
+//                   setError(
+//                     "Payment verified, but could not locate the associated order.",
+//                   );
+//               }
+//             } catch (khaltiErr) {
+//               console.error("Khalti Verification Error:", khaltiErr);
+//               // Fallback: If Khalti fails but we have the order ID, just fetch the order anyway
+//               if (urlOrderId && isMounted) {
+//                 const fallbackRes = await axios.get(
+//                   `http://localhost:5000/api/orders/${urlOrderId}`,
+//                   config,
+//                 );
+//                 setOrder(fallbackRes.data);
+//               } else if (isMounted) {
+//                 setError(
+//                   "Payment successful, but failed to sync receipt with database. Please contact support.",
+//                 );
+//               }
+//             }
+//           } else {
+//             if (isMounted)
+//               setError(
+//                 `Khalti Payment Status: ${khaltiStatus || "Failed/Cancelled"}`,
+//               );
+//           }
+//         }
+
+//         // --- SCENARIO B: STRIPE, COD, OR DIRECT HISTORY VIEW ---
+//         else if (urlOrderId) {
+//           const { data } = await axios.get(
+//             `http://localhost:5000/api/orders/${urlOrderId}`,
+//             config,
+//           );
+//           if (isMounted) setOrder(data);
+//         }
+
+//         // --- SCENARIO C: NO PARAMETERS FOUND ---
+//         else {
+//           if (isMounted)
+//             setError(
+//               "No order reference found in URL. Please check your order history.",
+//             );
+//         }
+//       } catch (err) {
+//         console.error("Fetch Error:", err);
+//         if (isMounted) {
+//           setError(
+//             err.response?.data?.message ||
+//               err.message ||
+//               "Failed to load receipt.",
+//           );
+//         }
+//       } finally {
+//         if (isMounted) setIsLoading(false);
+//       }
+//     };
+
+//     if (!order) {
+//       processPaymentAndFetchOrder();
+//     }
+
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [pidx, khaltiStatus, transactionId, urlOrderId, order]);
+
+//   // Auto-redirect countdown
+//   useEffect(() => {
+//     if (order && !error && !isLoading) {
+//       const timer = setInterval(() => {
+//         setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+//       }, 1000);
+
+//       const redirect = setTimeout(() => {
+//         navigate("/orders");
+//       }, 15000);
+
+//       return () => {
+//         clearInterval(timer);
+//         clearTimeout(redirect);
+//       };
+//     }
+//   }, [order, error, isLoading, navigate]);
+
+//   // --- RENDER: LOADING ---
+//   if (isLoading) {
+//     return (
+//       <div
+//         className="d-flex flex-column justify-content-center align-items-center min-vh-100"
+//         style={{ backgroundColor: "#f0f2f2" }}
+//       >
+//         <Spinner
+//           animation="border"
+//           style={{ color: "#007185", width: "3rem", height: "3rem" }}
+//         />
+//         <h5 className="mt-3 text-muted animate-pulse">
+//           Securing your receipt...
+//         </h5>
+//       </div>
+//     );
+//   }
+
+//   // --- RENDER: ERROR ---
+//   if (error && !order) {
+//     return (
+//       <div
+//         style={{
+//           backgroundColor: "#f0f2f2",
+//           minHeight: "100vh",
+//           display: "flex",
+//           alignItems: "center",
+//         }}
+//       >
+//         <Container className="d-flex justify-content-center align-items-center">
+//           <Card
+//             className="border-0 shadow-sm rounded-1 text-center p-5 bg-white"
+//             style={{ maxWidth: "500px", width: "100%" }}
+//           >
+//             <div className="mb-3 text-danger">
+//               <XCircle size={64} />
+//             </div>
+//             <h3 className="fw-bold text-danger mb-3">Payment Notice</h3>
+//             <p className="text-muted mb-4">{error}</p>
+//             <div className="d-grid gap-2">
+//               <Link
+//                 to="/orders"
+//                 className="btn rounded-1 fw-bold text-white shadow-sm py-2"
+//                 style={{ backgroundColor: "#007185" }}
+//               >
+//                 View My Orders
+//               </Link>
+//             </div>
+//           </Card>
+//         </Container>
+//       </div>
+//     );
+//   }
+
+//   if (!order) return null;
+
+//   // ----------------------------------------------------
+//   // FINANCIAL CALCULATIONS (Strict Formatting)
+//   // ----------------------------------------------------
+//   const isPaid = order.isPaid;
+//   const isCOD = order.paymentMethod === "COD";
+
+//   // Force strict number fallback in case backend misses itemsPrice
+//   const itemsPriceNum = Number(order.itemsPrice);
+//   const calculatedSubtotal =
+//     itemsPriceNum > 0
+//       ? itemsPriceNum
+//       : order.orderItems?.reduce(
+//           (sum, item) => sum + Number(item.price) * Number(item.qty),
+//           0,
+//         ) || 0;
+
+//   const shipping = Number(order.shippingPrice) || 0;
+//   const tax = Number(order.taxPrice) || 0;
+//   const total = Number(order.totalPrice) || 0;
+
+//   let statusIcon = <CheckCircle size={48} strokeWidth={3} />;
+//   let statusColor = "text-success";
+//   let title = "Payment Successful!";
+//   let subtitle = "Thank you for your purchase. Your order is being processed.";
+
+//   if (!isPaid && !isCOD) {
+//     statusIcon = <Clock size={48} strokeWidth={3} />;
+//     statusColor = "text-warning";
+//     title = "Payment Pending / Failed";
+//     subtitle = "Your order is placed but awaiting payment confirmation.";
+//   } else if (!isPaid && isCOD) {
+//     title = "Order Confirmed!";
+//     subtitle = "Your order is placed. Please keep cash ready upon delivery.";
+//   }
+
+//   return (
+//     <div
+//       className="print-page-bg"
+//       style={{
+//         backgroundColor: "#f0f2f2",
+//         minHeight: "100vh",
+//         padding: "40px 0",
+//       }}
+//     >
+//       {/* ✅ FIXED LAYOUT: d-flex flex-column forces the items to stack vertically instead of side-by-side */}
+//       <Container className="d-flex flex-column align-items-center animate-fade-in print-container">
+//         {/* Success Notice Header (Hidden on Print) */}
+//         <div className="text-center mb-4 d-print-none w-100">
+//           <div className={`${statusColor} mb-3`}>{statusIcon}</div>
+//           <h2 className="fw-bold mb-2 text-dark">{title}</h2>
+//           <p className="text-muted px-3 mb-3">{subtitle}</p>
+
+//           <div className="d-inline-block px-4 py-2 rounded-pill bg-white border shadow-sm text-muted small fw-medium">
+//             Redirecting to orders in{" "}
+//             <span className="fw-bold text-danger fs-6 mx-1">{countdown}</span>{" "}
+//             seconds
+//           </div>
+//         </div>
+
+//         {/* REAL WORLD RECEIPT/INVOICE UI */}
+//         <div
+//           className="bg-white border p-4 p-md-5 shadow-sm printable-receipt w-100"
+//           style={{ maxWidth: "800px", borderColor: "#D5D9D9" }}
+//         >
+//           {/* Invoice Header */}
+//           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start border-bottom pb-4 mb-4">
+//             <div className="mb-3 mb-sm-0">
+//               <h2
+//                 className="fw-bold mb-1 d-flex align-items-center gap-2"
+//                 style={{ color: "#0F1111", letterSpacing: "-0.5px" }}
+//               >
+//                 <Building size={28} style={{ color: "#007185" }} />{" "}
+//                 SmartPharmacy
+//               </h2>
+//               <p className="text-muted small mb-0 mt-2">
+//                 123 Health Avenue, Medical District
+//               </p>
+//               <p className="text-muted small mb-0">Bagmati Province, Nepal</p>
+//               <p className="text-muted small mb-0">
+//                 support@smartpharmacy.com | +977-1234567890
+//               </p>
+//             </div>
+//             <div className="text-sm-end text-start">
+//               <h1
+//                 className="fw-bold text-uppercase mb-1"
+//                 style={{
+//                   color: "#565959",
+//                   letterSpacing: "2px",
+//                   fontSize: "2rem",
+//                 }}
+//               >
+//                 Receipt
+//               </h1>
+//               <p className="mb-1 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Order #:</span>
+//                 <span className="font-monospace">
+//                   {order.orderNumber || order._id.slice(-8).toUpperCase()}
+//                 </span>
+//               </p>
+//               <p className="mb-0 text-dark small">
+//                 <span className="fw-bold text-muted me-2">Date:</span>
+//                 {new Date(order.createdAt).toLocaleDateString("en-US", {
+//                   year: "numeric",
+//                   month: "short",
+//                   day: "numeric",
+//                 })}
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Customer & Address Grid */}
+//           <Row className="mb-5 g-4">
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Billed To:
+//               </h6>
+//               <div className="fw-bold text-dark fs-6">
+//                 {order.user?.name || "Customer"}
+//               </div>
+//               <div className="small text-muted">{order.user?.email}</div>
+//             </Col>
+
+//             <Col sm={4}>
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Shipped To:
+//               </h6>
+//               <div className="small text-dark lh-base">
+//                 <span className="fw-bold">
+//                   {order.user?.name || "Customer"}
+//                 </span>
+//                 <br />
+//                 {order.shippingAddress?.address}
+//                 <br />
+//                 {order.shippingAddress?.city}, {order.shippingAddress?.country}
+//                 <br />
+//                 {order.shippingAddress?.postalCode}
+//               </div>
+//             </Col>
+
+//             <Col sm={4} className="text-sm-end mt-4 mt-sm-0">
+//               <h6
+//                 className="text-muted text-uppercase small fw-bold mb-2"
+//                 style={{ letterSpacing: "0.5px" }}
+//               >
+//                 Payment Details:
+//               </h6>
+//               <div className="small mb-2">
+//                 <span className="text-muted me-2">Method:</span>
+//                 <span className="fw-bold text-dark">{order.paymentMethod}</span>
+//               </div>
+//               <div className="small">
+//                 <span className="text-muted me-2">Status:</span>
+//                 <Badge
+//                   bg={isPaid ? "success" : isCOD ? "info" : "secondary"}
+//                   text={isPaid || isCOD ? "white" : "dark"}
+//                   className="rounded-1 print-badge px-2 py-1"
+//                 >
+//                   {isPaid ? "PAID" : isCOD ? "PENDING (COD)" : "UNPAID"}
+//                 </Badge>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           {/* Itemized Table */}
+//           <Table
+//             bordered
+//             hover
+//             responsive
+//             size="sm"
+//             className="mb-4 print-table border-secondary-subtle"
+//           >
+//             <thead style={{ backgroundColor: "#f8f9fa" }}>
+//               <tr className="text-uppercase small text-muted">
+//                 <th className="py-2 px-3 fw-bold border-bottom-0">
+//                   Description
+//                 </th>
+//                 <th
+//                   className="py-2 text-center fw-bold border-bottom-0"
+//                   width="12%"
+//                 >
+//                   Qty
+//                 </th>
+//                 <th
+//                   className="py-2 text-end fw-bold border-bottom-0"
+//                   width="20%"
+//                 >
+//                   Unit Price
+//                 </th>
+//                 <th
+//                   className="py-2 text-end pe-3 fw-bold border-bottom-0"
+//                   width="20%"
+//                 >
+//                   Amount
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody className="small align-middle">
+//               {order.orderItems?.map((item, index) => (
+//                 <tr key={index} className="print-row">
+//                   <td className="py-3 px-3">
+//                     <span
+//                       className="fw-bold d-block text-dark"
+//                       style={{ fontSize: "0.9rem" }}
+//                     >
+//                       {item.name}
+//                     </span>
+//                     <span
+//                       className="text-muted"
+//                       style={{ fontSize: "0.75rem" }}
+//                     >
+//                       Unit: {item.unit || "Pack"}
+//                       {item.batchNumber ? ` | Batch: ${item.batchNumber}` : ""}
+//                     </span>
+//                   </td>
+//                   <td className="text-center py-3">{item.qty}</td>
+//                   <td className="text-end py-3 text-muted">
+//                     Rs. {Number(item.price).toFixed(2)}
+//                   </td>
+//                   <td className="text-end py-3 pe-3 fw-bold text-dark">
+//                     Rs. {(item.qty * item.price).toFixed(2)}
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </Table>
+
+//           {/* Financials & Footer Notes */}
+//           <Row className="print-avoid-break mt-2">
+//             <Col sm={6}>
+//               <div
+//                 className="p-3 bg-light rounded-1 h-100 border text-muted small lh-base"
+//                 style={{ borderColor: "#D5D9D9" }}
+//               >
+//                 <strong className="text-dark d-block mb-1">
+//                   Important Information:
+//                 </strong>
+//                 Please retain this receipt for your records. For any return or
+//                 exchange, this invoice is mandatory. Note that consumable or
+//                 unsealed medicines cannot be returned as per company policy.
+//               </div>
+//             </Col>
+//             <Col sm={6}>
+//               <div
+//                 className="ms-auto mt-4 mt-sm-0"
+//                 style={{ width: "100%", maxWidth: "300px" }}
+//               >
+//                 <Table borderless size="sm" className="text-end mb-0 small">
+//                   <tbody>
+//                     <tr>
+//                       <td className="text-muted pb-2">Items Subtotal:</td>
+//                       {/* ✅ Fixed: Shows actual calculated subtotal */}
+//                       <td className="pb-2 text-dark fw-medium">
+//                         Rs. {calculatedSubtotal.toFixed(2)}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-2">Shipping & Handling:</td>
+//                       <td className="pb-2 text-dark fw-medium">
+//                         {shipping === 0 ? "FREE" : `Rs. ${shipping.toFixed(2)}`}
+//                       </td>
+//                     </tr>
+//                     <tr>
+//                       <td className="text-muted pb-3 border-bottom">
+//                         Tax (13%):
+//                       </td>
+//                       <td className="pb-3 border-bottom text-dark fw-medium">
+//                         Rs. {tax.toFixed(2)}
+//                       </td>
+//                     </tr>
+//                     <tr className="fs-5">
+//                       <td className="pt-3 fw-bold text-dark">Grand Total:</td>
+//                       {/* ✅ Fixed: Strictly enforces 2 decimal places */}
+//                       <td className="pt-3 fw-bold" style={{ color: "#B12704" }}>
+//                         Rs.{" "}
+//                         {total.toLocaleString("en-US", {
+//                           minimumFractionDigits: 2,
+//                           maximumFractionDigits: 2,
+//                         })}
+//                       </td>
+//                     </tr>
+//                   </tbody>
+//                 </Table>
+//               </div>
+//             </Col>
+//           </Row>
+
+//           <div className="text-center mt-5 pt-4 border-top text-muted small d-print-block">
+//             Thank you for trusting SmartPharmacy! Wishing you good health.
+//           </div>
+//         </div>
+
+//         {/* ✅ FIXED LAYOUT: Action Buttons now stack horizontally under the receipt instead of next to it */}
+//         <div
+//           className="d-flex flex-column flex-sm-row justify-content-center gap-3 d-print-none mt-2 w-100"
+//           style={{ maxWidth: "800px" }}
+//         >
+//           <Button
+//             variant="outline-dark"
+//             className="rounded-1 fw-bold px-4 py-3 bg-white shadow-sm border d-flex align-items-center justify-content-center flex-grow-1"
+//             style={{ borderColor: "#D5D9D9" }}
+//             onClick={() => window.print()}
+//           >
+//             <Download size={18} className="me-2" /> Download / Print Invoice
+//           </Button>
+
+//           <Button
+//             className="rounded-1 fw-bold px-4 py-3 shadow-sm border-0 d-flex align-items-center justify-content-center flex-grow-1"
+//             style={{ backgroundColor: "#FFD814", color: "#0F1111" }}
+//             onClick={() => navigate("/orders")}
+//           >
+//             Return to My Orders <ArrowRight size={18} className="ms-2" />
+//           </Button>
+//         </div>
+//       </Container>
+
+//       <style>{`
+//         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+//         .animate-pulse { animation: pulse 2s infinite; }
+//         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+//         /* ✅ BULLETPROOF PRINT STYLES */
+//         @media print {
+//           * {
+//             -webkit-print-color-adjust: exact !important;
+//             print-color-adjust: exact !important;
+//           }
+//           nav, header, footer, .d-print-none, .navbar {
+//             display: none !important;
+//           }
+//           body, html, .print-page-bg {
+//             background-color: white !important;
+//             margin: 0 !important;
+//             padding: 0 !important;
+//           }
+//           .print-container {
+//             max-width: 100% !important;
+//             width: 100% !important;
+//             padding: 0 !important;
+//             margin: 0 !important;
+//             display: block !important;
+//           }
+//           .printable-receipt {
+//             border: none !important;
+//             box-shadow: none !important;
+//             padding: 0 !important;
+//             margin: 0 auto !important;
+//             width: 100% !important;
+//             max-width: none !important;
+//           }
+//           .print-table {
+//             border: 1px solid #dee2e6 !important;
+//           }
+//           tr, .print-avoid-break {
+//             page-break-inside: avoid !important;
+//           }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default PaymentSuccess;
+
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -1497,8 +2033,9 @@ import {
   Spinner,
   Row,
   Col,
+  Table,
 } from "react-bootstrap";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
   CheckCircle,
   XCircle,
@@ -1513,25 +2050,28 @@ import {
 import axios from "axios";
 
 const PaymentSuccess = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // State for handling verification status
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [order, setOrder] = useState(null);
+  const [countdown, setCountdown] = useState(15);
 
-  // Get params from URL
-  const pidx = searchParams.get("pidx"); // Khalti Transaction ID
+  // Safely extract all possible URL parameters
+  const pidx = searchParams.get("pidx");
+  const khaltiStatus = searchParams.get("status");
+  const transactionId = searchParams.get("transaction_id");
   const urlOrderId =
     searchParams.get("id") ||
     searchParams.get("order_id") ||
-    searchParams.get("purchase_order_id");
+    searchParams.get("purchase_order_id") ||
+    searchParams.get("orderId");
 
-  // --- 1. FETCH & VERIFY EFFECT ---
   useEffect(() => {
     let isMounted = true;
 
-    const fetchOrVerifyOrder = async () => {
+    const processPaymentAndFetchOrder = async () => {
       try {
         setIsLoading(true);
         setError(null);
@@ -1543,57 +2083,88 @@ const PaymentSuccess = () => {
           },
         };
 
-        // Scenario A: Coming back from Khalti Payment
+        // --- SCENARIO A: KHALTI REDIRECT ---
         if (pidx) {
-          try {
-            const { data } = await axios.post(
-              "http://localhost:5000/api/payments/khalti-lookup",
-              { pidx },
-              config,
-            );
+          if (khaltiStatus === "Completed" || !khaltiStatus) {
+            try {
+              // 1. Lookup Khalti Payment
+              const { data } = await axios.post(
+                "http://localhost:5000/api/payments/khalti-lookup",
+                { pidx },
+                config,
+              );
 
-            if (data.success && data.order && isMounted) {
-              setOrder(data.order);
-            } else if (urlOrderId && isMounted) {
-              // Fallback: Khalti failed, but we have the order ID, so just fetch the order
-              const orderRes = await axios.get(
-                `http://localhost:5000/api/orders/${urlOrderId}`,
-                config,
-              );
-              setOrder(orderRes.data);
-            } else if (isMounted) {
-              setError(data.message || "Payment verification failed.");
+              // 2. Identify the Order ID (Fallback to data.order._id if URL misses it)
+              const actualOrderId =
+                urlOrderId || (data.order && data.order._id) || data.orderId;
+
+              if (actualOrderId) {
+                // 3. Mark as Paid in Database
+                await axios.put(
+                  `http://localhost:5000/api/orders/${actualOrderId}/pay`,
+                  {
+                    id: transactionId || pidx,
+                    status: "COMPLETED",
+                    update_time: new Date().toISOString(),
+                    email_address: "khalti_wallet_user",
+                  },
+                  config,
+                );
+
+                // 4. Fetch the fully updated order for the receipt
+                const finalOrderRes = await axios.get(
+                  `http://localhost:5000/api/orders/${actualOrderId}`,
+                  config,
+                );
+                if (isMounted) setOrder(finalOrderRes.data);
+              } else {
+                if (isMounted)
+                  setError(
+                    "Payment verified, but could not locate the associated order.",
+                  );
+              }
+            } catch (khaltiErr) {
+              console.error("Khalti Verification Error:", khaltiErr);
+              // Fallback: If Khalti fails but we have the order ID, just fetch the order anyway
+              if (urlOrderId && isMounted) {
+                const fallbackRes = await axios.get(
+                  `http://localhost:5000/api/orders/${urlOrderId}`,
+                  config,
+                );
+                setOrder(fallbackRes.data);
+              } else if (isMounted) {
+                setError(
+                  "Payment successful, but failed to sync receipt with database. Please contact support.",
+                );
+              }
             }
-          } catch (khaltiErr) {
-            console.error("Khalti Error:", khaltiErr);
-            // If Khalti lookup fails completely, try to load the order anyway if we have the ID
-            if (urlOrderId && isMounted) {
-              const orderRes = await axios.get(
-                `http://localhost:5000/api/orders/${urlOrderId}`,
-                config,
+          } else {
+            if (isMounted)
+              setError(
+                `Khalti Payment Status: ${khaltiStatus || "Failed/Cancelled"}`,
               );
-              setOrder(orderRes.data);
-            } else if (isMounted) {
-              setError("Failed to verify payment with Khalti.");
-            }
           }
         }
-        // Scenario B: Viewing an existing order (from Order History)
+
+        // --- SCENARIO B: STRIPE, COD, OR DIRECT HISTORY VIEW ---
         else if (urlOrderId) {
           const { data } = await axios.get(
             `http://localhost:5000/api/orders/${urlOrderId}`,
             config,
           );
-          if (isMounted) {
-            setOrder(data);
-          }
-        } else {
-          if (isMounted) setError("No order reference found in URL.");
+          if (isMounted) setOrder(data);
+        }
+
+        // --- SCENARIO C: NO PARAMETERS FOUND ---
+        else {
+          if (isMounted)
+            setError(
+              "No order reference found in URL. Please check your order history.",
+            );
         }
       } catch (err) {
         console.error("Fetch Error:", err);
         if (isMounted) {
-          // ✅ FIX: Now it will ALWAYS set an error if it fails, preventing a blank page
           setError(
             err.response?.data?.message ||
               err.message ||
@@ -1606,229 +2177,453 @@ const PaymentSuccess = () => {
     };
 
     if (!order) {
-      fetchOrVerifyOrder();
+      processPaymentAndFetchOrder();
     }
 
     return () => {
       isMounted = false;
     };
-  }, [pidx, urlOrderId, order]);
+  }, [pidx, khaltiStatus, transactionId, urlOrderId, order]);
 
-  // --- 2. RENDER: LOADING STATE ---
+  // Auto-redirect countdown
+  useEffect(() => {
+    if (order && !error && !isLoading) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+
+      const redirect = setTimeout(() => {
+        navigate("/orders");
+      }, 15000);
+
+      return () => {
+        clearInterval(timer);
+        clearTimeout(redirect);
+      };
+    }
+  }, [order, error, isLoading, navigate]);
+
+  // --- RENDER: LOADING ---
   if (isLoading) {
     return (
-      <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100">
+      <div
+        className="d-flex flex-column justify-content-center align-items-center min-vh-100"
+        style={{ backgroundColor: "#f0f2f2" }}
+      >
         <Spinner
           animation="border"
-          variant="primary"
-          style={{ width: "3rem", height: "3rem" }}
+          style={{ color: "#007185", width: "3rem", height: "3rem" }}
         />
-        <h5 className="mt-3 text-muted animate-pulse">Loading Receipt...</h5>
-      </Container>
+        <h5 className="mt-3 text-muted animate-pulse">
+          Securing your receipt...
+        </h5>
+      </div>
     );
   }
 
-  // --- 3. RENDER: ERROR STATE ---
+  // --- RENDER: ERROR ---
   if (error && !order) {
     return (
-      <Container className="d-flex justify-content-center align-items-center min-vh-100">
-        <Card
-          className="border-0 shadow-lg rounded-4 text-center p-5"
-          style={{ maxWidth: "500px" }}
-        >
-          <div className="mb-3 text-danger">
-            <XCircle size={64} />
-          </div>
-          <h3 className="fw-bold text-danger mb-3">Error</h3>
-          <p className="text-muted mb-4">{error}</p>
-          <div className="d-grid gap-2">
-            <Link to="/orders" className="btn btn-primary rounded-pill">
-              View My Orders
-            </Link>
-          </div>
-        </Card>
-      </Container>
+      <div
+        style={{
+          backgroundColor: "#f0f2f2",
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Container className="d-flex justify-content-center align-items-center">
+          <Card
+            className="border-0 shadow-sm rounded-1 text-center p-5 bg-white"
+            style={{ maxWidth: "500px", width: "100%" }}
+          >
+            <div className="mb-3 text-danger">
+              <XCircle size={64} />
+            </div>
+            <h3 className="fw-bold text-danger mb-3">Payment Notice</h3>
+            <p className="text-muted mb-4">{error}</p>
+            <div className="d-grid gap-2">
+              <Link
+                to="/orders"
+                className="btn rounded-1 fw-bold text-white shadow-sm py-2"
+                style={{ backgroundColor: "#007185" }}
+              >
+                View My Orders
+              </Link>
+            </div>
+          </Card>
+        </Container>
+      </div>
     );
   }
 
-  // Fallback Catch-all for blank page prevention
-  if (!order) {
-    return (
-      <Container className="d-flex justify-content-center align-items-center min-vh-100">
-        <h5 className="text-muted">Order details could not be loaded.</h5>
-      </Container>
-    );
-  }
+  if (!order) return null;
 
-  // --- DYNAMIC UI LOGIC based on actual DB status ---
+  // ----------------------------------------------------
+  // FINANCIAL CALCULATIONS (Strict Formatting)
+  // ----------------------------------------------------
   const isPaid = order.isPaid;
   const isCOD = order.paymentMethod === "COD";
 
+  // Force strict number fallback in case backend misses itemsPrice
+  const itemsPriceNum = Number(order.itemsPrice);
+  const calculatedSubtotal =
+    itemsPriceNum > 0
+      ? itemsPriceNum
+      : order.orderItems?.reduce(
+          (sum, item) => sum + Number(item.price) * Number(item.qty),
+          0,
+        ) || 0;
+
+  const shipping = Number(order.shippingPrice) || 0;
+  const tax = Number(order.taxPrice) || 0;
+  const total = Number(order.totalPrice) || 0;
+
   let statusIcon = <CheckCircle size={48} strokeWidth={3} />;
-  let statusColor = "bg-success";
+  let statusColor = "text-success";
   let title = "Payment Successful!";
   let subtitle = "Thank you for your purchase. Your order is being processed.";
 
   if (!isPaid && !isCOD) {
     statusIcon = <Clock size={48} strokeWidth={3} />;
-    statusColor = "bg-warning text-dark";
-    title = "Payment Pending / Failed!";
+    statusColor = "text-warning";
+    title = "Payment Pending / Failed";
     subtitle = "Your order is placed but awaiting payment confirmation.";
   } else if (!isPaid && isCOD) {
     title = "Order Confirmed!";
     subtitle = "Your order is placed. Please keep cash ready upon delivery.";
   }
 
-  // --- 4. RENDER: RECEIPT STATE ---
   return (
-    <Container className="d-flex justify-content-center align-items-center min-vh-100 py-5 animate-fade-in">
-      <Card
-        className="border-0 shadow-lg rounded-4 p-4 p-md-5 position-relative overflow-hidden"
-        style={{ maxWidth: "600px", width: "100%" }}
-      >
-        {/* Dynamic Header */}
-        <div className="text-center mb-4">
-          <div
-            className={`${statusColor} ${!isPaid && !isCOD ? "" : "text-white"} rounded-circle d-inline-flex p-3 shadow-sm mb-3`}
-          >
-            {statusIcon}
-          </div>
+    <div
+      className="print-page-bg"
+      style={{
+        backgroundColor: "#f0f2f2",
+        minHeight: "100vh",
+        padding: "40px 0",
+      }}
+    >
+      {/* ✅ FIXED LAYOUT: d-flex flex-column forces the items to stack vertically instead of side-by-side */}
+      <Container className="d-flex flex-column align-items-center animate-fade-in print-container">
+        {/* Success Notice Header (Hidden on Print) */}
+        <div className="text-center mb-4 d-print-none w-100">
+          <div className={`${statusColor} mb-3`}>{statusIcon}</div>
           <h2 className="fw-bold mb-2 text-dark">{title}</h2>
-          <p className="text-muted px-3">{subtitle}</p>
+          <p className="text-muted px-3 mb-3">{subtitle}</p>
+
+          <div className="d-inline-block px-4 py-2 rounded-pill bg-white border shadow-sm text-muted small fw-medium">
+            Redirecting to orders in{" "}
+            <span className="fw-bold text-danger fs-6 mx-1">{countdown}</span>{" "}
+            seconds
+          </div>
         </div>
 
-        {/* Detailed Receipt Card */}
-        <div className="bg-light bg-opacity-50 border border-light-subtle p-4 rounded-4 mb-4 shadow-sm">
-          {/* Company Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-10">
-            <div className="d-flex align-items-center gap-2 text-primary">
-              <Building size={24} />
-              <span className="fw-bold fs-5 tracking-wider">PharmaStore</span>
+        {/* REAL WORLD RECEIPT/INVOICE UI */}
+        <div
+          className="bg-white border p-4 p-md-5 shadow-sm printable-receipt w-100"
+          style={{ maxWidth: "800px", borderColor: "#D5D9D9" }}
+        >
+          {/* Invoice Header */}
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start border-bottom pb-4 mb-4">
+            <div className="mb-3 mb-sm-0">
+              <h2
+                className="fw-bold mb-1 d-flex align-items-center gap-2"
+                style={{ color: "#0F1111", letterSpacing: "-0.5px" }}
+              >
+                <Building size={28} style={{ color: "#007185" }} />{" "}
+                SmartPharmacy
+              </h2>
+              <p className="text-muted small mb-0 mt-2">
+                123 Health Avenue, Medical District
+              </p>
+              <p className="text-muted small mb-0">Bagmati Province, Nepal</p>
+              <p className="text-muted small mb-0">
+                support@smartpharmacy.com | +977-1234567890
+              </p>
             </div>
-            <Receipt size={24} className="text-muted opacity-50" />
+            <div className="text-sm-end text-start">
+              <h1
+                className="fw-bold text-uppercase mb-1"
+                style={{
+                  color: "#565959",
+                  letterSpacing: "2px",
+                  fontSize: "2rem",
+                }}
+              >
+                Receipt
+              </h1>
+              <p className="mb-1 text-dark small">
+                <span className="fw-bold text-muted me-2">Order #:</span>
+                <span className="font-monospace">
+                  {order.orderNumber || order._id.slice(-8).toUpperCase()}
+                </span>
+              </p>
+              <p className="mb-0 text-dark small">
+                <span className="fw-bold text-muted me-2">Date:</span>
+                {new Date(order.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
           </div>
 
-          {/* Customer & Address Info */}
-          <Row className="mb-4 g-3">
-            <Col sm={6}>
-              <div className="small text-muted text-uppercase fw-bold mb-1">
+          {/* Customer & Address Grid */}
+          <Row className="mb-5 g-4">
+            <Col sm={4}>
+              <h6
+                className="text-muted text-uppercase small fw-bold mb-2"
+                style={{ letterSpacing: "0.5px" }}
+              >
                 Billed To:
-              </div>
-              <div className="fw-bold text-dark d-flex align-items-center gap-2">
-                <User size={14} className="text-muted" />{" "}
+              </h6>
+              <div className="fw-bold text-dark fs-6">
                 {order.user?.name || "Customer"}
               </div>
-              <div className="small text-muted ms-4">{order.user?.email}</div>
+              <div className="small text-muted">{order.user?.email}</div>
+            </Col>
+
+            <Col sm={4}>
+              <h6
+                className="text-muted text-uppercase small fw-bold mb-2"
+                style={{ letterSpacing: "0.5px" }}
+              >
+                Shipped To:
+              </h6>
+              <div className="small text-dark lh-base">
+                <span className="fw-bold">
+                  {order.user?.name || "Customer"}
+                </span>
+                <br />
+                {order.shippingAddress?.address}
+                <br />
+                {order.shippingAddress?.city}, {order.shippingAddress?.country}
+                <br />
+                {order.shippingAddress?.postalCode}
+              </div>
+            </Col>
+
+            <Col sm={4} className="text-sm-end mt-4 mt-sm-0">
+              <h6
+                className="text-muted text-uppercase small fw-bold mb-2"
+                style={{ letterSpacing: "0.5px" }}
+              >
+                Payment Details:
+              </h6>
+              <div className="small mb-2">
+                <span className="text-muted me-2">Method:</span>
+                <span className="fw-bold text-dark">{order.paymentMethod}</span>
+              </div>
+              <div className="small">
+                <span className="text-muted me-2">Status:</span>
+                <Badge
+                  bg={isPaid ? "success" : isCOD ? "info" : "secondary"}
+                  text={isPaid || isCOD ? "white" : "dark"}
+                  className="rounded-1 print-badge px-2 py-1"
+                >
+                  {isPaid ? "PAID" : isCOD ? "PENDING (COD)" : "UNPAID"}
+                </Badge>
+              </div>
+            </Col>
+          </Row>
+
+          {/* Itemized Table */}
+          <Table
+            bordered
+            hover
+            responsive
+            size="sm"
+            className="mb-4 print-table border-secondary-subtle"
+          >
+            <thead style={{ backgroundColor: "#f8f9fa" }}>
+              <tr className="text-uppercase small text-muted">
+                <th className="py-2 px-3 fw-bold border-bottom-0">
+                  Description
+                </th>
+                <th
+                  className="py-2 text-center fw-bold border-bottom-0"
+                  width="12%"
+                >
+                  Qty
+                </th>
+                <th
+                  className="py-2 text-end fw-bold border-bottom-0"
+                  width="20%"
+                >
+                  Unit Price
+                </th>
+                <th
+                  className="py-2 text-end pe-3 fw-bold border-bottom-0"
+                  width="20%"
+                >
+                  Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody className="small align-middle">
+              {order.orderItems?.map((item, index) => (
+                <tr key={index} className="print-row">
+                  <td className="py-3 px-3">
+                    <span
+                      className="fw-bold d-block text-dark"
+                      style={{ fontSize: "0.9rem" }}
+                    >
+                      {item.name}
+                    </span>
+                    <span
+                      className="text-muted"
+                      style={{ fontSize: "0.75rem" }}
+                    >
+                      Unit: {item.unit || "Pack"}
+                      {item.batchNumber ? ` | Batch: ${item.batchNumber}` : ""}
+                    </span>
+                  </td>
+                  <td className="text-center py-3">{item.qty}</td>
+                  <td className="text-end py-3 text-muted">
+                    Rs. {Number(item.price).toFixed(2)}
+                  </td>
+                  <td className="text-end py-3 pe-3 fw-bold text-dark">
+                    Rs. {(item.qty * item.price).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          {/* Financials & Footer Notes */}
+          <Row className="print-avoid-break mt-2">
+            <Col sm={6}>
+              <div
+                className="p-3 bg-light rounded-1 h-100 border text-muted small lh-base"
+                style={{ borderColor: "#D5D9D9" }}
+              >
+                <strong className="text-dark d-block mb-1">
+                  Important Information:
+                </strong>
+                Please retain this receipt for your records. For any return or
+                exchange, this invoice is mandatory. Note that consumable or
+                unsealed medicines cannot be returned as per company policy.
+              </div>
             </Col>
             <Col sm={6}>
-              <div className="small text-muted text-uppercase fw-bold mb-1">
-                Shipped To:
-              </div>
-              <div className="small text-dark d-flex align-start gap-2">
-                <MapPin size={14} className="text-muted mt-1 flex-shrink-0" />
-                <span>
-                  {order.shippingAddress?.address}
-                  <br />
-                  {order.shippingAddress?.city},{" "}
-                  {order.shippingAddress?.country}
-                  <br />
-                  {order.shippingAddress?.postalCode}
-                </span>
+              <div
+                className="ms-auto mt-4 mt-sm-0"
+                style={{ width: "100%", maxWidth: "300px" }}
+              >
+                <Table borderless size="sm" className="text-end mb-0 small">
+                  <tbody>
+                    <tr>
+                      <td className="text-muted pb-2">Items Subtotal:</td>
+                      {/* ✅ Fixed: Shows actual calculated subtotal */}
+                      <td className="pb-2 text-dark fw-medium">
+                        Rs. {calculatedSubtotal.toFixed(2)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-muted pb-2">Shipping & Handling:</td>
+                      <td className="pb-2 text-dark fw-medium">
+                        {shipping === 0 ? "FREE" : `Rs. ${shipping.toFixed(2)}`}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="text-muted pb-3 border-bottom">
+                        Tax (13%):
+                      </td>
+                      <td className="pb-3 border-bottom text-dark fw-medium">
+                        Rs. {tax.toFixed(2)}
+                      </td>
+                    </tr>
+                    <tr className="fs-5">
+                      <td className="pt-3 fw-bold text-dark">Grand Total:</td>
+                      {/* ✅ Fixed: Strictly enforces 2 decimal places */}
+                      <td className="pt-3 fw-bold" style={{ color: "#B12704" }}>
+                        Rs.{" "}
+                        {total.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                    </tr>
+                  </tbody>
+                </Table>
               </div>
             </Col>
           </Row>
 
-          <div className="bg-white p-3 rounded-3 border mb-3">
-            <Row className="g-3">
-              <Col xs={6}>
-                <span className="text-muted small d-block">Order ID</span>
-                <span className="fw-bold font-monospace">
-                  {order.orderNumber || `#${order._id.slice(-6).toUpperCase()}`}
-                </span>
-              </Col>
-              <Col xs={6}>
-                <span className="text-muted small d-block">Date</span>
-                <span className="fw-bold small">
-                  {new Date(order.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </Col>
-              <Col xs={6}>
-                <span className="text-muted small d-block">Payment Method</span>
-                <span className="fw-bold">{order.paymentMethod}</span>
-              </Col>
-              <Col xs={6}>
-                <span className="text-muted small d-block">Total Amount</span>
-                <span className="fw-bold text-primary fs-5">
-                  Rs. {order.totalPrice?.toLocaleString()}
-                </span>
-              </Col>
-            </Row>
+          <div className="text-center mt-5 pt-4 border-top text-muted small d-print-block">
+            Thank you for trusting SmartPharmacy! Wishing you good health.
           </div>
-
-          <Row className="g-3">
-            <Col xs={6}>
-              <span className="text-muted small d-block mb-1">
-                Payment Status
-              </span>
-              <Badge
-                bg={isPaid ? "success" : "warning"}
-                text={isPaid ? "white" : "dark"}
-                className="px-3 py-2"
-              >
-                {isPaid ? "PAID" : "PENDING"}
-              </Badge>
-            </Col>
-            <Col xs={6}>
-              <span className="text-muted small d-block mb-1">
-                Fulfillment Status
-              </span>
-              <Badge
-                bg={order.isDelivered ? "info" : "secondary"}
-                className="px-3 py-2"
-              >
-                {order.orderStatus ||
-                  (order.isDelivered ? "Delivered" : "Processing")}
-              </Badge>
-            </Col>
-          </Row>
         </div>
 
-        {/* Action Buttons */}
-        <div className="d-grid gap-3">
+        {/* ✅ FIXED LAYOUT: Action Buttons now stack horizontally under the receipt instead of next to it */}
+        <div
+          className="d-flex flex-column flex-sm-row justify-content-center gap-3 d-print-none mt-2 w-100"
+          style={{ maxWidth: "800px" }}
+        >
           <Button
-            variant="outline-secondary"
-            className="rounded-pill border-opacity-25"
+            variant="outline-dark"
+            className="rounded-1 fw-bold px-4 py-3 bg-white shadow-sm border d-flex align-items-center justify-content-center flex-grow-1"
+            style={{ borderColor: "#D5D9D9" }}
             onClick={() => window.print()}
           >
-            <Download size={18} className="me-2" /> Download Full Receipt
+            <Download size={18} className="me-2" /> Download / Print Invoice
           </Button>
 
-          <Link
-            to="/orders"
-            className="btn btn-primary rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center"
+          <Button
+            className="rounded-1 fw-bold px-4 py-3 shadow-sm border-0 d-flex align-items-center justify-content-center flex-grow-1"
+            style={{ backgroundColor: "#FFD814", color: "#0F1111" }}
+            onClick={() => navigate("/orders")}
           >
-            View Order History <ArrowRight size={18} className="ms-2" />
-          </Link>
+            Return to My Orders <ArrowRight size={18} className="ms-2" />
+          </Button>
         </div>
-      </Card>
+      </Container>
 
       <style>{`
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* ✅ BULLETPROOF PRINT STYLES */
         @media print {
-          body * { visibility: hidden; }
-          .card, .card * { visibility: visible; }
-          .card { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
-          .btn { display: none !important; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          nav, header, footer, .d-print-none, .navbar {
+            display: none !important;
+          }
+          body, html, .print-page-bg {
+            background-color: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .print-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+          }
+          .printable-receipt {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+            width: 100% !important;
+            max-width: none !important;
+          }
+          .print-table {
+            border: 1px solid #dee2e6 !important;
+          }
+          tr, .print-avoid-break {
+            page-break-inside: avoid !important;
+          }
         }
       `}</style>
-    </Container>
+    </div>
   );
 };
 

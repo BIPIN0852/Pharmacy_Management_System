@@ -8,133 +8,6 @@
 //   Badge,
 //   Spinner,
 //   Alert,
-// } from "react-bootstrap";
-// import { useParams, Link } from "react-router-dom";
-// import { useDispatch } from "react-redux";
-// import { addToCart } from "../redux/actions/cartActions";
-// import { ArrowLeft, ShoppingCart, ShieldAlert } from "lucide-react";
-
-// const API_BASE_URL = "http://localhost:5000/api";
-
-// const MedicineDetails = () => {
-//   const { id } = useParams();
-//   const dispatch = useDispatch();
-
-//   const [medicine, setMedicine] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [qty, setQty] = useState(1);
-
-//   useEffect(() => {
-//     const fetchDetails = async () => {
-//       try {
-//         const res = await fetch(`${API_BASE_URL}/medicines/${id}`);
-//         if (!res.ok) throw new Error("Medicine not found");
-//         const data = await res.json();
-//         setMedicine(data);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchDetails();
-//   }, [id]);
-
-//   const handleAddToCart = () => {
-//     dispatch(addToCart(medicine._id, qty));
-//     alert("Added to cart");
-//   };
-
-//   if (loading)
-//     return (
-//       <div className="text-center py-5">
-//         <Spinner animation="border" />
-//       </div>
-//     );
-//   if (error)
-//     return (
-//       <Alert variant="danger" className="m-5">
-//         {error}
-//       </Alert>
-//     );
-
-//   return (
-//     <Container className="py-5">
-//       <Link to="/medicines" className="btn btn-light mb-4">
-//         <ArrowLeft size={18} /> Back
-//       </Link>
-//       <Row>
-//         <Col md={5}>
-//           <Image
-//             src={medicine.image}
-//             alt={medicine.name}
-//             fluid
-//             className="rounded-4 shadow-sm"
-//           />
-//         </Col>
-//         <Col md={7}>
-//           <h2 className="fw-bold">{medicine.name}</h2>
-//           <p className="text-muted">{medicine.brand}</p>
-//           <hr />
-//           <h3 className="text-primary fw-bold">Rs. {medicine.price}</h3>
-
-//           <div className="my-3">
-//             {medicine.countInStock > 0 ? (
-//               <Badge bg="success">In Stock</Badge>
-//             ) : (
-//               <Badge bg="danger">Out of Stock</Badge>
-//             )}
-//             {medicine.prescriptionRequired && (
-//               <Badge bg="warning" text="dark" className="ms-2">
-//                 <ShieldAlert size={14} /> Rx Required
-//               </Badge>
-//             )}
-//           </div>
-
-//           <p className="mt-4">{medicine.description}</p>
-
-//           <div className="d-flex align-items-center gap-3 mt-4">
-//             <select
-//               value={qty}
-//               onChange={(e) => setQty(Number(e.target.value))}
-//               className="form-select w-auto"
-//               disabled={medicine.countInStock === 0}
-//             >
-//               {[...Array(medicine.countInStock).keys()].map((x) => (
-//                 <option key={x + 1} value={x + 1}>
-//                   {x + 1}
-//                 </option>
-//               ))}
-//             </select>
-//             <Button
-//               variant="primary"
-//               size="lg"
-//               disabled={medicine.countInStock === 0}
-//               onClick={handleAddToCart}
-//               className="px-5 rounded-pill"
-//             >
-//               <ShoppingCart size={20} className="me-2" /> Add to Cart
-//             </Button>
-//           </div>
-//         </Col>
-//       </Row>
-//     </Container>
-//   );
-// };
-
-// export default MedicineDetails;
-
-// import React, { useState, useEffect } from "react";
-// import {
-//   Container,
-//   Row,
-//   Col,
-//   Image,
-//   Button,
-//   Badge,
-//   Spinner,
-//   Alert,
 //   Form,
 // } from "react-bootstrap";
 // import { useParams, Link, useNavigate } from "react-router-dom";
@@ -186,7 +59,7 @@
 //   }, [id]);
 
 //   const handleAddToCart = () => {
-//     // ✅ Updated: Passing the full medicine object with selected unit and manual qty
+//     // ✅ FIX: Explicitly passing the prescriptionRequired flag to the cart action
 //     dispatch(
 //       addToCart({
 //         ...medicine,
@@ -194,7 +67,8 @@
 //         price: selectedUnit.price,
 //         unit: selectedUnit.name,
 //         buyingMultiplier: selectedUnit.multiplier,
-//       })
+//         prescriptionRequired: medicine.prescriptionRequired, // ✅ ADDED THIS LINE
+//       }),
 //     );
 
 //     // Optional: navigate to cart or show a toast
@@ -347,7 +221,7 @@
 //                   type="number"
 //                   min="1"
 //                   max={Math.floor(
-//                     medicine.countInStock / (selectedUnit?.multiplier || 1)
+//                     medicine.countInStock / (selectedUnit?.multiplier || 1),
 //                   )}
 //                   value={qty}
 //                   onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
@@ -404,7 +278,7 @@ import {
   Package,
   CheckCircle,
 } from "lucide-react";
-import api from "../services/api"; // ✅ Use global api service
+import api from "../services/api";
 
 const MedicineDetails = () => {
   const { id } = useParams();
@@ -423,7 +297,6 @@ const MedicineDetails = () => {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        // ✅ Updated: Using global api service with error handling
         const data = await api.get(`/medicines/${id}`);
         setMedicine(data);
 
@@ -443,7 +316,6 @@ const MedicineDetails = () => {
   }, [id]);
 
   const handleAddToCart = () => {
-    // ✅ FIX: Explicitly passing the prescriptionRequired flag to the cart action
     dispatch(
       addToCart({
         ...medicine,
@@ -451,11 +323,10 @@ const MedicineDetails = () => {
         price: selectedUnit.price,
         unit: selectedUnit.name,
         buyingMultiplier: selectedUnit.multiplier,
-        prescriptionRequired: medicine.prescriptionRequired, // ✅ ADDED THIS LINE
+        prescriptionRequired: medicine.prescriptionRequired,
       }),
     );
 
-    // Optional: navigate to cart or show a toast
     if (window.confirm(`${qty} ${selectedUnit.name}(s) added! View Cart?`)) {
       navigate("/cart");
     }
@@ -511,16 +382,25 @@ const MedicineDetails = () => {
                 {medicine.brand || "Generic Name"}
               </p>
             </div>
-            <Badge
-              bg={
-                medicine.countInStock > 0 ? "success-subtle" : "danger-subtle"
-              }
-              className={`text-${
-                medicine.countInStock > 0 ? "success" : "danger"
-              } border px-3 py-2`}
-            >
-              {medicine.countInStock > 0 ? "In Stock" : "Out of Stock"}
-            </Badge>
+
+            {/* UPDATED: Detailed Stock Status */}
+            <div className="mb-2">
+              {medicine.countInStock > 0 ? (
+                <Badge
+                  bg="success-subtle"
+                  className="text-success border px-3 py-2"
+                >
+                  In Stock ({medicine.countInStock} available)
+                </Badge>
+              ) : (
+                <Badge
+                  bg="danger-subtle"
+                  className="text-danger border px-3 py-2"
+                >
+                  Out of Stock
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="mt-3 d-flex gap-2">
@@ -610,18 +490,31 @@ const MedicineDetails = () => {
                   value={qty}
                   onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
                   className="py-2 border-2"
+                  disabled={medicine.countInStock === 0}
                 />
               </Form.Group>
             </Col>
             <Col xs={8} md={9}>
-              <Button
-                variant="primary"
+              {/* UPDATED: Dynamic Button Styling based on Stock */}
+              <button
+                className="btn w-100 py-2 fs-5 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm border-0"
+                style={{
+                  backgroundColor:
+                    medicine.countInStock > 0 ? "#FFD814" : "#F0F2F2",
+                  color: medicine.countInStock > 0 ? "#0F1111" : "#888C8C",
+                  cursor: medicine.countInStock > 0 ? "pointer" : "not-allowed",
+                }}
                 disabled={medicine.countInStock === 0}
                 onClick={handleAddToCart}
-                className="w-100 py-2 fs-5 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm"
               >
-                <ShoppingCart size={22} /> Add to Cart
-              </Button>
+                {medicine.countInStock > 0 ? (
+                  <>
+                    <ShoppingCart size={22} /> Add to Cart
+                  </>
+                ) : (
+                  "Out of Stock"
+                )}
+              </button>
             </Col>
           </Row>
 
