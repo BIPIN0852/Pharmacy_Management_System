@@ -652,3 +652,36 @@ body.bg-dark .custom-saas-table tbody tr:hover {
     pointer-events: none; /* Prevent clicks on content when mobile menu is open */
   }
 }
+/* ========================================== */
+/* GLOBAL LIGHT & DARK THEME VARIABLES        */
+/* ========================================== */
+
+body.theme-light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #d5d9d9;
+}
+
+body.theme-dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure the body transitions smoothly between themes */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Helper utility class for generic text */
+.theme-text {
+  color: var(--text-primary) !important;
+}

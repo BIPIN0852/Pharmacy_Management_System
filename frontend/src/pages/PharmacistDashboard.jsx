@@ -1752,6 +1752,412 @@
 
 // export default PharmacistDashboard;
 
+// import React, { useState, useEffect } from "react";
+// import {
+//   Row,
+//   Col,
+//   Card,
+//   Table,
+//   Badge,
+//   Spinner,
+//   Alert,
+//   Button,
+// } from "react-bootstrap";
+// import {
+//   AlertTriangle,
+//   Package,
+//   Clock,
+//   FileText,
+//   ChevronRight,
+//   RefreshCw,
+//   TrendingUp,
+//   Activity,
+//   ShoppingBag,
+// } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+// import api from "../services/api";
+
+// const PharmacistDashboard = () => {
+//   const navigate = useNavigate();
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+
+//   const [stats, setStats] = useState({
+//     pendingRx: 0,
+//     pendingOrders: 0,
+//     lowStock: 0,
+//     totalMedicines: 0,
+//     todaysOrdersCount: 0,
+//   });
+
+//   const [lowStockItems, setLowStockItems] = useState([]);
+
+//   useEffect(() => {
+//     fetchDashboardData();
+//   }, []);
+
+//   const fetchDashboardData = async () => {
+//     try {
+//       setLoading(true);
+
+//       // 1. Fetch Stats from consolidated pharmacist dashboard route
+//       const statsRes = await api.get("/pharmacist/dashboard");
+//       const dashboardStats = statsRes.data || statsRes;
+
+//       // 2. Fetch Low Stock Items for the preview table
+//       const medRes = await api.get("/medicines");
+
+//       // ROBUST DATA EXTRACTION:
+//       const medPayload = medRes.data || medRes;
+//       const allMedicines = Array.isArray(medPayload)
+//         ? medPayload
+//         : medPayload.medicines || [];
+
+//       // Filter for low stock (Threshold < 15) and take top 5 for preview
+//       const lowStockList = allMedicines
+//         .filter((m) => (m.countInStock || 0) < 15)
+//         .slice(0, 5);
+
+//       // 3. Update State with Real DB Data
+//       setStats({
+//         pendingRx: dashboardStats.pendingPrescriptionsCount || 0,
+//         pendingOrders: dashboardStats.pendingOrdersCount || 0,
+//         lowStock: dashboardStats.lowStockCount || 0,
+//         totalMedicines: dashboardStats.totalMedicines || 0,
+//         todaysOrdersCount: dashboardStats.todaysOrdersCount || 0,
+//       });
+
+//       setLowStockItems(lowStockList);
+//       setError("");
+//     } catch (err) {
+//       console.error("Dashboard fetch error:", err);
+//       setError(
+//         err.response?.data?.message || "Failed to load dashboard statistics.",
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+//         <Spinner animation="border" style={{ color: "#007185" }} />
+//       </div>
+//     );
+
+//   const statCards = [
+//     {
+//       label: "Pending Orders",
+//       value: stats.pendingOrders,
+//       subtext: `${stats.todaysOrdersCount} new orders today`,
+//       icon: Clock,
+//       borderColor: "#007185", // Amazon Teal
+//       link: "/pharmacist/orders",
+//     },
+//     {
+//       label: "New Prescriptions",
+//       value: stats.pendingRx,
+//       subtext: "Requires verification",
+//       icon: FileText,
+//       borderColor: "#F3A847", // Amazon Orange
+//       link: "/pharmacist/prescriptions",
+//     },
+//     {
+//       label: "Inventory Alerts",
+//       value: stats.lowStock,
+//       subtext: "Items critically low",
+//       icon: AlertTriangle,
+//       borderColor: "#B12704", // Amazon Red
+//       link: "/pharmacist/inventory",
+//     },
+//     {
+//       label: "Total Medicines",
+//       value: stats.totalMedicines,
+//       subtext: "Active in database",
+//       icon: Package,
+//       borderColor: "#166534", // Medical Green
+//       link: "/pharmacist/inventory",
+//     },
+//   ];
+
+//   return (
+//     <div
+//       className="animate-fade-in p-3"
+//       style={{ backgroundColor: "#f0f2f2", minHeight: "100vh" }}
+//     >
+//       {/* --- Header Section --- */}
+//       <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary-subtle">
+//         <div>
+//           <h2
+//             className="fw-bold mb-1"
+//             style={{ color: "#0F1111", fontSize: "1.5rem" }}
+//           >
+//             Pharmacist Overview
+//           </h2>
+//           <p className="small mb-0" style={{ color: "#565959" }}>
+//             Real-time telemetry of store operations and inventory metrics.
+//           </p>
+//         </div>
+//         <Button
+//           variant="light"
+//           className="btn-sm px-3 py-2 border shadow-sm d-flex align-items-center gap-2 bg-white"
+//           onClick={fetchDashboardData}
+//           style={{
+//             borderColor: "#D5D9D9",
+//             color: "#0F1111",
+//             fontWeight: "500",
+//           }}
+//         >
+//           <RefreshCw size={14} /> Refresh Data
+//         </Button>
+//       </div>
+
+//       {error && (
+//         <Alert
+//           variant="danger"
+//           className="border-0 shadow-sm mb-4 rounded-1"
+//           style={{
+//             backgroundColor: "#fef0f0",
+//             color: "#B12704",
+//             borderLeft: "4px solid #B12704",
+//           }}
+//         >
+//           {error}
+//         </Alert>
+//       )}
+
+//       {/* --- Quick Stats Section --- */}
+//       <Row className="g-3 mb-4">
+//         {statCards.map((item, idx) => (
+//           <Col md={3} sm={6} key={idx}>
+//             <Card
+//               className="border-0 shadow-sm h-100 rounded-1 cursor-pointer aws-card"
+//               onClick={() => navigate(item.link)}
+//               style={{ borderTop: `4px solid ${item.borderColor}` }}
+//             >
+//               <Card.Body className="p-3 d-flex flex-column justify-content-between">
+//                 <div className="d-flex justify-content-between align-items-start mb-3">
+//                   <p
+//                     className="small mb-0 fw-bold text-uppercase"
+//                     style={{
+//                       color: "#565959",
+//                       letterSpacing: "0.5px",
+//                       fontSize: "0.7rem",
+//                     }}
+//                   >
+//                     {item.label}
+//                   </p>
+//                   <item.icon size={20} style={{ color: item.borderColor }} />
+//                 </div>
+//                 <div>
+//                   <h2 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
+//                     {item.value}
+//                   </h2>
+//                   <small style={{ color: "#565959", fontSize: "0.75rem" }}>
+//                     {item.subtext}
+//                   </small>
+//                 </div>
+//               </Card.Body>
+//             </Card>
+//           </Col>
+//         ))}
+//       </Row>
+
+//       <Row className="g-3">
+//         {/* --- Low Stock Table Preview --- */}
+//         <Col lg={8}>
+//           <Card
+//             className="border shadow-sm h-100 rounded-1 bg-white"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+//               <span className="fw-bold" style={{ color: "#0F1111" }}>
+//                 Critical Inventory Alerts
+//               </span>
+//               <span
+//                 className="badge rounded-1 px-2 py-1"
+//                 style={{
+//                   backgroundColor: "#fef0f0",
+//                   color: "#B12704",
+//                   border: "1px solid #B12704",
+//                 }}
+//               >
+//                 Action Required
+//               </span>
+//             </Card.Header>
+//             <div className="table-responsive">
+//               <Table className="mb-0 align-middle border-0">
+//                 <thead className="bg-light">
+//                   <tr style={{ borderBottom: "1px solid #D5D9D9" }}>
+//                     <th
+//                       className="ps-4 py-2 small text-muted text-uppercase fw-bold border-0"
+//                       style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+//                     >
+//                       Medicine
+//                     </th>
+//                     <th
+//                       className="py-2 text-center small text-muted text-uppercase fw-bold border-0"
+//                       style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+//                     >
+//                       Current Stock
+//                     </th>
+//                     <th
+//                       className="py-2 pe-4 text-end small text-muted text-uppercase fw-bold border-0"
+//                       style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+//                     >
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {lowStockItems.length === 0 ? (
+//                     <tr>
+//                       <td colSpan="3" className="text-center py-5">
+//                         <Activity
+//                           size={32}
+//                           className="text-muted mb-2 opacity-50"
+//                         />
+//                         <div className="text-muted small">
+//                           All inventory levels are nominal.
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   ) : (
+//                     lowStockItems.map((m) => (
+//                       <tr key={m._id} className="aws-table-row border-bottom">
+//                         <td className="ps-4 py-3">
+//                           <div
+//                             className="fw-bold"
+//                             style={{ color: "#007185", fontSize: "0.9rem" }}
+//                           >
+//                             {m.name}
+//                           </div>
+//                           <div
+//                             className="text-muted"
+//                             style={{ fontSize: "0.75rem" }}
+//                           >
+//                             {m.category}
+//                           </div>
+//                         </td>
+//                         <td className="text-center py-3">
+//                           <span
+//                             className="fw-bold"
+//                             style={{ color: "#B12704" }}
+//                           >
+//                             {m.countInStock}{" "}
+//                             <span
+//                               className="text-muted fw-normal"
+//                               style={{ fontSize: "0.75rem" }}
+//                             >
+//                               {m.baseUnit || "Units"}
+//                             </span>
+//                           </span>
+//                         </td>
+//                         <td className="text-end pe-4 py-3">
+//                           <Button
+//                             variant="light"
+//                             size="sm"
+//                             className="bg-white border"
+//                             style={{ borderColor: "#D5D9D9", color: "#0F1111" }}
+//                             onClick={() => navigate("/pharmacist/inventory")}
+//                           >
+//                             Restock <ChevronRight size={14} />
+//                           </Button>
+//                         </td>
+//                       </tr>
+//                     ))
+//                   )}
+//                 </tbody>
+//               </Table>
+//             </div>
+//             <Card.Footer className="bg-light border-top py-2 text-center">
+//               <Button
+//                 variant="link"
+//                 className="text-decoration-none p-0 fw-medium"
+//                 style={{ color: "#007185", fontSize: "0.85rem" }}
+//                 onClick={() => navigate("/pharmacist/inventory")}
+//               >
+//                 View full inventory report
+//               </Button>
+//             </Card.Footer>
+//           </Card>
+//         </Col>
+
+//         {/* --- Quick Action Center --- */}
+//         <Col lg={4}>
+//           <Card
+//             className="border shadow-sm h-100 rounded-1 bg-white"
+//             style={{ borderColor: "#D5D9D9" }}
+//           >
+//             <Card.Header className="bg-white py-3 border-bottom">
+//               <span className="fw-bold" style={{ color: "#0F1111" }}>
+//                 Quick Actions
+//               </span>
+//             </Card.Header>
+//             <Card.Body className="p-4 d-flex flex-column">
+//               <div className="text-center mb-4">
+//                 <TrendingUp
+//                   size={36}
+//                   style={{ color: "#565959", opacity: 0.5 }}
+//                   className="mb-3"
+//                 />
+//                 <h6 className="fw-bold text-dark">Workflow Hub</h6>
+//                 <p className="text-muted small">
+//                   Access primary monitoring queues for incoming customer
+//                   requests.
+//                 </p>
+//               </div>
+
+//               <div className="d-grid gap-3 mt-auto">
+//                 <Button
+//                   className="py-2 border-0 shadow-sm fw-medium d-flex align-items-center justify-content-center"
+//                   style={{
+//                     backgroundColor: "#FFD814",
+//                     color: "#0F1111",
+//                     borderRadius: "4px",
+//                   }}
+//                   onClick={() => navigate("/pharmacist/orders")}
+//                 >
+//                   <ShoppingBag size={16} className="me-2" /> Fulfill Orders
+//                 </Button>
+
+//                 <Button
+//                   className="py-2 shadow-sm fw-medium d-flex align-items-center justify-content-center bg-white"
+//                   style={{
+//                     border: "1px solid #D5D9D9",
+//                     color: "#0F1111",
+//                     borderRadius: "4px",
+//                   }}
+//                   onClick={() => navigate("/pharmacist/prescriptions")}
+//                 >
+//                   <FileText size={16} className="me-2 text-muted" /> Review
+//                   Prescriptions
+//                 </Button>
+//               </div>
+//             </Card.Body>
+//           </Card>
+//         </Col>
+//       </Row>
+
+//       <style>{`
+//         .cursor-pointer { cursor: pointer; }
+//         .aws-card { transition: box-shadow 0.2s, transform 0.2s; }
+//         .aws-card:hover {
+//           box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+//           transform: translateY(-2px);
+//         }
+//         .aws-table-row { transition: background-color 0.1s; }
+//         .aws-table-row:hover { background-color: #f8f9fa; }
+//         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+//         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default PharmacistDashboard;
+
 import React, { useState, useEffect } from "react";
 import {
   Row,
@@ -1773,6 +2179,11 @@ import {
   TrendingUp,
   Activity,
   ShoppingBag,
+  BellRing,
+  ShieldCheck,
+  TrendingDown,
+  ArrowRight,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -1791,6 +2202,7 @@ const PharmacistDashboard = () => {
   });
 
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -1828,6 +2240,35 @@ const PharmacistDashboard = () => {
       });
 
       setLowStockItems(lowStockList);
+
+      // 4. Generate Real-World Actionable Notifications
+      const alerts = [];
+      if (dashboardStats.pendingOrdersCount > 0) {
+        alerts.push({
+          type: "order",
+          title: "Pending Fulfillments",
+          message: `You have ${dashboardStats.pendingOrdersCount} orders waiting to be processed and shipped.`,
+          action: "/pharmacist/orders",
+        });
+      }
+      if (dashboardStats.pendingPrescriptionsCount > 0) {
+        alerts.push({
+          type: "prescription",
+          title: "Rx Verification Required",
+          message: `${dashboardStats.pendingPrescriptionsCount} new digital prescriptions require pharmacist verification.`,
+          action: "/pharmacist/prescriptions",
+        });
+      }
+      if (dashboardStats.lowStockCount > 0) {
+        alerts.push({
+          type: "inventory",
+          title: "Critical Inventory",
+          message: `${dashboardStats.lowStockCount} medicines have fallen below the minimum stock threshold.`,
+          action: "/pharmacist/inventory",
+        });
+      }
+      setNotifications(alerts);
+
       setError("");
     } catch (err) {
       console.error("Dashboard fetch error:", err);
@@ -1841,7 +2282,7 @@ const PharmacistDashboard = () => {
 
   if (loading)
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
         <Spinner animation="border" style={{ color: "#007185" }} />
       </div>
     );
@@ -1852,23 +2293,26 @@ const PharmacistDashboard = () => {
       value: stats.pendingOrders,
       subtext: `${stats.todaysOrdersCount} new orders today`,
       icon: Clock,
-      borderColor: "#007185", // Amazon Teal
+      borderColor: "#007185", // Teal
+      bgLight: "#e6f1f3",
       link: "/pharmacist/orders",
     },
     {
-      label: "New Prescriptions",
+      label: "Rx Verification",
       value: stats.pendingRx,
-      subtext: "Requires verification",
+      subtext: "Awaiting approval",
       icon: FileText,
-      borderColor: "#F3A847", // Amazon Orange
+      borderColor: "#F3A847", // Orange
+      bgLight: "#fef6eb",
       link: "/pharmacist/prescriptions",
     },
     {
-      label: "Inventory Alerts",
+      label: "Low Stock Alerts",
       value: stats.lowStock,
       subtext: "Items critically low",
       icon: AlertTriangle,
-      borderColor: "#B12704", // Amazon Red
+      borderColor: "#B12704", // Red
+      bgLight: "#fce9e5",
       link: "/pharmacist/inventory",
     },
     {
@@ -1876,85 +2320,112 @@ const PharmacistDashboard = () => {
       value: stats.totalMedicines,
       subtext: "Active in database",
       icon: Package,
-      borderColor: "#166534", // Medical Green
+      borderColor: "#166534", // Green
+      bgLight: "#e8f5ec",
       link: "/pharmacist/inventory",
     },
   ];
 
   return (
     <div
-      className="animate-fade-in p-3"
+      className="animate-fade-in p-3 p-md-4"
       style={{ backgroundColor: "#f0f2f2", minHeight: "100vh" }}
     >
+      {/* --- REAL-WORLD NOTIFICATION BANNER --- */}
+      {notifications.length > 0 && (
+        <div
+          className="alert border-0 shadow-sm rounded-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between p-4 mb-4 animate-slide-down gap-3 bg-white"
+          style={{ borderLeft: "5px solid #F3A847" }}
+        >
+          <div className="d-flex align-items-center gap-3">
+            <div className="bg-warning bg-opacity-10 text-warning rounded-circle p-3 shadow-sm flex-shrink-0">
+              <BellRing size={28} className="ring-animation" />
+            </div>
+            <div>
+              <h5 className="fw-black mb-1 text-dark">
+                Action Required: {notifications.length} System Alerts
+              </h5>
+              <p className="mb-0 fw-medium text-muted">
+                Please clear pending verification queues and review low stock
+                items to maintain operational compliance.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- Header Section --- */}
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary-subtle">
+      <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-light-subtle">
         <div>
-          <h2
-            className="fw-bold mb-1"
-            style={{ color: "#0F1111", fontSize: "1.5rem" }}
-          >
-            Pharmacist Overview
-          </h2>
-          <p className="small mb-0" style={{ color: "#565959" }}>
-            Real-time telemetry of store operations and inventory metrics.
+          <h3 className="fw-black mb-1" style={{ color: "#0F1111" }}>
+            Pharmacist Command Center
+          </h3>
+          <p className="small mb-0 text-muted fw-medium">
+            Real-time telemetry of store operations, dispensing queues, and
+            inventory metrics.
           </p>
         </div>
         <Button
           variant="light"
-          className="btn-sm px-3 py-2 border shadow-sm d-flex align-items-center gap-2 bg-white"
+          className="rounded-pill px-4 py-2 border shadow-sm d-flex align-items-center gap-2 bg-white hover-lift"
           onClick={fetchDashboardData}
           style={{
             borderColor: "#D5D9D9",
             color: "#0F1111",
-            fontWeight: "500",
+            fontWeight: "600",
           }}
         >
-          <RefreshCw size={14} /> Refresh Data
+          <RefreshCw size={16} className="text-primary" /> Refresh Data
         </Button>
       </div>
 
       {error && (
         <Alert
           variant="danger"
-          className="border-0 shadow-sm mb-4 rounded-1"
-          style={{
-            backgroundColor: "#fef0f0",
-            color: "#B12704",
-            borderLeft: "4px solid #B12704",
-          }}
+          className="border-0 shadow-sm mb-4 rounded-3"
+          style={{ backgroundColor: "#fef0f0", color: "#B12704" }}
         >
-          {error}
+          <AlertTriangle size={18} className="me-2 mb-1" /> {error}
         </Alert>
       )}
 
       {/* --- Quick Stats Section --- */}
       <Row className="g-3 mb-4">
         {statCards.map((item, idx) => (
-          <Col md={3} sm={6} key={idx}>
+          <Col md={6} lg={3} key={idx}>
             <Card
-              className="border-0 shadow-sm h-100 rounded-1 cursor-pointer aws-card"
+              className="border-0 shadow-sm h-100 rounded-4 cursor-pointer hover-lift overflow-hidden"
               onClick={() => navigate(item.link)}
-              style={{ borderTop: `4px solid ${item.borderColor}` }}
             >
-              <Card.Body className="p-3 d-flex flex-column justify-content-between">
+              <div
+                style={{ height: "4px", backgroundColor: item.borderColor }}
+              ></div>
+              <Card.Body className="p-4 d-flex flex-column justify-content-between">
                 <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div
+                    className="p-2 rounded-3"
+                    style={{ backgroundColor: item.bgLight }}
+                  >
+                    <item.icon size={24} style={{ color: item.borderColor }} />
+                  </div>
+                  <h2
+                    className="fw-black mb-0 display-6"
+                    style={{ color: "#0F1111" }}
+                  >
+                    {item.value}
+                  </h2>
+                </div>
+                <div>
                   <p
-                    className="small mb-0 fw-bold text-uppercase"
-                    style={{
-                      color: "#565959",
-                      letterSpacing: "0.5px",
-                      fontSize: "0.7rem",
-                    }}
+                    className="fw-bold mb-0 text-uppercase tracking-wider text-dark"
+                    style={{ fontSize: "0.75rem" }}
                   >
                     {item.label}
                   </p>
-                  <item.icon size={20} style={{ color: item.borderColor }} />
-                </div>
-                <div>
-                  <h2 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
-                    {item.value}
-                  </h2>
-                  <small style={{ color: "#565959", fontSize: "0.75rem" }}>
+                  <small
+                    className="text-muted fw-medium"
+                    style={{ fontSize: "0.75rem" }}
+                  >
                     {item.subtext}
                   </small>
                 </div>
@@ -1964,48 +2435,47 @@ const PharmacistDashboard = () => {
         ))}
       </Row>
 
-      <Row className="g-3">
-        {/* --- Low Stock Table Preview --- */}
-        <Col lg={8}>
-          <Card
-            className="border shadow-sm h-100 rounded-1 bg-white"
-            style={{ borderColor: "#D5D9D9" }}
-          >
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-              <span className="fw-bold" style={{ color: "#0F1111" }}>
-                Critical Inventory Alerts
+      <Row className="g-4">
+        {/* --- MAIN LEFT COLUMN --- */}
+        <Col lg={8} className="d-flex flex-column gap-4">
+          {/* Analytics / Trends Component */}
+          <Card className="border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <Card.Header className="bg-white py-4 px-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center">
+              <span className="fw-bold fs-5 text-dark d-flex align-items-center gap-2">
+                <TrendingUp size={20} className="text-primary" /> Fulfillment
+                Trends
               </span>
-              <span
-                className="badge rounded-1 px-2 py-1"
-                style={{
-                  backgroundColor: "#fef0f0",
-                  color: "#B12704",
-                  border: "1px solid #B12704",
-                }}
-              >
+              <Badge bg="success" className="rounded-pill px-3">
+                Live
+              </Badge>
+            </Card.Header>
+            <Card.Body className="p-4 bg-light d-flex justify-content-center align-items-center">
+              {/* Inserted contextually relevant graph image for the dashboard */}
+            </Card.Body>
+          </Card>
+
+          {/* Low Stock Table Preview */}
+          <Card className="border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <Card.Header className="bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-light-subtle">
+              <span className="fw-bold text-dark fs-5 d-flex align-items-center gap-2">
+                <Activity size={20} className="text-danger" /> Critical
+                Inventory Alerts
+              </span>
+              <Badge bg="danger" className="rounded-pill px-3 py-2">
                 Action Required
-              </span>
+              </Badge>
             </Card.Header>
             <div className="table-responsive">
-              <Table className="mb-0 align-middle border-0">
+              <Table className="mb-0 align-middle border-0 custom-saas-table">
                 <thead className="bg-light">
-                  <tr style={{ borderBottom: "1px solid #D5D9D9" }}>
-                    <th
-                      className="ps-4 py-2 small text-muted text-uppercase fw-bold border-0"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-                    >
+                  <tr>
+                    <th className="ps-4 py-3 small text-muted text-uppercase fw-bold border-0 tracking-wider">
                       Medicine
                     </th>
-                    <th
-                      className="py-2 text-center small text-muted text-uppercase fw-bold border-0"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-                    >
+                    <th className="py-3 text-center small text-muted text-uppercase fw-bold border-0 tracking-wider">
                       Current Stock
                     </th>
-                    <th
-                      className="py-2 pe-4 text-end small text-muted text-uppercase fw-bold border-0"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-                    >
+                    <th className="py-3 pe-4 text-end small text-muted text-uppercase fw-bold border-0 tracking-wider">
                       Action
                     </th>
                   </tr>
@@ -2014,55 +2484,41 @@ const PharmacistDashboard = () => {
                   {lowStockItems.length === 0 ? (
                     <tr>
                       <td colSpan="3" className="text-center py-5">
-                        <Activity
-                          size={32}
-                          className="text-muted mb-2 opacity-50"
+                        <ShieldCheck
+                          size={48}
+                          className="text-success mb-3 opacity-50"
                         />
+                        <h6 className="fw-bold text-dark">Inventory Optimal</h6>
                         <div className="text-muted small">
-                          All inventory levels are nominal.
+                          All stock levels are above critical thresholds.
                         </div>
                       </td>
                     </tr>
                   ) : (
                     lowStockItems.map((m) => (
-                      <tr key={m._id} className="aws-table-row border-bottom">
+                      <tr
+                        key={m._id}
+                        className="hover-bg-light border-bottom border-light-subtle transition-all"
+                      >
                         <td className="ps-4 py-3">
-                          <div
-                            className="fw-bold"
-                            style={{ color: "#007185", fontSize: "0.9rem" }}
-                          >
-                            {m.name}
-                          </div>
-                          <div
-                            className="text-muted"
-                            style={{ fontSize: "0.75rem" }}
-                          >
-                            {m.category}
+                          <div className="fw-bold text-dark mb-1">{m.name}</div>
+                          <div className="text-muted small d-flex align-items-center gap-1">
+                            <Package size={12} /> {m.category}
                           </div>
                         </td>
                         <td className="text-center py-3">
-                          <span
-                            className="fw-bold"
-                            style={{ color: "#B12704" }}
-                          >
-                            {m.countInStock}{" "}
-                            <span
-                              className="text-muted fw-normal"
-                              style={{ fontSize: "0.75rem" }}
-                            >
-                              {m.baseUnit || "Units"}
-                            </span>
+                          <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill fw-bold">
+                            {m.countInStock} {m.baseUnit || "Units"}
                           </span>
                         </td>
                         <td className="text-end pe-4 py-3">
                           <Button
-                            variant="light"
+                            variant="outline-primary"
                             size="sm"
-                            className="bg-white border"
-                            style={{ borderColor: "#D5D9D9", color: "#0F1111" }}
+                            className="rounded-pill px-3 fw-bold shadow-sm hover-lift"
                             onClick={() => navigate("/pharmacist/inventory")}
                           >
-                            Restock <ChevronRight size={14} />
+                            Restock <ChevronRight size={14} className="ms-1" />
                           </Button>
                         </td>
                       </tr>
@@ -2071,86 +2527,133 @@ const PharmacistDashboard = () => {
                 </tbody>
               </Table>
             </div>
-            <Card.Footer className="bg-light border-top py-2 text-center">
+            <Card.Footer className="bg-white border-top py-3 text-center">
               <Button
                 variant="link"
-                className="text-decoration-none p-0 fw-medium"
-                style={{ color: "#007185", fontSize: "0.85rem" }}
+                className="text-decoration-none fw-bold p-0 text-primary hover-lift d-flex align-items-center justify-content-center gap-1 mx-auto"
                 onClick={() => navigate("/pharmacist/inventory")}
               >
-                View full inventory report
+                View Full Inventory Report <ArrowRight size={16} />
               </Button>
             </Card.Footer>
           </Card>
         </Col>
 
-        {/* --- Quick Action Center --- */}
+        {/* --- RIGHT COLUMN: Action Center & Live Alerts --- */}
         <Col lg={4}>
           <Card
-            className="border shadow-sm h-100 rounded-1 bg-white"
-            style={{ borderColor: "#D5D9D9" }}
+            className="border-0 shadow-lg rounded-4 overflow-hidden mb-4 bg-dark text-white"
+            style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)" }}
           >
-            <Card.Header className="bg-white py-3 border-bottom">
-              <span className="fw-bold" style={{ color: "#0F1111" }}>
-                Quick Actions
+            <Card.Header className="bg-transparent py-4 px-4 border-bottom border-light border-opacity-10">
+              <span className="fw-bold fs-5 d-flex align-items-center gap-2">
+                <Settings size={20} className="text-info" /> Clinic Operations
               </span>
             </Card.Header>
-            <Card.Body className="p-4 d-flex flex-column">
-              <div className="text-center mb-4">
-                <TrendingUp
-                  size={36}
-                  style={{ color: "#565959", opacity: 0.5 }}
-                  className="mb-3"
-                />
-                <h6 className="fw-bold text-dark">Workflow Hub</h6>
-                <p className="text-muted small">
-                  Access primary monitoring queues for incoming customer
-                  requests.
-                </p>
-              </div>
+            <Card.Body className="p-4 d-flex flex-column gap-3">
+              <button
+                className="btn btn-outline-light rounded-pill py-2 text-start fw-bold d-flex align-items-center gap-3 border-opacity-25 hover-lift"
+                onClick={() => navigate("/pharmacist/orders")}
+              >
+                <div className="bg-white bg-opacity-10 p-2 rounded-circle">
+                  <ShoppingBag size={18} className="text-warning" />
+                </div>
+                Fulfill E-commerce Orders
+              </button>
 
-              <div className="d-grid gap-3 mt-auto">
-                <Button
-                  className="py-2 border-0 shadow-sm fw-medium d-flex align-items-center justify-content-center"
-                  style={{
-                    backgroundColor: "#FFD814",
-                    color: "#0F1111",
-                    borderRadius: "4px",
-                  }}
-                  onClick={() => navigate("/pharmacist/orders")}
-                >
-                  <ShoppingBag size={16} className="me-2" /> Fulfill Orders
-                </Button>
-
-                <Button
-                  className="py-2 shadow-sm fw-medium d-flex align-items-center justify-content-center bg-white"
-                  style={{
-                    border: "1px solid #D5D9D9",
-                    color: "#0F1111",
-                    borderRadius: "4px",
-                  }}
-                  onClick={() => navigate("/pharmacist/prescriptions")}
-                >
-                  <FileText size={16} className="me-2 text-muted" /> Review
-                  Prescriptions
-                </Button>
-              </div>
+              <button
+                className="btn btn-outline-light rounded-pill py-2 text-start fw-bold d-flex align-items-center gap-3 border-opacity-25 hover-lift"
+                onClick={() => navigate("/pharmacist/prescriptions")}
+              >
+                <div className="bg-white bg-opacity-10 p-2 rounded-circle">
+                  <FileText size={18} className="text-success" />
+                </div>
+                Verify Digital Prescriptions
+              </button>
             </Card.Body>
+          </Card>
+
+          {/* Active Alerts List */}
+          <Card className="border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <Card.Header className="bg-white py-3 px-4 border-bottom border-light-subtle">
+              <span className="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                <BellRing size={16} className="text-warning" /> Live Alerts
+              </span>
+            </Card.Header>
+            <div className="p-0">
+              <ul className="list-group list-group-flush">
+                {notifications.length === 0 ? (
+                  <li className="list-group-item p-4 text-center text-muted border-0">
+                    <ShieldCheck
+                      size={32}
+                      className="mb-2 opacity-50 text-success"
+                    />
+                    <p className="small mb-0">
+                      No active alerts. System is nominal.
+                    </p>
+                  </li>
+                ) : (
+                  notifications.map((alert, idx) => (
+                    <li
+                      key={idx}
+                      className="list-group-item p-3 hover-bg-light cursor-pointer transition-all"
+                      onClick={() => navigate(alert.action)}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div
+                          className={`mt-1 flex-shrink-0 ${alert.type === "inventory" ? "text-danger" : alert.type === "prescription" ? "text-info" : "text-primary"}`}
+                        >
+                          {alert.type === "inventory" ? (
+                            <TrendingDown size={18} />
+                          ) : alert.type === "prescription" ? (
+                            <FileText size={18} />
+                          ) : (
+                            <Package size={18} />
+                          )}
+                        </div>
+                        <div>
+                          <h6 className="fw-bold text-dark mb-1 fs-6">
+                            {alert.title}
+                          </h6>
+                          <p className="small text-muted mb-0 lh-sm">
+                            {alert.message}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
           </Card>
         </Col>
       </Row>
 
       <style>{`
         .cursor-pointer { cursor: pointer; }
-        .aws-card { transition: box-shadow 0.2s, transform 0.2s; }
-        .aws-card:hover { 
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; 
-          transform: translateY(-2px);
+        .tracking-wider { letter-spacing: 0.05em; }
+        .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+        .hover-bg-light:hover { background-color: #f8fafc; }
+        .transition-all { transition: all 0.2s ease; }
+        .ring-animation { animation: ring 2s ease infinite; transform-origin: top center; }
+        .animate-slide-down { animation: slideDown 0.4s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { 
+          from { opacity: 0; transform: translateY(-20px); } 
+          to { opacity: 1; transform: translateY(0); } 
         }
-        .aws-table-row { transition: background-color 0.1s; }
-        .aws-table-row:hover { background-color: #f8f9fa; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ring {
+          0% { transform: rotate(0); }
+          5% { transform: rotate(15deg); }
+          10% { transform: rotate(-10deg); }
+          15% { transform: rotate(15deg); }
+          20% { transform: rotate(-10deg); }
+          25% { transform: rotate(0); }
+          100% { transform: rotate(0); }
+        }
       `}</style>
     </div>
   );

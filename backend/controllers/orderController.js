@@ -550,29 +550,65 @@ const getOrderById = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Update order to paid (Automatic via Gateway)
+// // @desc    Update order to paid (Automatic via Gateway)
+// // @route   PUT /api/orders/:id/pay
+// // @access  Private
+// const updateOrderToPaid = asyncHandler(async (req, res) => {
+//   const order = await Order.findById(req.params.id);
+
+//   if (order) {
+//     order.isPaid = true;
+//     order.paidAt = Date.now();
+//     order.paymentResult = {
+//       id: req.body.id,
+//       status: req.body.status,
+//       update_time: req.body.update_time,
+//       email_address: req.body.email_address,
+//     };
+
+//     const updatedOrder = await order.save();
+//     res.json(updatedOrder);
+//   } else {
+//     res.status(404);
+//     throw new Error("Order not found");
+//   }
+// });
+
+// @desc    Update order to paid (Triggered by Customer after payment success)
 // @route   PUT /api/orders/:id/pay
 // @access  Private
-const updateOrderToPaid = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+const updateOrderToPaid = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
 
-  if (order) {
-    order.isPaid = true;
-    order.paidAt = Date.now();
-    order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.email_address,
-    };
+    if (order) {
+      // ✅ 1. FORCE THE DATABASE TO MARK IT AS PAID
+      order.isPaid = true;
+      order.paidAt = Date.now();
 
-    const updatedOrder = await order.save();
-    res.json(updatedOrder);
-  } else {
-    res.status(404);
-    throw new Error("Order not found");
+      // ✅ 2. SAVE THE TRANSACTION DETAILS (Works for Khalti & Stripe)
+      order.paymentResult = {
+        id: req.body.id || req.body.pidx || "transaction_id_missing",
+        status: req.body.status || "COMPLETED",
+        update_time: req.body.update_time || new Date().toISOString(),
+        email_address: req.body.email_address || req.user?.email || "customer",
+      };
+
+      // ✅ 3. SAVE TO DATABASE
+      const updatedOrder = await order.save();
+
+      // ✅ 4. RETURN UPDATED ORDER TO FRONTEND
+      res.json(updatedOrder);
+    } else {
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (error) {
+    console.error("Payment Update Error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while updating payment status" });
   }
-});
+};
 
 // @desc    Manually mark order as paid (For COD or Corrections)
 // @route   PUT /api/orders/:id/pay-manual
