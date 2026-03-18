@@ -84,9 +84,6 @@ app.use((req, res, next) => {
   next();
 });
 
-//message routes
-app.use("/api/messages", messageRoutes);
-
 // -------------------------------------------------------------------
 // 3. STATIC FILES & DIRECTORY SETUP
 // -------------------------------------------------------------------
@@ -94,12 +91,14 @@ app.use("/api/messages", messageRoutes);
  * Enhanced Directory Setup:
  * Ensures all subfolders exist to prevent Multer "No such file or directory" errors
  */
+// ✅ FIXED: Added the closing bracket "]" to the dirs array
 const dirs = [
   "uploads",
   "uploads/prescriptions",
   "uploads/profiles",
   "uploads/medicines",
   "images", 
+];
 
 dirs.forEach((dir) => {
   const fullPath = path.join(__dirname, dir);
@@ -130,8 +129,10 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/suppliers", supplierRoutes);
 app.use("/api/admin/purchases", purchaseRoutes);
 
+// Messages
+app.use("/api/messages", messageRoutes);
+
 // PUBLIC & PRIVATE DOCTOR ROUTES
-// Matches BOTH plural (for public directory) and singular (for the Doctor Dashboard)
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/doctor", doctorRoutes);
 app.use("/api/doctor", doctorDashboardRoutes);
@@ -192,7 +193,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/pharmacy";
 
-//Added: Mongoose Connection Event Listeners
+// Mongoose Connection Event Listeners
 mongoose.connection.on("disconnected", () => {
   console.log("⚠️ MongoDB Disconnected");
 });
