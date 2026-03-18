@@ -1,6 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-const Medicine = require("./models/Medicine"); // Ensure path is correct
+const Medicine = require("./models/Medicine"); 
 
 // --- 1. Master Data Lists (Real Real-world Data) ---
 const manufacturers = [

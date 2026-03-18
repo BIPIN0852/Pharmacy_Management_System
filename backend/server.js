@@ -7,7 +7,7 @@ const path = require("path");
 const passport = require("./utils/passport");
 const multer = require("multer");
 const fs = require("fs");
-const helmet = require("helmet"); // ✅ Added for security headers
+const helmet = require("helmet"); //Added for security headers
 
 // -------------------------------------------------------------------
 // 1. IMPORT ROUTES
@@ -91,7 +91,7 @@ app.use("/api/messages", messageRoutes);
 // 3. STATIC FILES & DIRECTORY SETUP
 // -------------------------------------------------------------------
 /**
- * ✅ Enhanced Directory Setup:
+ * Enhanced Directory Setup:
  * Ensures all subfolders exist to prevent Multer "No such file or directory" errors
  */
 const dirs = [
@@ -99,8 +99,7 @@ const dirs = [
   "uploads/prescriptions",
   "uploads/profiles",
   "uploads/medicines",
-  "images", // ✅ Added this to ensure the images directory is created if it doesn't exist
-];
+  "images", 
 
 dirs.forEach((dir) => {
   const fullPath = path.join(__dirname, dir);
@@ -111,7 +110,7 @@ dirs.forEach((dir) => {
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/images", express.static(path.join(__dirname, "images"))); // ✅ Added this line to serve the /images folder
+app.use("/images", express.static(path.join(__dirname, "images"))); 
 
 // -------------------------------------------------------------------
 // 4. MOUNT ROUTES
@@ -123,7 +122,7 @@ app.use("/api/users", userRoutes); // Handles Login/Register & Admin User Manage
 
 // Pharmacy Commerce & Medical Features
 app.use("/api/medicines", medicineRoutes);
-app.use("/api/cart", cartRoutes); // ✅ Added Cart API Route
+app.use("/api/cart", cartRoutes); 
 app.use("/api/orders", orderRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
@@ -131,7 +130,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/suppliers", supplierRoutes);
 app.use("/api/admin/purchases", purchaseRoutes);
 
-// ✅ PUBLIC & PRIVATE DOCTOR ROUTES
+// PUBLIC & PRIVATE DOCTOR ROUTES
 // Matches BOTH plural (for public directory) and singular (for the Doctor Dashboard)
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/doctor", doctorRoutes);
@@ -193,7 +192,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/pharmacy";
 
-// ✅ Added: Mongoose Connection Event Listeners
+//Added: Mongoose Connection Event Listeners
 mongoose.connection.on("disconnected", () => {
   console.log("⚠️ MongoDB Disconnected");
 });
@@ -210,7 +209,7 @@ mongoose
       console.log(`🚀 Smart Pharmacy Server active on port ${PORT}`),
     );
 
-    // ✅ Graceful Shutdown Handler
+    // Graceful Shutdown Handler
     process.on("SIGTERM", () => {
       console.info("SIGTERM signal received. Closing server...");
       server.close(() => {

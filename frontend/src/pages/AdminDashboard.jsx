@@ -25,6 +25,7 @@ import {
   Send,
   Reply,
   Check,
+  ArrowRight,
 } from "lucide-react";
 import api from "../services/api";
 
@@ -60,7 +61,6 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
 
-        // ✅ FIX: Added a direct fetch for orders as a fallback
         const [statsRes, medsRes, messagesRes, ordersRes] = await Promise.all([
           api.get("/admin/stats").catch(() => ({ data: {} })),
           api.get("/medicines").catch(() => ({ data: [] })),
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
           salesData: statsData.salesData || [],
         });
 
-        // ✅ FIX: Determine recent orders reliably
+        // Determine recent orders reliably
         let ordersList = [];
         if (
           statsData.recentOrders &&
@@ -114,12 +114,10 @@ const AdminDashboard = () => {
         ) {
           ordersList = statsData.recentOrders;
         } else {
-          // Fallback to the dedicated orders endpoint
           const rawOrders = ordersRes.data || [];
           const actualOrders = Array.isArray(rawOrders)
             ? rawOrders
             : rawOrders.orders || rawOrders.data || [];
-          // Sort by newest first and take top 5
           ordersList = [...actualOrders]
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .slice(0, 5);
@@ -150,9 +148,7 @@ const AdminDashboard = () => {
           : [];
         setMessages(supportMsgs);
         setUnreadCount(supportMsgs.filter((m) => !m.isRead).length);
-      } catch (e) {
-        /* ignore silent refresh errors */
-      }
+      } catch (e) {}
     }, 30000);
 
     return () => clearInterval(interval);
@@ -204,16 +200,21 @@ const AdminDashboard = () => {
     return (
       <div
         className="d-flex flex-column align-items-center justify-content-center vh-100"
-        style={{ backgroundColor: "#f0f2f2" }}
+        style={{ backgroundColor: "#f8fafc" }}
       >
-        <Loader2
-          className="spin-animation mb-3"
-          style={{ color: "#007185" }}
-          size={48}
-        />
-        <span className="text-secondary fw-bold tracking-wider text-uppercase small">
-          Syncing Dashboard Telemetry...
-        </span>
+        <div className="p-4 bg-white rounded-4 shadow-sm text-center">
+          <Loader2
+            className="spin-animation mb-3 mx-auto"
+            style={{ color: "#007185" }}
+            size={42}
+          />
+          <span
+            className="text-secondary fw-bold text-uppercase small"
+            style={{ letterSpacing: "1px" }}
+          >
+            Syncing Telemetry...
+          </span>
+        </div>
       </div>
     );
   }
@@ -260,56 +261,63 @@ const AdminDashboard = () => {
 
   return (
     <div
-      className="container-fluid p-3 p-md-4 animate-fade-in position-relative"
-      style={{ backgroundColor: "#f0f2f2", minHeight: "100vh" }}
+      className="container-fluid p-4 animate-fade-in"
+      style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}
     >
       {/* --- HEADER --- */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary-subtle gap-3">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h2
             className="fw-bold mb-1 d-flex align-items-center gap-2"
-            style={{ color: "#0F1111", fontSize: "1.5rem" }}
+            style={{
+              color: "#1e293b",
+              fontSize: "1.75rem",
+              letterSpacing: "-0.5px",
+            }}
           >
-            <LayoutDashboard style={{ color: "#007185" }} size={24} /> System
-            Overview
+            <div
+              className="p-2 rounded-3"
+              style={{ backgroundColor: "#e0f2fe" }}
+            >
+              <LayoutDashboard
+                style={{ color: "#0284c7" }}
+                size={26}
+                strokeWidth={2.5}
+              />
+            </div>
+            System Overview
           </h2>
-          <p className="small mb-0" style={{ color: "#565959" }}>
-            Real-time live data analytics & control center.
+          <p className="small mb-0 ms-1 text-muted fw-medium">
+            Real-time analytics and command center.
           </p>
         </div>
 
         <div className="d-flex align-items-center gap-3">
           {error && (
             <div
-              className="alert border-0 shadow-sm py-2 px-3 mb-0 rounded-1 d-flex align-items-center gap-2"
-              style={{
-                backgroundColor: "#fef0f0",
-                color: "#B12704",
-                borderLeft: "4px solid #B12704",
-              }}
+              className="alert border-0 shadow-sm py-2 px-3 mb-0 rounded-3 d-flex align-items-center gap-2"
+              style={{ backgroundColor: "#fef2f2", color: "#b91c1c" }}
             >
-              <Activity size={16} /> <span className="small">{error}</span>
+              <Activity size={16} />{" "}
+              <span className="small fw-medium">{error}</span>
             </div>
           )}
 
           {/* Messages Notification Button */}
           <button
-            className="btn bg-white border position-relative d-flex align-items-center justify-content-center shadow-sm"
+            className="btn bg-white border-0 shadow-sm position-relative d-flex align-items-center justify-content-center hover-lift rounded-circle"
             onClick={() => setShowMessagesModal(true)}
             title="View Messages"
-            style={{
-              width: "42px",
-              height: "42px",
-              borderColor: "#D5D9D9",
-              borderRadius: "4px",
-            }}
+            style={{ width: "48px", height: "48px" }}
           >
-            <MessageSquare size={20} style={{ color: "#565959" }} />
+            <MessageSquare size={22} className="text-secondary" />
             {unreadCount > 0 && (
               <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                className="position-absolute badge rounded-pill"
                 style={{
-                  backgroundColor: "#B12704",
+                  top: "2px",
+                  right: "2px",
+                  backgroundColor: "#ef4444",
                   fontSize: "0.65rem",
                   border: "2px solid #fff",
                 }}
@@ -322,161 +330,124 @@ const AdminDashboard = () => {
       </div>
 
       {/* --- KPI CARDS --- */}
-      <div className="row g-3 mb-4">
-        <div
-          className="col-12 col-md-6 col-xl-3 cursor-pointer"
-          onClick={() => navigate("/admin/users")}
-        >
-          <div
-            className="card border-0 shadow-sm h-100 rounded-1 aws-card bg-white"
-            style={{ borderTop: "4px solid #007185" }}
-          >
-            <div className="card-body p-4 d-flex justify-content-between align-items-center">
-              <div>
-                <p
-                  className="small fw-bold text-uppercase mb-1"
-                  style={{ color: "#565959", letterSpacing: "0.5px" }}
+      <div className="row g-4 mb-4">
+        {[
+          {
+            title: "Total Users",
+            value: stats.users,
+            icon: Users,
+            color: "#0284c7",
+            bg: "#e0f2fe",
+            path: "/admin/users",
+          },
+          {
+            title: "Medicines",
+            value: stats.medicines,
+            icon: Package,
+            color: "#ea580c",
+            bg: "#ffedd5",
+            path: "/admin/medicines",
+          },
+          {
+            title: "Total Orders",
+            value: stats.orders,
+            icon: ShoppingCart,
+            color: "#059669",
+            bg: "#d1fae5",
+            path: "/admin/orders",
+          },
+          {
+            title: "Total Revenue",
+            value:
+              stats.revenue >= 1000
+                ? `NPR ${(stats.revenue / 1000).toFixed(1)}k`
+                : `NPR ${stats.revenue.toLocaleString()}`,
+            icon: DollarSign,
+            color: "#7c3aed",
+            bg: "#ede9fe",
+            path: "/admin/reports",
+          },
+        ].map((kpi, index) => (
+          <div key={index} className="col-12 col-sm-6 col-xl-3">
+            <div
+              className="card border-0 shadow-sm h-100 rounded-4 modern-card bg-white cursor-pointer"
+              onClick={() => navigate(kpi.path)}
+            >
+              <div className="card-body p-4 d-flex align-items-center gap-3">
+                <div
+                  className="rounded-4 d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    backgroundColor: kpi.bg,
+                  }}
                 >
-                  Total Users
-                </p>
-                <h2 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
-                  {stats.users.toLocaleString()}
-                </h2>
-              </div>
-              <div className="p-3 bg-light rounded-circle">
-                <Users size={24} style={{ color: "#007185" }} />
+                  <kpi.icon
+                    size={28}
+                    style={{ color: kpi.color }}
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <div>
+                  <p
+                    className="small fw-bold text-muted text-uppercase mb-1"
+                    style={{ letterSpacing: "0.5px", fontSize: "0.75rem" }}
+                  >
+                    {kpi.title}
+                  </p>
+                  <h3
+                    className="fw-bold mb-0 text-dark"
+                    style={{ letterSpacing: "-0.5px" }}
+                  >
+                    {typeof kpi.value === "number"
+                      ? kpi.value.toLocaleString()
+                      : kpi.value}
+                  </h3>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div
-          className="col-12 col-md-6 col-xl-3 cursor-pointer"
-          onClick={() => navigate("/admin/medicines")}
-        >
-          <div
-            className="card border-0 shadow-sm h-100 rounded-1 aws-card bg-white"
-            style={{ borderTop: "4px solid #F3A847" }}
-          >
-            <div className="card-body p-4 d-flex justify-content-between align-items-center">
-              <div>
-                <p
-                  className="small fw-bold text-uppercase mb-1"
-                  style={{ color: "#565959", letterSpacing: "0.5px" }}
-                >
-                  Medicines
-                </p>
-                <h2 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
-                  {stats.medicines.toLocaleString()}
-                </h2>
-              </div>
-              <div className="p-3 bg-light rounded-circle">
-                <Package size={24} style={{ color: "#F3A847" }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="col-12 col-md-6 col-xl-3 cursor-pointer"
-          onClick={() => navigate("/admin/orders")}
-        >
-          <div
-            className="card border-0 shadow-sm h-100 rounded-1 aws-card bg-white"
-            style={{ borderTop: "4px solid #067D62" }}
-          >
-            <div className="card-body p-4 d-flex justify-content-between align-items-center">
-              <div>
-                <p
-                  className="small fw-bold text-uppercase mb-1"
-                  style={{ color: "#565959", letterSpacing: "0.5px" }}
-                >
-                  Total Orders
-                </p>
-                <h2 className="fw-bold mb-0" style={{ color: "#0F1111" }}>
-                  {stats.orders.toLocaleString()}
-                </h2>
-              </div>
-              <div className="p-3 bg-light rounded-circle">
-                <ShoppingCart size={24} style={{ color: "#067D62" }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="col-12 col-md-6 col-xl-3 cursor-pointer"
-          onClick={() => navigate("/admin/reports")}
-        >
-          <div
-            className="card border-0 shadow-sm h-100 rounded-1 aws-card text-white"
-            style={{
-              backgroundColor: "#064E3B",
-              borderTop: "4px solid #34D399",
-            }}
-          >
-            <div className="card-body p-4 d-flex justify-content-between align-items-center">
-              <div>
-                <p
-                  className="small fw-bold text-uppercase mb-1 text-white-50"
-                  style={{ letterSpacing: "0.5px" }}
-                >
-                  Total Revenue
-                </p>
-                <h2 className="fw-bold mb-0">
-                  {stats.revenue >= 1000
-                    ? `NPR ${(stats.revenue / 1000).toFixed(1)}k`
-                    : `NPR ${stats.revenue.toLocaleString()}`}
-                </h2>
-              </div>
-              <div
-                className="p-3 rounded-circle"
-                style={{ backgroundColor: "rgba(52, 211, 153, 0.2)" }}
-              >
-                <DollarSign size={24} style={{ color: "#34D399" }} />
-              </div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* --- CHARTS & RECENT ORDERS --- */}
       <div className="row g-4 mb-4">
+        {/* CHART SECTION */}
         <div className="col-12 col-xl-8">
-          <div
-            className="card border bg-white shadow-sm rounded-1 h-100"
-            style={{ borderColor: "#D5D9D9" }}
-          >
-            <div className="card-header bg-white border-bottom pt-4 px-4 pb-3">
-              <h5 className="fw-bold text-dark mb-0 fs-6">
+          <div className="card border-0 bg-white shadow-sm rounded-4 h-100">
+            <div className="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+              <h5 className="fw-bold text-dark mb-1 fs-6">
                 Revenue vs Operational Cost
               </h5>
+              <p className="text-muted small mb-0">
+                Financial overview for the current period
+              </p>
             </div>
-            <div className="card-body px-2 pb-4 pt-4">
+            <div className="card-body px-3 pb-4 pt-4">
               <div style={{ width: "100%", height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={processedChartData}
-                    margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="#E5E7EB"
+                      stroke="#f1f5f9"
                     />
                     <XAxis
                       dataKey="labelText"
                       tickFormatter={formatDate}
-                      axisLine={{ stroke: "#D5D9D9" }}
+                      axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#565959", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       dy={10}
                     />
                     <YAxis
                       yAxisId="left"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#565959", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       tickFormatter={formatCurrency}
                     />
                     <YAxis
@@ -484,45 +455,50 @@ const AdminDashboard = () => {
                       orientation="right"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#565959", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       tickFormatter={formatCurrency}
                     />
                     <Tooltip
-                      cursor={{ fill: "#f0f2f2" }}
+                      cursor={{ fill: "#f8fafc" }}
                       contentStyle={{
-                        borderRadius: "4px",
-                        border: "1px solid #D5D9D9",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
                         fontSize: "13px",
-                        color: "#0F1111",
+                        fontWeight: "500",
+                        color: "#1e293b",
                       }}
                       formatter={(value) => `NPR ${value.toLocaleString()}`}
                     />
                     <Legend
-                      wrapperStyle={{ fontSize: "13px", paddingTop: "10px" }}
+                      wrapperStyle={{
+                        fontSize: "13px",
+                        paddingTop: "15px",
+                        fontWeight: "500",
+                      }}
                     />
                     <Bar
                       yAxisId="left"
                       dataKey="revenue"
                       name="Revenue"
-                      fill="#007185" // Amazon Teal
-                      barSize={30}
-                      radius={[2, 2, 0, 0]}
+                      fill="#0284c7"
+                      barSize={28}
+                      radius={[4, 4, 0, 0]}
                     />
                     <Line
                       yAxisId="right"
                       type="monotone"
                       dataKey="cost"
                       name="Operational Cost"
-                      stroke="#F3A847" // Amazon Orange
+                      stroke="#ea580c"
                       strokeWidth={3}
                       dot={{
                         r: 4,
-                        fill: "#F3A847",
+                        fill: "#ea580c",
                         stroke: "#fff",
                         strokeWidth: 2,
                       }}
-                      activeDot={{ r: 6, fill: "#B12704", stroke: "#fff" }}
+                      activeDot={{ r: 6, fill: "#b91c1c", stroke: "#fff" }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -531,105 +507,75 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* RECENT ORDERS SECTION */}
         <div className="col-12 col-xl-4">
-          <div
-            className="card border shadow-sm rounded-1 h-100 bg-white"
-            style={{ borderColor: "#D5D9D9" }}
-          >
-            <div className="card-header bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
-              <h5 className="fw-bold mb-0 fs-6" style={{ color: "#0F1111" }}>
-                Recent Orders
-              </h5>
+          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white d-flex flex-column">
+            <div className="card-header bg-transparent border-bottom-0 px-4 pt-4 pb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="fw-bold mb-1 fs-6 text-dark">Recent Orders</h5>
+                <p className="text-muted small mb-0">Latest transactions</p>
+              </div>
               <button
-                className="btn btn-link p-0 text-decoration-none small fw-medium"
+                className="btn btn-sm btn-light rounded-pill px-3 fw-medium d-flex align-items-center gap-1 text-primary hover-bg-primary-light"
                 onClick={() => navigate("/admin/orders")}
-                style={{ color: "#007185" }}
               >
-                View All
+                View All <ArrowRight size={14} />
               </button>
             </div>
-            <div
-              className="card-body p-0 overflow-auto custom-scrollbar"
-              style={{ maxHeight: "380px" }}
-            >
-              <table className="table align-middle mb-0 border-0">
-                <thead className="bg-light sticky-top">
-                  <tr>
-                    <th
-                      className="ps-4 py-2 border-0 small text-muted text-uppercase fw-bold"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+            <div className="card-body p-0 flex-grow-1 overflow-auto custom-scrollbar">
+              <div className="list-group list-group-flush px-2">
+                {recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <div
+                      key={order._id}
+                      className="list-group-item border-0 p-3 mb-2 rounded-3 modern-list-item d-flex justify-content-between align-items-center"
                     >
-                      Order ID
-                    </th>
-                    <th
-                      className="py-2 border-0 small text-muted text-uppercase fw-bold"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-                    >
-                      Customer
-                    </th>
-                    <th
-                      className="pe-4 text-end py-2 border-0 small text-muted text-uppercase fw-bold"
-                      style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-                    >
-                      Amount
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.length > 0 ? (
-                    recentOrders.map((order) => (
-                      <tr
-                        key={order._id}
-                        className="aws-table-row border-bottom border-light-subtle"
-                      >
-                        <td className="ps-4 py-3 border-0">
-                          <span
-                            className="fw-bold"
-                            style={{ color: "#007185", fontSize: "0.85rem" }}
-                          >
-                            #
-                            {order._id
-                              .substring(order._id.length - 6)
-                              .toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="border-0 py-3">
+                      <div className="d-flex align-items-center gap-3">
+                        <div
+                          className="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold"
+                          style={{
+                            width: "42px",
+                            height: "42px",
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          #
+                          {order._id
+                            .substring(order._id.length - 4)
+                            .toUpperCase()}
+                        </div>
+                        <div>
                           <div
-                            className="fw-bold"
-                            style={{ color: "#0F1111", fontSize: "0.85rem" }}
+                            className="fw-bold text-dark mb-1"
+                            style={{ fontSize: "0.9rem" }}
                           >
                             {order.user?.name || "Guest User"}
                           </div>
                           <div
-                            className="text-muted"
-                            style={{ fontSize: "0.7rem" }}
+                            className="text-muted d-flex align-items-center gap-1"
+                            style={{ fontSize: "0.75rem" }}
                           >
-                            {new Date(order.createdAt).toLocaleDateString(
-                              "en-US",
-                              { month: "short", day: "numeric" },
-                            )}
+                            <span className="badge bg-secondary bg-opacity-10 text-secondary border-0 px-2 py-1 rounded-pill">
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "en-US",
+                                { month: "short", day: "numeric" },
+                              )}
+                            </span>
                           </div>
-                        </td>
-                        <td
-                          className="pe-4 text-end border-0 fw-bold py-3"
-                          style={{ color: "#B12704", fontSize: "0.85rem" }}
-                        >
-                          NPR {order.totalPrice?.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="3"
-                        className="text-center py-5 text-muted small"
-                      >
-                        No orders found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                      <div className="text-end fw-bold text-dark">
+                        NPR {order.totalPrice?.toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-5 text-muted small">
+                    <Package size={32} className="mb-2 opacity-50" />
+                    <p className="mb-0">No recent orders found.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -637,22 +583,27 @@ const AdminDashboard = () => {
 
       {/* --- INVENTORY SECTION --- */}
       <div className="row g-4">
+        {/* CRITICAL STOCK ALERTS */}
         <div className="col-12 col-lg-6">
-          <div
-            className="card border shadow-sm rounded-1 h-100 bg-white"
-            style={{ borderColor: "#D5D9D9", borderTop: "4px solid #B12704" }}
-          >
-            <div className="card-header bg-white border-bottom pt-3 px-4 pb-3 d-flex justify-content-between align-items-center">
-              <h5
-                className="fw-bold mb-0 d-flex align-items-center gap-2 fs-6"
-                style={{ color: "#0F1111" }}
-              >
-                <Bell size={18} style={{ color: "#B12704" }} /> Critical Stock
-                Alerts
-              </h5>
+          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white position-relative overflow-hidden">
+            <div
+              className="position-absolute top-0 start-0 w-100"
+              style={{ height: "4px", backgroundColor: "#ef4444" }}
+            ></div>
+            <div className="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="fw-bold mb-1 d-flex align-items-center gap-2 fs-6 text-dark">
+                  <div className="p-1 rounded bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center">
+                    <Bell size={16} />
+                  </div>
+                  Critical Stock Alerts
+                </h5>
+                <p className="text-muted small mb-0">
+                  Items falling below threshold
+                </p>
+              </div>
               <button
-                className="btn btn-sm bg-white border shadow-sm fw-medium"
-                style={{ borderColor: "#D5D9D9", color: "#0F1111" }}
+                className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium"
                 onClick={() => navigate("/admin/suppliers")}
               >
                 Restock Hub
@@ -664,47 +615,44 @@ const AdminDashboard = () => {
             >
               {lowStock.length === 0 ? (
                 <div className="d-flex flex-column align-items-center justify-content-center h-100 py-5">
-                  <CheckCircle2
-                    size={36}
-                    style={{ color: "#067D62" }}
-                    className="mb-3 opacity-75"
-                  />
-                  <span className="text-muted small">
+                  <div className="bg-success bg-opacity-10 p-3 rounded-circle mb-3">
+                    <CheckCircle2 size={32} className="text-success" />
+                  </div>
+                  <span className="text-muted fw-medium">
                     Inventory levels are healthy.
                   </span>
                 </div>
               ) : (
-                <div className="list-group list-group-flush rounded-0">
+                <div className="list-group list-group-flush px-3 pb-3">
                   {lowStock.map((item) => (
                     <div
                       key={item._id}
-                      className="list-group-item d-flex justify-content-between align-items-center p-3 border-bottom border-light-subtle"
+                      className="list-group-item border border-light-subtle rounded-3 mb-2 p-3 d-flex justify-content-between align-items-center bg-white shadow-sm hover-lift-sm"
                     >
                       <div className="d-flex align-items-center gap-3">
-                        <Package size={18} className="text-muted" />
+                        <div className="bg-light p-2 rounded-3 text-secondary">
+                          <Package size={20} />
+                        </div>
                         <div>
                           <div
-                            className="fw-bold"
-                            style={{ color: "#007185", fontSize: "0.9rem" }}
+                            className="fw-bold text-dark mb-1"
+                            style={{ fontSize: "0.95rem" }}
                           >
                             {item.name}
                           </div>
                           <div
-                            className="text-muted"
+                            className="text-danger fw-medium d-flex align-items-center gap-1"
                             style={{ fontSize: "0.75rem" }}
                           >
-                            Requires Attention
+                            <span
+                              className="d-inline-block rounded-circle bg-danger"
+                              style={{ width: "6px", height: "6px" }}
+                            ></span>
+                            Requires Immediate Attention
                           </div>
                         </div>
                       </div>
-                      <span
-                        className="badge rounded-1"
-                        style={{
-                          backgroundColor: "#fef0f0",
-                          color: "#B12704",
-                          border: "1px solid #B12704",
-                        }}
-                      >
+                      <span className="badge bg-danger bg-opacity-10 text-danger border-0 px-3 py-2 rounded-pill fw-bold">
                         {item.countInStock} Left
                       </span>
                     </div>
@@ -715,40 +663,39 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* INVENTORY SNAPSHOT */}
         <div className="col-12 col-lg-6">
-          <div
-            className="card border shadow-sm rounded-1 h-100 bg-white"
-            style={{ borderColor: "#D5D9D9" }}
-          >
-            <div className="card-header bg-white border-bottom pt-3 px-4 pb-3 d-flex justify-content-between align-items-center">
-              <h5 className="fw-bold mb-0 fs-6" style={{ color: "#0F1111" }}>
-                Inventory Snapshot
-              </h5>
+          <div className="card border-0 shadow-sm rounded-4 h-100 bg-white">
+            <div className="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="fw-bold mb-1 fs-6 text-dark">
+                  Inventory Snapshot
+                </h5>
+                <p className="text-muted small mb-0">
+                  Quick overview of catalog
+                </p>
+              </div>
               <button
-                className="btn btn-link p-0 text-decoration-none small fw-medium"
+                className="btn btn-sm btn-light rounded-pill px-3 fw-medium d-flex align-items-center gap-1 text-primary"
                 onClick={() => navigate("/admin/medicines")}
-                style={{ color: "#007185" }}
               >
-                View Full Catalog
+                Full Catalog <ArrowRight size={14} />
               </button>
             </div>
-            <div className="card-body p-4">
+            <div className="card-body px-4 pb-4 pt-2">
               <div className="row g-3">
                 {medicines.slice(0, 6).map((med) => (
                   <div key={med._id} className="col-12 col-md-6">
-                    <div
-                      className="p-3 border rounded-1 d-flex justify-content-between align-items-center bg-white aws-table-row"
-                      style={{ borderColor: "#D5D9D9" }}
-                    >
+                    <div className="p-3 border border-light-subtle rounded-4 d-flex justify-content-between align-items-center bg-light bg-opacity-50 hover-bg-white transition-all shadow-sm-hover">
                       <div className="overflow-hidden pe-2">
                         <div
-                          className="fw-bold text-truncate"
-                          style={{ color: "#0F1111", fontSize: "0.85rem" }}
+                          className="fw-bold text-dark text-truncate mb-1"
+                          style={{ fontSize: "0.9rem" }}
                         >
                           {med.name}
                         </div>
                         <span
-                          className="text-muted"
+                          className="badge bg-white text-secondary border px-2 py-1 rounded-pill fw-normal"
                           style={{ fontSize: "0.7rem" }}
                         >
                           {med.category}
@@ -756,18 +703,22 @@ const AdminDashboard = () => {
                       </div>
                       <div className="text-end flex-shrink-0">
                         <div
-                          className="fw-bold mb-1"
-                          style={{ color: "#B12704", fontSize: "0.85rem" }}
+                          className="fw-bold text-dark mb-1"
+                          style={{ fontSize: "0.9rem" }}
                         >
                           NPR {med.price}
                         </div>
                         <div
-                          className="fw-medium small"
+                          className="fw-bold small rounded-pill px-2 py-1 d-inline-block"
                           style={{
+                            backgroundColor:
+                              (med.countInStock || 0) < 15
+                                ? "#fef2f2"
+                                : "#ecfdf5",
                             color:
                               (med.countInStock || 0) < 15
-                                ? "#B12704"
-                                : "#067D62",
+                                ? "#ef4444"
+                                : "#10b981",
                             fontSize: "0.7rem",
                           }}
                         >
@@ -778,7 +729,7 @@ const AdminDashboard = () => {
                   </div>
                 ))}
                 {medicines.length === 0 && (
-                  <div className="col-12 text-center py-4 text-muted small">
+                  <div className="col-12 text-center py-5 text-muted small bg-light rounded-4">
                     No medicines available in the database.
                   </div>
                 )}
@@ -788,13 +739,17 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* ✅ INTERACTIVE MESSAGES MODAL */}
+      {/* ✅ MODERNISED MESSAGES MODAL */}
       {showMessagesModal && (
         <>
           <div
             className="modal-backdrop fade show"
             onClick={() => setShowMessagesModal(false)}
-            style={{ zIndex: 1040 }}
+            style={{
+              zIndex: 1040,
+              backgroundColor: "rgba(15, 23, 42, 0.4)",
+              backdropFilter: "blur(2px)",
+            }}
           ></div>
           <div
             className="modal fade show d-block animate-fade-in"
@@ -802,195 +757,171 @@ const AdminDashboard = () => {
             style={{ zIndex: 1050 }}
           >
             <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-              <div
-                className="modal-content border shadow-lg rounded-1 bg-white"
-                style={{ borderColor: "#D5D9D9" }}
-              >
-                <div className="modal-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center">
-                  <h5
-                    className="modal-title fw-bold d-flex align-items-center gap-2 fs-6"
-                    style={{ color: "#0F1111" }}
-                  >
-                    <MessageSquare size={18} style={{ color: "#565959" }} />{" "}
-                    Support Inquiries
+              <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div className="modal-header bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+                  <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5 text-dark">
+                    <div className="bg-primary bg-opacity-10 p-2 rounded-circle text-primary d-flex align-items-center justify-content-center">
+                      <MessageSquare size={20} />
+                    </div>
+                    Support Inbox
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="btn-close shadow-none"
                     onClick={() => setShowMessagesModal(false)}
                   ></button>
                 </div>
 
                 <div
-                  className="modal-body p-0"
-                  style={{
-                    maxHeight: "65vh",
-                    overflowY: "auto",
-                    backgroundColor: "#f0f2f2",
-                  }}
+                  className="modal-body p-0 bg-light"
+                  style={{ maxHeight: "65vh", overflowY: "auto" }}
                 >
                   {messages.length === 0 ? (
                     <div className="text-center py-5 text-muted">
-                      <MessageSquare size={48} className="mb-3 opacity-25" />
-                      <h6 className="fw-normal">No support messages found.</h6>
+                      <div className="bg-white p-4 rounded-circle d-inline-block shadow-sm mb-3">
+                        <MessageSquare
+                          size={48}
+                          className="text-secondary opacity-50"
+                        />
+                      </div>
+                      <h5 className="fw-bold text-dark">Inbox Zero</h5>
+                      <p className="small mb-0">
+                        No new support inquiries found.
+                      </p>
                     </div>
                   ) : (
-                    <div className="list-group list-group-flush rounded-0">
+                    <div className="list-group list-group-flush">
                       {messages.map((msg) => (
                         <div
                           key={msg._id}
-                          className={`list-group-item p-4 border-bottom border-light-subtle ${!msg.isRead ? "bg-white" : ""}`}
-                          style={{
-                            backgroundColor: msg.isRead ? "#fafafa" : "#fff",
-                          }}
+                          className={`list-group-item p-4 border-bottom border-light-subtle transition-all ${!msg.isRead ? "bg-white" : "bg-transparent"}`}
                         >
                           <div className="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                              <h6
-                                className="fw-bold mb-1 d-flex align-items-center gap-2"
-                                style={{ color: "#0F1111" }}
+                            <div className="d-flex align-items-center gap-3">
+                              <div
+                                className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm"
+                                style={{ width: "45px", height: "45px" }}
                               >
-                                {msg.name}
-                                {!msg.isRead && (
-                                  <span
-                                    className="badge rounded-1"
-                                    style={{
-                                      backgroundColor: "#B12704",
-                                      color: "#fff",
-                                      fontSize: "0.6rem",
-                                    }}
-                                  >
-                                    NEW
-                                  </span>
-                                )}
-                              </h6>
-                              <a
-                                href={`mailto:${msg.email}`}
-                                className="text-decoration-none small"
-                                style={{ color: "#007185" }}
-                              >
-                                {msg.email}
-                              </a>
+                                {msg.name?.charAt(0).toUpperCase() || "U"}
+                              </div>
+                              <div>
+                                <h6 className="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                                  {msg.name}
+                                  {!msg.isRead && (
+                                    <span
+                                      className="badge bg-danger rounded-pill px-2"
+                                      style={{ fontSize: "0.6rem" }}
+                                    >
+                                      NEW
+                                    </span>
+                                  )}
+                                </h6>
+                                <a
+                                  href={`mailto:${msg.email}`}
+                                  className="text-decoration-none small text-muted hover-text-primary"
+                                >
+                                  {msg.email}
+                                </a>
+                              </div>
                             </div>
-                            <small
-                              className="text-muted"
-                              style={{ fontSize: "0.75rem" }}
-                            >
-                              {new Date(msg.createdAt).toLocaleString()}
-                            </small>
+                            <span className="badge bg-light text-secondary border px-2 py-1 rounded-pill fw-medium">
+                              {new Date(msg.createdAt).toLocaleDateString([], {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
                           </div>
 
                           <div
-                            className="p-3 rounded-1 mb-3 border"
-                            style={{
-                              backgroundColor: "#f8f9fa",
-                              borderColor: "#e5e7eb",
-                              color: "#0F1111",
-                              fontSize: "0.9rem",
-                            }}
+                            className="bg-white p-3 rounded-4 shadow-sm border border-light-subtle mb-3 text-dark position-relative"
+                            style={{ fontSize: "0.95rem", lineHeight: "1.5" }}
                           >
-                            "{msg.text}"
+                            {/* Speech bubble tail effect */}
+                            <div
+                              className="position-absolute top-0 start-0 translate-middle ms-4 mt-2"
+                              style={{
+                                width: 0,
+                                height: 0,
+                                borderTop: "10px solid transparent",
+                                borderRight: "10px solid #fff",
+                                borderBottom: "10px solid transparent",
+                              }}
+                            ></div>
+                            {msg.text}
                           </div>
 
                           {/* REPLIES / ACTIONS */}
                           {msg.adminReply ? (
-                            <div
-                              className="p-3 rounded-1 border-start border-4 mt-2"
-                              style={{
-                                backgroundColor: "#f2fcf5",
-                                borderLeftColor: "#067D62 !important",
-                                border: "1px solid #D5D9D9",
-                              }}
-                            >
-                              <span
-                                className="small fw-bold text-uppercase tracking-wider d-block mb-1"
-                                style={{ color: "#067D62", fontSize: "0.7rem" }}
+                            <div className="d-flex justify-content-end mb-2">
+                              <div
+                                className="p-3 rounded-4 bg-primary text-white shadow-sm position-relative"
+                                style={{ maxWidth: "85%", fontSize: "0.95rem" }}
                               >
-                                Reply Sent:
-                              </span>
-                              <p
-                                className="small mb-0"
-                                style={{ color: "#0F1111" }}
-                              >
-                                "{msg.adminReply}"
-                              </p>
+                                <div className="d-flex justify-content-between align-items-center mb-1 opacity-75 small">
+                                  <span className="fw-bold d-flex align-items-center gap-1">
+                                    <Check size={14} /> Support Team
+                                  </span>
+                                </div>
+                                {msg.adminReply}
+                              </div>
                             </div>
                           ) : replyingTo === msg._id ? (
-                            <div
-                              className="mt-3 bg-white p-3 rounded-1 border shadow-sm"
-                              style={{ borderColor: "#D5D9D9" }}
-                            >
+                            <div className="mt-3 bg-white p-3 rounded-4 shadow-sm border border-light-subtle animate-fade-in">
                               <textarea
-                                className="form-control mb-2 small shadow-none amazon-input"
+                                className="form-control border-light-subtle bg-light mb-3 small shadow-none modern-input"
                                 rows="3"
-                                placeholder={`Write reply to ${msg.name}...`}
+                                placeholder={`Write a helpful reply to ${msg.name}...`}
                                 value={replyText}
                                 onChange={(e) => setReplyText(e.target.value)}
                                 autoFocus
                               ></textarea>
-                              <div className="d-flex gap-2 justify-content-end mt-2">
+                              <div className="d-flex gap-2 justify-content-end">
                                 <button
-                                  className="btn btn-sm bg-white border fw-medium"
+                                  className="btn btn-light rounded-pill px-4 fw-medium"
                                   onClick={() => setReplyingTo(null)}
                                   disabled={replyLoading}
-                                  style={{
-                                    borderColor: "#D5D9D9",
-                                    color: "#0F1111",
-                                  }}
                                 >
                                   Cancel
                                 </button>
                                 <button
-                                  className="btn btn-sm border-0 fw-medium d-flex align-items-center gap-2 shadow-sm"
+                                  className="btn btn-primary rounded-pill px-4 fw-medium d-flex align-items-center gap-2 shadow-sm"
                                   onClick={() => handleSendReply(msg._id)}
                                   disabled={replyLoading || !replyText.trim()}
-                                  style={{
-                                    backgroundColor: "#FFD814",
-                                    color: "#0F1111",
-                                  }}
                                 >
                                   {replyLoading ? (
                                     <Loader2
-                                      size={14}
+                                      size={16}
                                       className="spin-animation"
                                     />
                                   ) : (
-                                    <Send size={14} />
+                                    <Send size={16} />
                                   )}
                                   Send Reply
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="d-flex gap-2 mt-2">
+                            <div className="d-flex gap-2 justify-content-end mt-2">
+                              {!msg.isRead && (
+                                <button
+                                  className="btn btn-sm btn-light rounded-pill px-3 fw-medium d-flex align-items-center gap-2"
+                                  onClick={() => handleMarkAsRead(msg._id)}
+                                >
+                                  <Check size={14} className="text-secondary" />{" "}
+                                  Mark as Read
+                                </button>
+                              )}
                               <button
-                                className="btn btn-sm bg-white border fw-medium d-flex align-items-center gap-2 shadow-sm"
+                                className="btn btn-sm btn-outline-primary rounded-pill px-3 fw-medium d-flex align-items-center gap-2"
                                 onClick={() => {
                                   setReplyingTo(msg._id);
                                   setReplyText("");
                                 }}
-                                style={{
-                                  borderColor: "#D5D9D9",
-                                  color: "#0F1111",
-                                }}
                               >
-                                <Reply size={14} style={{ color: "#007185" }} />{" "}
-                                Write Reply
+                                <Reply size={14} /> Reply to User
                               </button>
-
-                              {/* ✅ NEW: Mark as Read Button */}
-                              {!msg.isRead && (
-                                <button
-                                  className="btn btn-sm bg-white border fw-medium d-flex align-items-center gap-2 shadow-sm"
-                                  onClick={() => handleMarkAsRead(msg._id)}
-                                  style={{
-                                    borderColor: "#D5D9D9",
-                                    color: "#565959",
-                                  }}
-                                >
-                                  <Check size={14} /> Mark as Read
-                                </button>
-                              )}
                             </div>
                           )}
                         </div>
@@ -1005,16 +936,47 @@ const AdminDashboard = () => {
       )}
 
       <style>{`
+        /* --- Modern Utilities --- */
         .cursor-pointer { cursor: pointer; }
-        .aws-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .aws-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
-        .aws-table-row { transition: background-color 0.1s; }
-        .aws-table-row:hover { background-color: #f8f9fa; }
-        .amazon-input:focus { border-color: #e47911 !important; box-shadow: 0 0 3px 2px rgba(228, 121, 17, .5) !important; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+        
+        /* --- Card Hover Effects --- */
+        .modern-card { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s; }
+        .modern-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; }
+        
+        .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
+        
+        .hover-lift-sm { transition: transform 0.15s ease; }
+        .hover-lift-sm:hover { transform: translateY(-1px); }
+
+        /* --- List Items & Interactions --- */
+        .modern-list-item { transition: background-color 0.15s ease; }
+        .modern-list-item:hover { background-color: #f8fafc !important; }
+        
+        .hover-bg-white:hover { background-color: #ffffff !important; }
+        .shadow-sm-hover:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; }
+        .hover-text-primary:hover { color: #0d6efd !important; }
+        
+        /* --- Form Inputs --- */
+        .modern-input { border-radius: 0.75rem; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        .modern-input:focus { background-color: #ffffff; border-color: #93c5fd !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important; }
+
+        /* --- Scrollbars --- */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+        /* --- Animations --- */
         .spin-animation { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { 
+          from { opacity: 0; transform: translateY(10px); } 
+          to { opacity: 1; transform: translateY(0); } 
+        }
       `}</style>
     </div>
   );
