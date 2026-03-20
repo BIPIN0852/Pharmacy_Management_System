@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-// ✅ FIXED: Changed from "../models/Prescription" to "../models/prescriptionModel"
+
 const Prescription = require("../models/prescriptionModel");
 const Medicine = require("../models/Medicine");
 // const Order = require("../models/Order"); // Uncomment when Order model exists
