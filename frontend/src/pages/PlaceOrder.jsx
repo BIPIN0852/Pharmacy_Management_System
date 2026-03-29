@@ -31,19 +31,14 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Prescription Upload States
   const [uploadingImage, setUploadingImage] = useState(false);
   const [prescriptionImage, setPrescriptionImage] = useState("");
 
-  // ✅ CRITICAL BUG FIX: Force the app to strictly use 'checkoutData' from the Cart page
   const getCartItems = () => {
-    // 1. Read the fresh data saved exactly when the user clicked "Proceed to Checkout"
     const checkoutData = JSON.parse(
       localStorage.getItem("checkoutData") || "{}",
     );
     let items = checkoutData.cartItems || [];
-
-    // Filter out any corrupted items
     return items.filter(
       (item) => (item.product || item.medicine) && item.price !== undefined,
     );
@@ -59,12 +54,10 @@ const PlaceOrder = () => {
   const finalCartItems = getCartItems();
   const shippingAddress = getShippingAddress();
 
-  // Check if any item in the cart requires a prescription
   const requiresPrescription = finalCartItems.some(
     (item) => item.prescriptionRequired === true,
   );
 
-  // --- Calculations ---
   const addDecimals = (num) => (Math.round(num * 100) / 100).toFixed(2);
 
   const itemsPrice = addDecimals(
@@ -74,7 +67,7 @@ const PlaceOrder = () => {
     ),
   );
 
-  const shippingPrice = addDecimals(Number(itemsPrice) > 1000 ? 0 : 50); // Matched to your cart threshold
+  const shippingPrice = addDecimals(Number(itemsPrice) > 1000 ? 0 : 50);
   const taxPrice = addDecimals(Number((0.13 * itemsPrice).toFixed(2)));
 
   const totalPrice = (
@@ -89,7 +82,6 @@ const PlaceOrder = () => {
     }
   }, [shippingAddress, navigate]);
 
-  // Upload Handler for Prescription
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -102,7 +94,6 @@ const PlaceOrder = () => {
     try {
       const config = { headers: { "Content-Type": "multipart/form-data" } };
       const { data } = await api.post("/upload", formData, config);
-
       setPrescriptionImage(data.imageUrl || data);
       setUploadingImage(false);
     } catch (err) {
@@ -112,98 +103,47 @@ const PlaceOrder = () => {
     }
   };
 
-  const placeOrderHandler = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  // ✅ FIXED: This NO LONGER creates the order! It just passes the data to the Payment page.
+  const placeOrderHandler = () => {
+    setError("");
 
-      // Validation: Block if Rx is required but not uploaded
-      if (requiresPrescription && !prescriptionImage) {
-        setError(
-          "You must upload a valid prescription for the restricted medicines in your order.",
-        );
-        setLoading(false);
-        return;
-      }
+    if (requiresPrescription && !prescriptionImage) {
+      setError(
+        "You must upload a valid prescription for the restricted medicines in your order.",
+      );
+      return;
+    }
 
-      const orderData = {
-        orderItems: finalCartItems.map((item) => ({
-          name: item.name || "Unknown Item",
-          qty: Number(item.qty),
-          image: item.image || "",
-          price: Number(item.price),
-          product: item.product || item.medicine,
-          unit: item.unit || "Pack",
-          buyingMultiplier: item.buyingMultiplier || 1,
-          prescriptionRequired: item.prescriptionRequired || false,
-        })),
-        shippingAddress: shippingAddress,
-        paymentMethod: "Khalti", // Or whichever default you are using
+    const orderData = {
+      orderItems: finalCartItems.map((item) => ({
+        name: item.name || "Unknown Item",
+        qty: Number(item.qty),
+        image: item.image || "",
+        price: Number(item.price),
+        product: item.product || item.medicine,
+        unit: item.unit || "Pack",
+        buyingMultiplier: item.buyingMultiplier || 1,
+        prescriptionRequired: item.prescriptionRequired || false,
+      })),
+      shippingAddress: shippingAddress,
+      itemsPrice,
+      shippingPrice,
+      taxPrice,
+      totalPrice,
+      prescriptionImage: requiresPrescription ? prescriptionImage : null,
+    };
+
+    // ✅ Pass data cleanly to the next screen. No database hits, no cart clearing.
+    navigate("/payment", {
+      state: {
+        orderData,
+        finalCartItems,
+        totalPrice,
         itemsPrice,
         shippingPrice,
         taxPrice,
-        totalPrice,
-        prescriptionImage: requiresPrescription ? prescriptionImage : null,
-      };
-
-      // 1. Create the Order
-      const res = await api.post("/orders", orderData);
-      const data = res.data || res;
-      const orderId =
-        data._id || data.order?._id || data.createdOrder?._id || data.id;
-
-      if (orderId) {
-        // ✅ 2. CART CLEANUP: Remove ONLY the purchased items from the backend cart
-        try {
-          await Promise.all(
-            finalCartItems.map((item) => {
-              const id = item.product || item.medicine;
-              // Tell backend to delete this specific item from cart
-              return api.delete(`/cart/${id}`).catch(() => null);
-            }),
-          );
-        } catch (cleanupErr) {
-          console.warn(
-            "Minor error clearing backend cart, local will still clear.",
-            cleanupErr,
-          );
-        }
-
-        // ✅ 3. CART CLEANUP: Remove purchased items from Local Storage
-        const currentLocalCart =
-          JSON.parse(localStorage.getItem("cartItems")) || [];
-        const purchasedIds = finalCartItems.map((i) =>
-          String(i.product || i.medicine),
-        );
-
-        // Filter out the items we just bought
-        const remainingCart = currentLocalCart.filter((item) => {
-          const id = String(
-            item.medicine?._id || item.medicine || item.product,
-          );
-          return !purchasedIds.includes(id);
-        });
-
-        // Save the remaining items back to the cart
-        localStorage.setItem("cartItems", JSON.stringify(remainingCart));
-
-        // Clear the active checkout session
-        localStorage.removeItem("checkoutData");
-
-        // Proceed to payment gateway
-        navigate(`/payment?orderId=${orderId}&amount=${totalPrice}`);
-      } else {
-        throw new Error("Order created but ID was missing from response.");
-      }
-    } catch (err) {
-      console.error("Place Order Error:", err);
-      setError(
-        err.response?.data?.message ||
-          "Failed to place order. Please check your connection.",
-      );
-    } finally {
-      setLoading(false);
-    }
+      },
+    });
   };
 
   return (
@@ -215,7 +155,6 @@ const PlaceOrder = () => {
       }}
     >
       <Container className="py-4 animate-fade-in">
-        {/* Back Button */}
         <div className="mb-3">
           <Button
             variant="link"
@@ -234,7 +173,6 @@ const PlaceOrder = () => {
         <Row className="g-4 mt-2">
           <Col lg={8}>
             <div className="d-flex flex-column gap-3">
-              {/* Shipping Info Card */}
               <Card
                 className="border-0 shadow-sm rounded-1 border"
                 style={{ borderColor: "#D5D9D9" }}
@@ -264,9 +202,12 @@ const PlaceOrder = () => {
                         Postal Code: {shippingAddress.postalCode},{" "}
                         {shippingAddress.country}
                       </p>
+                      {/* ✅ FIXED: Correctly displaying the Phone Number */}
                       <p className="mb-0 small" style={{ color: "#565959" }}>
                         <strong className="text-dark">Phone:</strong>{" "}
-                        {shippingAddress.phone || "N/A"}
+                        {shippingAddress.phoneNumber ||
+                          shippingAddress.phone ||
+                          "Not Provided"}
                       </p>
                     </div>
                   ) : (
@@ -283,7 +224,6 @@ const PlaceOrder = () => {
                 </Card.Body>
               </Card>
 
-              {/* Prescription Upload Section (Only visible if required) */}
               {requiresPrescription && (
                 <Card
                   className="border-0 shadow-sm rounded-1"
@@ -376,7 +316,6 @@ const PlaceOrder = () => {
                 </Card>
               )}
 
-              {/* Review Items */}
               <Card
                 className="border-0 shadow-sm rounded-1 border"
                 style={{ borderColor: "#D5D9D9" }}
@@ -500,7 +439,6 @@ const PlaceOrder = () => {
             </div>
           </Col>
 
-          {/* Checkout Summary Sidebar */}
           <Col lg={4}>
             <Card
               className="border-0 shadow-sm rounded-1 bg-white sticky-top"
