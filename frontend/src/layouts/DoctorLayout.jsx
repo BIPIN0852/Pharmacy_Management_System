@@ -112,9 +112,9 @@ const DoctorLayout = () => {
 
       const generatedMsgAlerts = Object.keys(groupedMsgs).map((apptId) => ({
         id: `msg-${apptId}`,
+        appointmentId: apptId,
         title: "New Patient Message",
         message: `You have ${groupedMsgs[apptId]} new message(s) from a patient.`,
-        link: "/doctor/appointments",
         icon: MessageSquare,
         color: "text-primary",
       }));
@@ -234,7 +234,7 @@ const DoctorLayout = () => {
                       msgAlerts.map((n) => (
                         <Dropdown.Item
                           key={n.id}
-                          onClick={() => navigate(n.link)}
+                          onClick={() => navigate("/doctor/dashboard", { state: { openChatForAppointment: n.appointmentId } })}
                           className="p-3 border-bottom text-wrap transition-all"
                         >
                           <div className="d-flex gap-3 align-items-start">

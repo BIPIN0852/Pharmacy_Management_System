@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Dropdown, Badge } from "react-bootstrap";
+import { Dropdown, Badge, Modal, Form, Button, Spinner } from "react-bootstrap";
 import CustomerSidebar from "../components/CustomerSidebar";
 import Breadcrumbs from "../components/Breadcrumbs";
 import {
@@ -10,11 +10,13 @@ import {
   LogOut,
   Package,
   MessageSquare,
+  MessageCircle,
   Truck,
   CheckCircle2,
   Sun,
   Moon,
-  Globe, // ✅ Added Globe icon for language
+  Globe,
+  Send,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useAuth } from "../context/AuthContext";
@@ -36,6 +38,16 @@ const CustomerLayout = () => {
   // --- Separate Notification States ---
   const [orderAlerts, setOrderAlerts] = useState([]);
   const [msgAlerts, setMsgAlerts] = useState([]);
+  const [activeAppointments, setActiveAppointments] = useState([]);
+
+  // --- Chat Modal States ---
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatTarget, setChatTarget] = useState(null);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const chatScrollRef = useRef(null);
 
   // --- Handle Screen Resize ---
   useEffect(() => {
@@ -66,9 +78,10 @@ const CustomerLayout = () => {
   // --- Fetch Notifications (Orders + Messages) ---
   const fetchNotifications = async () => {
     try {
-      const [msgRes, orderRes] = await Promise.all([
+      const [msgRes, orderRes, apptRes] = await Promise.all([
         api.get("/messages/my").catch(() => ({ data: [] })),
         api.get("/orders/myorders").catch(() => ({ data: [] })),
+        api.get("/customer/appointments").catch(() => ({ data: { appointments: [] } })),
       ]);
 
       const messages = Array.isArray(msgRes.data)
@@ -77,6 +90,8 @@ const CustomerLayout = () => {
       const orders = Array.isArray(orderRes.data)
         ? orderRes.data
         : orderRes.data?.orders || [];
+      const appointments = apptRes.data?.appointments || (Array.isArray(apptRes.data) ? apptRes.data : []);
+      setActiveAppointments(appointments);
 
       // 1. MESSAGE ALERTS
       const generatedMsgAlerts = [];
@@ -113,9 +128,9 @@ const CustomerLayout = () => {
         Object.keys(groupedDoctorMsgs).forEach((apptId) => {
           generatedMsgAlerts.push({
             id: `doc-msg-${apptId}`,
+            appointmentId: apptId,
             title: "New Message from Doctor",
             message: `You have ${groupedDoctorMsgs[apptId]} unread message(s) in an active chat.`,
-            link: "/appointments",
             icon: MessageSquare,
             color: "text-primary",
           });
@@ -188,6 +203,92 @@ const CustomerLayout = () => {
 
     localStorage.setItem("dismissedOrderAlerts", JSON.stringify(newDismissed));
     setOrderAlerts([]);
+  };
+
+  // --- Chat Modal Logic ---
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatHistory, showChatModal]);
+
+  const handleOpenChat = async (appointmentId) => {
+    // Find the appointment to get doctor info
+    let appointment = activeAppointments.find((a) => a._id === appointmentId);
+
+    // If not found locally, fetch from API
+    if (!appointment) {
+      try {
+        const res = await api.get("/customer/appointments");
+        const allAppts = res.data?.appointments || (Array.isArray(res.data) ? res.data : []);
+        appointment = allAppts.find((a) => a._id === appointmentId);
+      } catch (err) {
+        console.error("Failed to fetch appointment:", err);
+      }
+    }
+
+    setChatTarget({
+      appointmentId,
+      doctorName: appointment?.doctor?.name || "Doctor",
+      doctorId: appointment?.doctor?._id,
+      date: appointment?.date,
+    });
+    setShowChatModal(true);
+    setChatLoading(true);
+    setChatHistory([]);
+
+    try {
+      const res = await api.get(`/messages/appointment/${appointmentId}`);
+      setChatHistory(res.data.messages || res.data || []);
+    } catch (err) {
+      console.error("Failed to load chat history:", err);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e?.preventDefault();
+    if (!messageText.trim() || !chatTarget) return;
+
+    try {
+      setSendingMessage(true);
+      const payload = {
+        receiverId: chatTarget.doctorId,
+        appointmentId: chatTarget.appointmentId,
+        text: messageText,
+        senderModel: "User",
+      };
+
+      const res = await api.post("/messages/appointment", payload);
+
+      const newMsg = res.data?.message ||
+        res.data || {
+          _id: Date.now().toString(),
+          sender: user?._id,
+          senderModel: "User",
+          text: messageText,
+          createdAt: new Date().toISOString(),
+        };
+
+      setChatHistory((prev) => [...prev, newMsg]);
+      setMessageText("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send message.");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const getDoctorInitials = (name) => {
+    if (!name) return "Dr";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   // --- Cart Calculation ---
@@ -382,7 +483,9 @@ const CustomerLayout = () => {
                               navigate("/customer-dashboard", {
                                 state: { scrollTo: "support-tickets" },
                               });
-                            } else {
+                            } else if (n.appointmentId) {
+                              handleOpenChat(n.appointmentId);
+                            } else if (n.link) {
                               navigate(n.link);
                             }
                           }}
@@ -584,6 +687,155 @@ const CustomerLayout = () => {
           </div>
         </main>
       </div>
+
+      {/* ====================================================================== */}
+      {/* PATIENT CHAT MODAL (Same style as Doctor Dashboard) */}
+      {/* ====================================================================== */}
+      <Modal
+        show={showChatModal}
+        onHide={() => setShowChatModal(false)}
+        centered
+        contentClassName="border-0 shadow-lg rounded-4 overflow-hidden"
+      >
+        <Modal.Header className="bg-primary text-white border-0 p-4 pb-3">
+          <Modal.Title className="fw-bold d-flex align-items-center gap-2 fs-5">
+            <MessageCircle size={20} /> Doctor Chat
+          </Modal.Title>
+          <button
+            type="button"
+            className="btn-close btn-close-white shadow-none ms-auto"
+            onClick={() => setShowChatModal(false)}
+          ></button>
+        </Modal.Header>
+
+        <Modal.Body className="p-0 bg-white">
+          <div className="p-3 bg-light border-bottom border-light-subtle d-flex align-items-center gap-3">
+            <div
+              className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm flex-shrink-0"
+              style={{ width: "40px", height: "40px" }}
+            >
+              {getDoctorInitials(chatTarget?.doctorName)}
+            </div>
+            <div>
+              <h6 className="fw-bold text-dark mb-0">
+                Dr. {chatTarget?.doctorName || "Doctor"}
+              </h6>
+              <span className="text-muted small fw-medium">
+                Appt:{" "}
+                {chatTarget?.date
+                  ? new Date(chatTarget.date).toLocaleDateString()
+                  : "Active"}
+              </span>
+            </div>
+          </div>
+
+          <div
+            className="p-3 bg-white d-flex flex-column custom-scrollbar"
+            style={{
+              height: "350px",
+              overflowY: "auto",
+            }}
+            ref={chatScrollRef}
+          >
+            {chatLoading ? (
+              <div className="m-auto text-center">
+                <Spinner
+                  animation="border"
+                  size="sm"
+                  className="text-primary mb-2"
+                />
+                <p className="small text-muted fw-medium mb-0">
+                  Loading history...
+                </p>
+              </div>
+            ) : chatHistory.length === 0 ? (
+              <div className="m-auto text-center text-muted opacity-50">
+                <MessageSquare size={32} className="mb-2" />
+                <p className="small fw-medium mb-0">
+                  No messages yet.
+                  <br />
+                  Say hello to your doctor!
+                </p>
+              </div>
+            ) : (
+              <div className="d-flex flex-column gap-3">
+                {chatHistory.map((msg) => {
+                  const isMe =
+                    msg.senderModel === "User" ||
+                    msg.senderModel === "Customer" ||
+                    String(msg.sender?._id || msg.sender) === String(user?._id);
+                  return (
+                    <div
+                      key={msg._id}
+                      className={`d-flex ${isMe ? "justify-content-end" : "justify-content-start"}`}
+                    >
+                      <div
+                        className={`p-3 rounded-4 shadow-sm ${isMe ? "bg-primary text-white" : "bg-light text-dark border border-light-subtle"}`}
+                        style={{
+                          maxWidth: "85%",
+                          borderBottomRightRadius: isMe ? "4px" : "16px",
+                          borderBottomLeftRadius: !isMe ? "4px" : "16px",
+                        }}
+                      >
+                        <div className="small mb-1 lh-base">{msg.text}</div>
+                        <div
+                          className={`text-end fw-medium ${isMe ? "text-white-50" : "text-muted"}`}
+                          style={{ fontSize: "0.65rem" }}
+                        >
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="p-3 bg-light border-top border-light-subtle">
+            <Form
+              onSubmit={handleSendMessage}
+              className="d-flex gap-2 align-items-end"
+            >
+              <Form.Control
+                as="textarea"
+                rows={1}
+                className="border-light-subtle bg-white shadow-none focus-ring-primary rounded-pill py-2 px-3"
+                style={{
+                  resize: "none",
+                  overflow: "hidden",
+                  minHeight: "44px",
+                }}
+                placeholder="Type your message..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                className="rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm"
+                style={{ width: "44px", height: "44px" }}
+                disabled={sendingMessage || !messageText.trim()}
+              >
+                {sendingMessage ? (
+                  <Spinner size="sm" animation="border" />
+                ) : (
+                  <Send size={18} className="ms-1" />
+                )}
+              </Button>
+            </Form>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       <style>{`
         .hide-caret::after { display: none !important; }
