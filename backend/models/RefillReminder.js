@@ -52,11 +52,11 @@ const RefillReminderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // -------------------------------------------------------------------
-// ✅ INDEXES (Critical for Cron Jobs)
+// INDEXES (Critical for Cron Jobs)
 // -------------------------------------------------------------------
 
 // 1. Scheduler Index: Quickly find reminders that are DUE and NOT SENT yet

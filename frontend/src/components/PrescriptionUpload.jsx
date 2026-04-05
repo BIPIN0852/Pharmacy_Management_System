@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Upload, X, FileText, CheckCircle } from "lucide-react";
-import api from "../services/api"; // ✅ Use your Axios instance
+import api from "../services/api";
 
 const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
@@ -73,7 +73,7 @@ const PrescriptionUpload = ({ user, onUploadSuccess }) => {
       // extracts them from the JWT token (req.user)
       formData.append("customerName", user.name);
 
-      // ✅ UPDATED: Points to consolidated backend route
+      //  Points to consolidated backend route
       const { data } = await api.post("/prescriptions", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });

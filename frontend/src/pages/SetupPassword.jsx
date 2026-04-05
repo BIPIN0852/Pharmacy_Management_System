@@ -13,7 +13,7 @@ const SetupPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Strong Password Regex
+  // Strong Password Regex
   // Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -21,7 +21,7 @@ const SetupPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Regex Validation Check
+    // Regex Validation Check
     if (!passwordRegex.test(newPassword)) {
       setError("Password does not meet the security requirements.");
       return;

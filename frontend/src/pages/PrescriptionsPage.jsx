@@ -20,7 +20,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import api from "../services/api"; // ✅ Using global API (Axios)
+import api from "../services/api";
 
 const PrescriptionsPage = () => {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -40,7 +40,6 @@ const PrescriptionsPage = () => {
   const fetchPrescriptions = async () => {
     try {
       setLoading(true);
-      // ✅ Using /my endpoint which we created in prescriptionRoutes.js
       const { data } = await api.get("/prescriptions/my");
       setPrescriptions(data || []);
     } catch (err) {
@@ -68,7 +67,7 @@ const PrescriptionsPage = () => {
     formData.append("notes", notes);
 
     try {
-      // ✅ FIX: Explicitly set Content-Type to match multipart/form-data
+      //  Explicitly set Content-Type to match multipart/form-data
       await api.post("/prescriptions", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -83,7 +82,7 @@ const PrescriptionsPage = () => {
       alert("Prescription uploaded successfully!");
     } catch (err) {
       console.error(err);
-      // ✅ Show the specific error message from the backend
+      //  Show the specific error message from the backend
       const serverMessage =
         err.response?.data?.message || "Upload failed on server.";
       alert(`Upload Error: ${serverMessage}`);
@@ -176,7 +175,7 @@ const PrescriptionsPage = () => {
                   style={{ height: "200px" }}
                 >
                   <img
-                    // ✅ Fix image path: server stores relative path, ensuring localhost prefix if needed
+                    // Fix image path: server stores relative path, ensuring localhost prefix if needed
                     src={
                       pres.imageUrl
                         ? `http://localhost:5000${pres.imageUrl}`
@@ -206,7 +205,7 @@ const PrescriptionsPage = () => {
                       onClick={() =>
                         window.open(
                           `http://localhost:5000${pres.imageUrl}`,
-                          "_blank"
+                          "_blank",
                         )
                       }
                     >

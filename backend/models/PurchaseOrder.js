@@ -39,7 +39,7 @@ const purchaseItemSchema = new mongoose.Schema(
       type: Date,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const purchaseOrderSchema = new mongoose.Schema(
@@ -103,11 +103,11 @@ const purchaseOrderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // -------------------------------------------------------------------
-// ✅ MIDDLEWARE: Auto-calculate Total Cost before saving
+// Auto-calculate Total Cost before saving
 // -------------------------------------------------------------------
 purchaseOrderSchema.pre("save", function (next) {
   if (this.items && this.items.length > 0) {
@@ -125,7 +125,7 @@ purchaseOrderSchema.pre("save", function (next) {
 });
 
 // -------------------------------------------------------------------
-// ✅ INDEXES
+// INDEXES
 // -------------------------------------------------------------------
 
 // Sort by date descending (Newest orders first)

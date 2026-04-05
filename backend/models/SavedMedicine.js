@@ -10,11 +10,11 @@ const savedMedicineSchema = mongoose.Schema(
     medicine: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      // ✅ CRITICAL: Must match the lowercase "medicine" export in Medicine.js
+
       ref: "medicine",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Unique Constraint: A user can only save a specific medicine once

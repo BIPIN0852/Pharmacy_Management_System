@@ -31,7 +31,7 @@ const AdminPurchases = () => {
     items: [],
   });
 
-  // ✅ FIX: Auto-initialize with one empty item so the form is ready to use
+  // Auto-initialize with one empty item so the form is ready to use
   const resetForm = () => {
     setFormData({
       supplier: "",

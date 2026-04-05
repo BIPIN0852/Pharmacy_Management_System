@@ -54,7 +54,7 @@ const protect = asyncHandler(async (req, res, next) => {
 // 3. Role-Based Middleware
 // ----------------------
 
-// ✅ ADMIN CHECK
+// ADMIN CHECK
 const admin = (req, res, next) => {
   if (req.user && (req.user.role === "admin" || req.user.isAdmin === true)) {
     next();
@@ -64,7 +64,7 @@ const admin = (req, res, next) => {
   }
 };
 
-// ✅ PHARMACIST CHECK (Admins also allowed)
+// PHARMACIST CHECK (Admins also allowed)
 const pharmacist = (req, res, next) => {
   if (
     req.user &&
@@ -79,7 +79,7 @@ const pharmacist = (req, res, next) => {
   }
 };
 
-// ✅ CUSTOMER CHECK (Admins also allowed)
+// CUSTOMER CHECK (Admins also allowed)
 const customer = (req, res, next) => {
   if (
     req.user &&
@@ -95,7 +95,7 @@ const customer = (req, res, next) => {
 };
 
 module.exports = {
-  generateToken, // ✅ Exported for use in controllers
+  generateToken,
   protect,
   admin,
   pharmacist,

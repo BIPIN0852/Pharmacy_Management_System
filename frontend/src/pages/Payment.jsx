@@ -129,7 +129,7 @@ const StripeCheckoutForm = ({ amount, orderId }) => {
 const Payment = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { state } = useLocation(); // ✅ Receive data from PlaceOrder cleanly
+  const { state } = useLocation();
 
   // Extract state
   const orderData = state?.orderData;
@@ -153,7 +153,7 @@ const Payment = () => {
     }
   }, [orderData, navigate]);
 
-  // ✅ CRITICAL LOGIC: Create the order and clear the cart ONLY when they click to pay
+  // CRITICAL LOGIC: Create the order and clear the cart ONLY when they click to pay
   const createOrderAndClearCart = async () => {
     const finalOrderData = { ...orderData, paymentMethod };
 

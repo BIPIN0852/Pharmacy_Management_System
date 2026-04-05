@@ -22,7 +22,7 @@ const supplierSchema = new mongoose.Schema(
     paymentTerms: { type: String, default: "Cash", trim: true },
     notes: { type: String, trim: true },
 
-    // ✅ UPDATED: Stores Medicine Reference AND Quantity
+    //  Stores Medicine Reference AND Quantity
     suppliedMedicines: [
       {
         // _id: false, // Uncomment this if you don't want unique IDs for each list item
@@ -35,7 +35,7 @@ const supplierSchema = new mongoose.Schema(
           type: Number,
           required: true,
           default: 1,
-          min: [1, "Quantity must be at least 1"], // ✅ Prevents negative/zero values
+          min: [1, "Quantity must be at least 1"], // Prevents negative/zero values
         },
       },
     ],
@@ -45,7 +45,7 @@ const supplierSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// ✅ INDEXES
+// INDEXES
 // 1. Text Search Index (for Search Bar)
 supplierSchema.index({ name: "text", contactPerson: "text" });
 

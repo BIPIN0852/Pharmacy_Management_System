@@ -70,7 +70,7 @@ const DoctorLayout = () => {
       );
 
       // ==========================================
-      // 2. MESSAGE ALERTS (Message Icon) - BULLETPROOF FIX
+      // 2. MESSAGE ALERTS (Message Icon)
       // ==========================================
       // We fetch the chat history for each active appointment directly.
       // This bypasses any bugs with missing receiverIds in the database!
@@ -234,7 +234,13 @@ const DoctorLayout = () => {
                       msgAlerts.map((n) => (
                         <Dropdown.Item
                           key={n.id}
-                          onClick={() => navigate("/doctor/dashboard", { state: { openChatForAppointment: n.appointmentId } })}
+                          onClick={() =>
+                            navigate("/doctor/dashboard", {
+                              state: {
+                                openChatForAppointment: n.appointmentId,
+                              },
+                            })
+                          }
                           className="p-3 border-bottom text-wrap transition-all"
                         >
                           <div className="d-flex gap-3 align-items-start">

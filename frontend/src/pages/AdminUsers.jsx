@@ -55,7 +55,7 @@ const AdminUsers = () => {
       u.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // ✅ Helper function to uniquely style different roles
+  // Helper function to uniquely style different roles
   const getRoleBadgeStyle = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
@@ -148,7 +148,7 @@ const AdminUsers = () => {
                           </div>
                         </td>
                         <td>
-                          {/* ✅ Applied dynamic role badge styling */}
+                          {/* Applied dynamic role badge styling */}
                           <span
                             className={`badge rounded-pill px-3 py-2 border ${getRoleBadgeStyle(u.role)}`}
                           >

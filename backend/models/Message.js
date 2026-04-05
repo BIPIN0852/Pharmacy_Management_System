@@ -58,7 +58,7 @@ const messageSchema = new mongoose.Schema(
     // ⏳ AUTO-DELETE (TTL) SETTINGS
     // ===================================================================
 
-    // ✅ TTL Index Field
+    // TTL Index Field
     // This tells MongoDB to automatically delete the document 48 hours (172800 seconds) after the 'createdAt' timestamp.
     // Note: This now means your Doctor-Patient chats will ALSO auto-delete after 48 hours (which is actually great for medical privacy!)
     createdAt: { type: Date, default: Date.now, expires: 172800 },

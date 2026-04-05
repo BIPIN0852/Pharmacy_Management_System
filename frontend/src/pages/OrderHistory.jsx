@@ -70,13 +70,18 @@ const OrderHistory = () => {
     }
   };
 
+  // ✅ FIXED useEffect
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo && userInfo.token) {
       fetchOrders();
+    } else {
+      // If no user is logged in, stop the spinner and redirect to login
+      setLoading(false);
+      navigate("/login");
     }
-  }, [userInfo]);
+  }, [userInfo, navigate]);
 
-  // ✅ PROPER STATE CLEANUP: Safely closes modal and resets ID
+  // PROPER STATE CLEANUP: Safely closes modal and resets ID
   const handleCloseDelete = () => {
     if (!deleteLoading) {
       setShowDeleteModal(false);
@@ -84,7 +89,7 @@ const OrderHistory = () => {
     }
   };
 
-  // ✅ ABSOLUTE FAILSAFE CANCELLATION
+  // ABSOLUTE FAILSAFE CANCELLATION
   const handleDeleteOrder = async () => {
     if (!orderToDelete) return;
 
@@ -310,7 +315,7 @@ const OrderHistory = () => {
                           }) || "0.00"}
                         </td>
 
-                        {/* ✅ UPDATED PAYMENT STATUS BADGE (TABLE) */}
+                        {/*PAYMENT STATUS BADGE (TABLE) */}
                         <td>
                           <div className="d-flex flex-column align-items-start">
                             <span
@@ -412,7 +417,7 @@ const OrderHistory = () => {
         )}
 
         {/* ============================================================================== */}
-        {/* ✅ ORDER DETAILS MODAL */}
+        {/* ORDER DETAILS MODAL */}
         {/* ============================================================================== */}
         <Modal
           show={showOrderModal}
@@ -494,7 +499,7 @@ const OrderHistory = () => {
                         </span>
                       </div>
 
-                      {/* ✅ UPDATED PAYMENT STATUS BADGE (MODAL) */}
+                      {/* UPDATED PAYMENT STATUS BADGE (MODAL) */}
                       <div className="d-flex justify-content-between mb-2 small">
                         <span className="text-muted">Payment Status:</span>
                         <Badge
@@ -700,7 +705,7 @@ const OrderHistory = () => {
           )}
         </Modal>
 
-        {/* ✅ CANCEL CONFIRMATION MODAL */}
+        {/* CANCEL CONFIRMATION MODAL */}
         <Modal
           show={showDeleteModal}
           onHide={handleCloseDelete}

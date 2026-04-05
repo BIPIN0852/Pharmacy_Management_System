@@ -31,7 +31,7 @@ const SavedMedicinesPage = () => {
       setLoading(true);
       const { data } = await api.get("/customer/saved-medicines");
 
-      // ✅ Safety Check: Ensure data is an array
+      // Safety Check: Ensure data is an array
       const items = Array.isArray(data) ? data : [];
       setSavedItems(items);
 
@@ -48,7 +48,7 @@ const SavedMedicinesPage = () => {
     }
   };
 
-  // ✅ DELETE ACTION HANDLER
+  // DELETE ACTION HANDLER
   const handleRemove = async (id) => {
     if (!window.confirm("Are you sure you want to remove this saved item?"))
       return;

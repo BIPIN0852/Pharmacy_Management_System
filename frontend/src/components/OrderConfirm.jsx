@@ -26,7 +26,7 @@ const OrderConfirmation = () => {
       }
 
       try {
-        // ✅ UPDATED: Fetch real order data from backend
+        // Fetch real order data from backend
         const { data } = await api.get(`/orders/${orderId}`);
         setOrder(data);
       } catch (error) {
@@ -41,7 +41,7 @@ const OrderConfirmation = () => {
 
   const downloadInvoice = async () => {
     try {
-      // ✅ UPDATED: Use the specific PDF invoice route we created in backend
+      // Use the specific PDF invoice route created in backend
       const response = await api.get(`/orders/${orderId}/invoice`, {
         responseType: "blob",
       });
@@ -111,7 +111,7 @@ const OrderConfirmation = () => {
           className="bg-white shadow-sm border rounded-3 p-4 p-md-5 w-100"
           style={{ maxWidth: 750, borderColor: "#D5D9D9" }}
         >
-          {/* Success Header (Amazon Style) */}
+          {/* Success Header  */}
           <div className="d-flex align-items-start mb-4 pb-3 border-bottom border-secondary-subtle">
             <CheckCircle
               className="text-success me-3 mt-1 flex-shrink-0"

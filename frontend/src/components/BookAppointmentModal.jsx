@@ -55,7 +55,7 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
     }
   }, [selectedDoctor, doctors]);
 
-  // ✅ HELPER: Format minutes back to HH:MM
+  // Format minutes back to HH:MM
   const formatTime = (minutes) => {
     const h = Math.floor(minutes / 60)
       .toString()
@@ -64,7 +64,7 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
     return `${h}:${m}`;
   };
 
-  // ✅ HELPER: Generate 15-minute intervals from a range
+  // Generate 15-minute intervals from a range
   const generate15MinSlots = (startStr, endStr) => {
     const slots = [];
     let [startH, startM] = startStr.split(":").map(Number);
@@ -196,7 +196,7 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
       setSelectedSlot("");
       setNotes("");
     } catch (err) {
-      // ✅ Provide a clear error if the backend rejects due to double-booking (Step 1 from previous response)
+      // Provide a clear error if the backend rejects due to double-booking (Step 1 from previous response)
       setError(
         err.response?.data?.message ||
           "Booking failed. This slot might have just been taken.",
@@ -304,7 +304,7 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
                       <option
                         key={slot.value}
                         value={slot.value}
-                        disabled={slot.status === "full"} // ✅ Disables the HTML select option
+                        disabled={slot.status === "full"}
                       >
                         {slot.label}{" "}
                         {slot.status === "full" ? "(Already Booked)" : ""}

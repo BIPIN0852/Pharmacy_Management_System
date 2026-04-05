@@ -1,7 +1,4 @@
 import { combineReducers } from "redux";
-
-// ✅ Updated paths to include the 'reducers' directory
-// If your files are NOT in a subfolder, remove the "reducers/" part.
 import { cartReducer } from "./reducers/cartReducers";
 import {
   userLoginReducer,

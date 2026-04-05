@@ -1,13 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const Supplier = require("../models/Supplier");
-const Medicine = require("../models/Medicine"); // ✅ Import the Model
+const Medicine = require("../models/Medicine");
 
 // @desc    Get all suppliers
 // @route   GET /api/admin/suppliers
 // @access  Private/Admin
 const getSuppliers = asyncHandler(async (req, res) => {
   try {
-    // ✅ Check if Medicine model loaded correctly
+    // Check if Medicine model loaded correctly
     if (!Medicine) {
       throw new Error(
         "Medicine model not loaded. Check '../models/Medicine.js' path.",
@@ -19,7 +19,7 @@ const getSuppliers = asyncHandler(async (req, res) => {
       .populate({
         path: "suppliedMedicines.medicine",
         select: "name manufacturer",
-        model: Medicine, // ✅ FIX: Pass the imported Model object, NOT a string
+        model: Medicine,
       })
       .sort({ createdAt: -1 });
 

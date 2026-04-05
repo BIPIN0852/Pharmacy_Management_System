@@ -10,7 +10,7 @@ const authorizeRoles = require("../middleware/role");
 // -------------------------------------------------------------------
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // ✅ FIX: Save to the "uploads/" folder so it matches the database
+    // FIX: Save to the "uploads/" folder so it matches the database
     cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
@@ -67,8 +67,8 @@ const {
   updateMedicine,
   getAllDoctors,
   createDoctor,
-  requestDoctorOtp, // ✅ NEW: Import Request OTP
-  verifyAndCreateDoctor, // ✅ NEW: Import Verify OTP
+  requestDoctorOtp,
+  verifyAndCreateDoctor,
   updateDoctor,
   deleteDoctor,
   getAllPurchases,
@@ -97,7 +97,7 @@ router.put(
 // 🩺 3. DOCTOR MANAGEMENT (MEDICAL STAFF)
 // -------------------------------------------------------------------
 
-// ✅ NEW: Request OTP for Doctor Registration
+// Request OTP for Doctor Registration
 router.post(
   "/request-doctor-otp",
   protect,
@@ -105,7 +105,7 @@ router.post(
   requestDoctorOtp,
 );
 
-// ✅ NEW: Verify OTP and Create Doctor (Handles image uploads just like createDoctor)
+//  Verify OTP and Create Doctor (Handles image uploads just like createDoctor)
 router.post(
   "/verify-create-doctor",
   protect,
@@ -129,7 +129,7 @@ router
 
 router
   .route("/doctors/:id")
-  // ✅ Edit route uses the same upload middleware
+  // Edit route uses the same upload middleware
   .put(
     protect,
     authorizeRoles("admin"),

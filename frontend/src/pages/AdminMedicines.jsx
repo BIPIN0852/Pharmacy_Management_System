@@ -22,7 +22,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-// ✅ STANDARD CATEGORIES (Matching Backend and Customer Dashboard)
+// STANDARD CATEGORIES (Matching Backend and Customer Dashboard)
 const CATEGORIES = [
   "Tablet",
   "Capsule",
@@ -148,7 +148,7 @@ const AdminMedicines = () => {
       med.batches && med.batches.length > 0 ? med.batches[0] : null;
     setEditingId(med._id);
 
-    // ✅ FIXED: Safely load countInStock and default to BATCH-1 if missing
+    // Safely load countInStock and default to BATCH-1 if missing
     setFormData({
       name: med.name || "",
       manufacturer: med.brand || med.manufacturer || "",
@@ -198,7 +198,7 @@ const AdminMedicines = () => {
         prescriptionRequired: formData.prescriptionRequired,
         image: formData.image || "/images/sample.jpg",
 
-        // ✅ FIXED: Always send at least one batch to prevent stock from being wiped to 0
+        // Always send at least one batch to prevent stock from being wiped to 0
         batches: [
           {
             batchNumber: formData.batchNumber.trim() || "BATCH-1",

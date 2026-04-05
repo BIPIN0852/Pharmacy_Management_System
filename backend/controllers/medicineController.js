@@ -22,7 +22,7 @@ const getMedicines = asyncHandler(async (req, res) => {
     .limit(pageSize)
     .skip(pageSize * (page - 1));
 
-  // ✅ Support for both paginated and non-paginated (all) requests
+  // Support for both paginated and non-paginated (all) requests
   // If 'all' query param is present, return everything (used by Admin dropdowns)
   if (req.query.all) {
     const allMedicines = await Medicine.find({}).sort({ name: 1 });
@@ -197,5 +197,5 @@ module.exports = {
   updateMedicine,
   createMedicineReview,
   getTopMedicines,
-  getExpiringMedicines, // ✅ Added new function export
+  getExpiringMedicines,
 };

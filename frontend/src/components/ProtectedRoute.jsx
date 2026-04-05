@@ -37,14 +37,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     console.warn(`Access Denied: Role '${user.role}' is not authorized.`);
 
-    // ✅ UPDATED: Added the Doctor fallback path
+    // Added the Doctor fallback path
     const fallbackPath =
       user.role === "admin"
         ? "/admin/dashboard"
         : user.role === "pharmacist"
           ? "/pharmacist/dashboard"
           : user.role === "doctor"
-            ? "/doctor/dashboard" // <-- Sends doctors to their dashboard
+            ? "/doctor/dashboard"
             : "/customer-dashboard";
 
     return <Navigate to={fallbackPath} replace />;

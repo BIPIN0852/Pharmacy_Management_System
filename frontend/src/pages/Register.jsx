@@ -1511,7 +1511,6 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // --- UNIQUE Image Swapping Logic for Register Page ---
-  // These are completely different from the Login page images!
   const backgroundImages = [
     "https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=1200&auto=format&fit=crop", // Hospital Tech
     "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1200&auto=format&fit=crop", // Medical Desk/Stethoscope
@@ -1619,7 +1618,7 @@ export default function Register() {
             className="d-flex flex-column p-4 p-md-5 position-relative"
             style={{ backgroundColor: "#09090b", color: "#ffffff" }}
           >
-            {/* ✅ FIXED: Return to Login Button */}
+            {/* Return to Login Button */}
             <div className="mb-auto slide-up">
               <Link
                 to="/login"
@@ -1904,8 +1903,6 @@ export default function Register() {
           </Col>
         </Row>
       </Container>
-
-      {/* ✅ FIXED: Footer updated to match the Login Page */}
       <footer
         className="py-3 position-relative z-index-1"
         style={{

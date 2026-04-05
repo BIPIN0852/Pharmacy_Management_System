@@ -8,8 +8,8 @@ import {
   Card,
   Spinner,
   Alert,
-  Row, // ✅ Added
-  Col, // ✅ Added
+  Row,
+  Col,
 } from "react-bootstrap";
 import {
   Eye,
@@ -19,9 +19,8 @@ import {
   User,
   Calendar,
 } from "lucide-react";
-// Remove unused imports if you want (Download, etc.), but I kept them as requested
 import { useNavigate } from "react-router-dom";
-import api from "../services/api"; // ✅ Ensure this path is correct for your folder structure
+import api from "../services/api";
 
 const PharmacistPrescriptions = () => {
   const navigate = useNavigate();
@@ -41,7 +40,7 @@ const PharmacistPrescriptions = () => {
   const fetchPrescriptions = async () => {
     try {
       setLoading(true);
-      // ✅ Interceptor handles token and base URL
+      // Interceptor handles token and base URL
       const response = await api.get("/prescriptions");
       // Handle various response structures (axios data vs direct array)
       const data = response.data || response;
@@ -58,7 +57,7 @@ const PharmacistPrescriptions = () => {
     setActionLoading(true);
 
     try {
-      // ✅ Synchronized with backend PUT /api/prescriptions/:id
+      // Synchronized with backend PUT /api/prescriptions/:id
       await api.put(`/prescriptions/${selectedRx._id}`, {
         status,
         notes: status === "Rejected" ? rejectReason : selectedRx.notes,
@@ -66,14 +65,14 @@ const PharmacistPrescriptions = () => {
 
       // Update UI locally to reflect the change immediately
       const updatedList = prescriptions.map((p) =>
-        p._id === selectedRx._id ? { ...p, status } : p
+        p._id === selectedRx._id ? { ...p, status } : p,
       );
       setPrescriptions(updatedList);
       setShowModal(false);
       setRejectReason("");
     } catch (err) {
       alert(
-        err.response?.data?.message || "Failed to update prescription status."
+        err.response?.data?.message || "Failed to update prescription status.",
       );
     } finally {
       setActionLoading(false);
@@ -110,7 +109,7 @@ const PharmacistPrescriptions = () => {
     );
   };
 
-  // ✅ HELPER: Get correct image URL (Handling localhost ports)
+  // HELPER: Get correct image URL (Handling localhost ports)
   const getImageUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
@@ -225,12 +224,12 @@ const PharmacistPrescriptions = () => {
               <div className="bg-light rounded-4 p-2 text-center border h-100 d-flex align-items-center justify-content-center overflow-hidden position-relative">
                 {selectedRx?.image ? (
                   <img
-                    // ✅ FIXED: Use helper to resolve full localhost:5000 URL
+                    // FIXED: Use helper to resolve full localhost:5000 URL
                     src={getImageUrl(selectedRx.image)}
                     className="img-fluid rounded-3 shadow-sm cursor-zoom"
                     style={{ maxHeight: "450px", cursor: "zoom-in" }}
                     alt="Prescription"
-                    // ✅ FIXED: Use helper for window.open too
+                    // FIXED: Use helper for window.open too
                     onClick={() =>
                       window.open(getImageUrl(selectedRx.image), "_blank")
                     }

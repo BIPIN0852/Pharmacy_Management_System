@@ -45,7 +45,7 @@ const appointmentSchema = new mongoose.Schema(
       phone: String,
       email: String,
     },
-    // ✅ Added: Track who cancelled or completed the appointment
+    // Track who cancelled or completed the appointment
     actionBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -55,25 +55,25 @@ const appointmentSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // -------------------------------------------------------------------
 // 🛠️ INDEXES & LOGIC
 // -------------------------------------------------------------------
 
-// ✅ Prevent a single customer from booking the same slot twice
+//  Prevent a single customer from booking the same slot twice
 // This is the primary guard against double-bookings in the database
 appointmentSchema.index(
   { user: 1, doctor: 1, date: 1, timeSlot: 1 },
-  { unique: true }
+  { unique: true },
 );
 
-// ✅ Performance Index: Helps the Admin Dashboard load "Today's" list faster
+// Performance Index: Helps the Admin Dashboard load "Today's" list faster
 appointmentSchema.index({ date: 1, status: 1 });
 
 /**
- * ✅ Pre-save Middleware
+ * Pre-save Middleware
  * Ensures the 'day' string matches the actual calendar 'date' day name
  */
 appointmentSchema.pre("save", function (next) {
@@ -94,7 +94,7 @@ appointmentSchema.pre("save", function (next) {
 });
 
 /**
- * ✅ Virtual Field: isExpired
+ * Virtual Field: isExpired
  * Automatically tells the frontend if an appointment date has already passed
  */
 appointmentSchema.virtual("isExpired").get(function () {

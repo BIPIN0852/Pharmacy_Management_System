@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
       default: "customer",
     },
 
-    // ✅ Backward Compatibility for Admin Middleware
+    // Backward Compatibility for Admin Middleware
     isAdmin: {
       type: Boolean,
       default: false,
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema(
     dob: {
       type: Date,
     },
-    // ✅ Consolidated Address Field
+    // Consolidated Address Field
     address: {
       street: { type: String, default: "" },
       city: { type: String, default: "" },
@@ -76,7 +76,7 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    // ✅ Standardized OTP Fields
+    // Standardized OTP Fields
     otp: { type: String },
     otpExpires: { type: Date },
 
@@ -92,7 +92,7 @@ const userSchema = new mongoose.Schema(
 
     // --- Customer Loyalty & Stats ---
     notes: { type: String, trim: true },
-    // ✅ Consolidated Loyalty Points
+    // Consolidated Loyalty Points
     loyaltyPoints: { type: Number, default: 0, min: 0 },
 
     preferredContact: {
@@ -106,7 +106,7 @@ const userSchema = new mongoose.Schema(
     prescriptionCount: { type: Number, default: 0 },
 
     // --- Relations ---
-    // ✅ CRITICAL: Used for Wishlist feature
+    // CRITICAL: Used for Wishlist feature
     savedMedicines: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -114,7 +114,7 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
-  // ✅ Correct placement of Schema Options
+  // Correct placement of Schema Options
   {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -122,7 +122,7 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// ✅ MIDDLEWARE & METHODS
+// MIDDLEWARE & METHODS
 // -------------------------------------------------------------------
 
 // Hash password before saving
@@ -133,7 +133,7 @@ userSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
   }
 
-  // ✅ Force Sync isAdmin flag with role
+  // Force Sync isAdmin flag with role
   // This ensures that if role is "admin", isAdmin is ALWAYS true
   if (this.isModified("role") || this.isNew) {
     this.isAdmin = this.role === "admin";

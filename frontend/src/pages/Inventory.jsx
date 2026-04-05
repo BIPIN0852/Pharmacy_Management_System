@@ -3,7 +3,7 @@ import { Container, Alert, Spinner } from "react-bootstrap";
 import { Package, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import MedicineForm from "../components/MedicineForm";
 import MedicineTable from "../components/MedicineTable";
-import api from "../services/api"; // ✅ Uses interceptor for token
+import api from "../services/api";
 
 const Inventory = () => {
   const [medicines, setMedicines] = useState([]);

@@ -159,7 +159,7 @@ const AdminCreateUser = ({ onUserCreated }) => {
         )}
 
         <form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
-          {/* ✅ ROLE DROPDOWN (Restricted to Staff, Pharmacist, Doctor) */}
+          {/* ROLE DROPDOWN (Restricted to Staff, Pharmacist, Doctor) */}
           <div>
             <label className="form-label small fw-bold text-muted mb-1 d-flex align-items-center gap-1">
               <Shield size={14} /> System Role *
@@ -220,7 +220,7 @@ const AdminCreateUser = ({ onUserCreated }) => {
             />
           </div>
 
-          {/* ✅ DOCTOR ONLY FIELDS (Stacked Vertically) */}
+          {/* DOCTOR ONLY FIELDS (Stacked Vertically) */}
           {role === "doctor" && (
             <div className="bg-info bg-opacity-10 border border-info border-opacity-25 rounded-3 p-3 mt-2 d-flex flex-column gap-3">
               <h6 className="fw-bold text-info mb-0 d-flex align-items-center gap-2">

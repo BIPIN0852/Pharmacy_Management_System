@@ -43,7 +43,7 @@ export const cartReducer = (
     case CART_REMOVE_ITEM:
       return {
         ...state,
-        // ✅ BULLETPROOF REMOVAL: Checks both 'product' and 'medicine' keys
+        // Checks both 'product' and 'medicine' keys
         // to guarantee no ghost items are left behind in the array.
         cartItems: state.cartItems.filter(
           (x) => x.product !== action.payload && x.medicine !== action.payload,
@@ -62,7 +62,7 @@ export const cartReducer = (
         paymentMethod: action.payload,
       };
 
-    // ✅ Replaces EMPTY_CART to match cartConstants
+    // Replaces EMPTY_CART to match cartConstants
     case CART_CLEAR_ITEMS:
     case CART_RESET:
       return {

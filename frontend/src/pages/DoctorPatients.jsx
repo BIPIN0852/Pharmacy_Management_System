@@ -467,7 +467,7 @@ const DoctorPatients = () => {
       )}
 
       {/* ====================================================================== */}
-      {/* ✅ PATIENT HISTORY MODAL */}
+      {/* PATIENT HISTORY MODAL */}
       {/* ====================================================================== */}
       <Modal
         show={showHistoryModal}
@@ -602,7 +602,7 @@ const DoctorPatients = () => {
       </Modal>
 
       {/* ====================================================================== */}
-      {/* ✅ LIVE CHAT/MESSAGE MODAL */}
+      {/* LIVE CHAT/MESSAGE MODAL */}
       {/* ====================================================================== */}
       <Modal
         show={showMessageModal}

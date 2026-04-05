@@ -1,13 +1,12 @@
 import React from "react";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
-import { useTheme } from "../context/ThemeContext"; // ✅ Import Theme Context
+import { useTheme } from "../context/ThemeContext";
 import { Menu } from "lucide-react";
 
 const DashboardLayout = ({ SidebarComponent, HeaderComponent, children }) => {
   const { isCollapsed, isMobile, toggleSidebar, setIsCollapsed } =
     useResponsiveLayout();
 
-  // ✅ Extract theme variables
   const { isDarkMode } = useTheme();
   const themeBg = isDarkMode ? "var(--bg-primary)" : "#f0f2f2";
 
@@ -36,7 +35,7 @@ const DashboardLayout = ({ SidebarComponent, HeaderComponent, children }) => {
             style={{
               width: "56px",
               height: "56px",
-              backgroundColor: "#007185", // ✅ Brand Color
+              backgroundColor: "#007185",
               color: "#ffffff",
             }}
           >

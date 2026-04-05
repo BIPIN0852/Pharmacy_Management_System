@@ -31,7 +31,7 @@ const MedicineSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ✅ Manufacturer / Brand Name
+    // Manufacturer / Brand Name
     brand: {
       type: String,
       trim: true,
@@ -46,7 +46,7 @@ const MedicineSchema = new mongoose.Schema(
       trim: true, // e.g., "500mg"
     },
 
-    // ✅ Image for UI Display
+    // Image for UI Display
     image: {
       type: String,
       required: true,
@@ -79,7 +79,7 @@ const MedicineSchema = new mongoose.Schema(
       },
     ],
 
-    // ✅ Total Stock (Derived from Batches)
+    // Total Stock (Derived from Batches)
     // Named 'countInStock' to align with typical E-commerce logic
     countInStock: {
       type: Number,
@@ -93,7 +93,7 @@ const MedicineSchema = new mongoose.Schema(
       type: Date,
     },
 
-    // ✅ Prescription Requirement Flag
+    // Prescription Requirement Flag
     prescriptionRequired: {
       type: Boolean,
       default: false, // CHANGED TO FALSE: Most OTC medicines don't need a prescription
@@ -117,14 +117,14 @@ const MedicineSchema = new mongoose.Schema(
 );
 
 // -------------------------------------------------------------------
-// ✅ INDEXES
+//  INDEXES
 // -------------------------------------------------------------------
 
 // Text Index allows users to search "Paracetamol Cipla" and get results
 MedicineSchema.index({ name: "text", genericName: "text", brand: "text" });
 
 // -------------------------------------------------------------------
-// ✅ METHODS
+// METHODS
 // -------------------------------------------------------------------
 
 // Recalculate total stock from batches and update earliest expiry

@@ -11,29 +11,26 @@ import {
   TrendingDown,
   CheckCircle2,
   LogOut,
-  Globe, // ✅ Added for language toggle
-  Sun, // ✅ Added for theme toggle
-  Moon, // ✅ Added for theme toggle
+  Globe,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext"; // ✅ Import Theme Context
+import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
 
 const PharmacistLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ Extract theme variables
   const { isDarkMode, toggleTheme } = useTheme();
 
-  // ✅ Language State
   const [isNepali, setIsNepali] = useState(false);
 
   // Notification States
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // ✅ Global Language Toggle Function
   const toggleLanguage = () => {
     const newLang = isNepali ? "en" : "ne"; // Switch between English and Nepali
     const select = document.querySelector(".goog-te-combo");
@@ -146,7 +143,7 @@ const PharmacistLayout = () => {
             </h4>
 
             <div className="d-flex align-items-center gap-4">
-              {/* ✅ LANGUAGE TOGGLE BUTTON */}
+              {/* LANGUAGE TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center gap-1 transition-all hover-opacity fw-bold"
                 onClick={toggleLanguage}
@@ -163,7 +160,7 @@ const PharmacistLayout = () => {
                 </span>
               </button>
 
-              {/* ✅ THEME TOGGLE BUTTON */}
+              {/* THEME TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center transition-all hover-opacity"
                 onClick={toggleTheme}
@@ -179,7 +176,7 @@ const PharmacistLayout = () => {
                 )}
               </button>
 
-              {/* ✅ DYNAMIC NOTIFICATIONS DROPDOWN */}
+              {/* DYNAMIC NOTIFICATIONS DROPDOWN */}
               <Dropdown align="end">
                 <Dropdown.Toggle
                   variant="link"
@@ -261,7 +258,7 @@ const PharmacistLayout = () => {
                 </Dropdown.Menu>
               </Dropdown>
 
-              {/* ✅ DYNAMIC USER PROFILE */}
+              {/* DYNAMIC USER PROFILE */}
               <Dropdown align="end">
                 <Dropdown.Toggle
                   variant="link"

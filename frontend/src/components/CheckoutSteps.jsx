@@ -13,9 +13,9 @@ const CheckoutSteps = ({ step1, step2, step3, step4 }) => {
   };
 
   // Amazon Style Colors
-  const activeColor = "#007185"; // Amazon Teal
-  const inactiveBorder = "#D5D9D9"; // Amazon Grey Border
-  const inactiveText = "#565959"; // Amazon Muted Text
+  const activeColor = "#007185";
+  const inactiveBorder = "#D5D9D9";
+  const inactiveText = "#565959";
 
   const StepIcon = ({
     stepNumber,

@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("token");
           localStorage.removeItem("userInfo");
 
-          // ✅ FIX: Also clear commerce data if session expires
+          // Also clear commerce data if session expires
           localStorage.removeItem("cartItems");
           localStorage.removeItem("shippingAddress");
           localStorage.removeItem("paymentMethod");
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
 
     // 2. Ensure header is set for subsequent requests
-    // ✅ BULLETPROOF FIX: Check userData.token FIRST, fallback to localStorage
+    // Check userData.token FIRST, fallback to localStorage
     const token = userData?.token || localStorage.getItem("token");
     if (token) {
       localStorage.setItem("token", token); // Ensure it's saved
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
 
-    // ✅ CRITICAL FIX: Destroy the cart and checkout data so the next logged-in user starts fresh
+    // Destroy the cart and checkout data so the next logged-in user starts fresh
     localStorage.removeItem("cartItems");
     localStorage.removeItem("shippingAddress");
     localStorage.removeItem("paymentMethod");

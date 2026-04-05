@@ -14,7 +14,7 @@ const SlotSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      uppercase: true, // ✅ Forces "MONDAY" consistency for dropdowns
+      uppercase: true, // Forces "MONDAY" consistency for dropdowns
     },
     startTime: {
       type: String, // e.g., "09:00"
@@ -37,13 +37,13 @@ const SlotSchema = new mongoose.Schema(
     },
   },
   {
-    _id: false, // ✅ Set to false to treat slots as simple data objects, not sub-docs
+    _id: false, // Set to false to treat slots as simple data objects, not sub-docs
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-// ✅ Virtual: Formats the time range for easy frontend display
+// Virtual: Formats the time range for easy frontend display
 SlotSchema.virtual("timeRange").get(function () {
   return `${this.startTime} - ${this.endTime}`;
 });
@@ -85,7 +85,7 @@ const DoctorSchema = new mongoose.Schema(
         "Invalid email format",
       ],
     },
-    // ✅ REQUIRED: Fixes the "Contact number is required" frontend error
+    // REQUIRED: Fixes the "Contact number is required" frontend error
     phone: {
       type: String,
       trim: true,
@@ -111,17 +111,17 @@ const DoctorSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ✅ Dynamic Schedule Slots
+    // Dynamic Schedule Slots
     slots: [SlotSchema],
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-// ✅ Indexes for Search Functionality
+// Indexes for Search Functionality
 DoctorSchema.index({ name: "text", speciality: "text" });
 
 module.exports = mongoose.model("Doctor", DoctorSchema);

@@ -22,7 +22,7 @@ const getSavedMedicines = async (req, res) => {
     res.json(validItems);
   } catch (error) {
     console.error("❌ Wishlist Error:", error.message);
-    // ✅ RETURN EMPTY LIST INSTEAD OF 500 CRASH
+    // RETURN EMPTY LIST INSTEAD OF 500 CRASH
     res.status(200).json([]);
   }
 };

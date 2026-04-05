@@ -224,7 +224,6 @@ const MedicineShop = () => {
   const getImageUrl = (path) => {
     // 1. If there is no image in the database, show a premium default medical image
     if (!path || path === "" || path === "none") {
-      // You can swap this URL with any image you like!
       return "https://images.unsplash.com/photo-1584308666744-24d5e478ac5c?q=80&w=600&auto=format&fit=crop";
     }
 
@@ -257,7 +256,6 @@ const MedicineShop = () => {
       style={{ backgroundColor: "#f4f7fe" }}
     >
       {/* --- TOP NAVBAR --- */}
-      {/* ✅ FIXED: Removed 'sticky-top' and hardcoded top/zIndex so it scrolls naturally. Added rounded borders. */}
       <div
         className="bg-white border shadow-sm rounded-4 mb-4"
         style={{ padding: "20px 0" }}

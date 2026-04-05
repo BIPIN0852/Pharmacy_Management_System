@@ -80,7 +80,7 @@ const AdminDashboard = () => {
         } else if (medsDataRaw && Array.isArray(medsDataRaw.data)) {
           medsArray = medsDataRaw.data;
         }
-
+        //low stock items
         const lowStockItems = medsArray.filter(
           (m) => (m.countInStock || 0) < 15,
         );
@@ -739,7 +739,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* ✅ MODERNISED MESSAGES MODAL */}
+      {/*  MODERNISED MESSAGES MODAL */}
       {showMessagesModal && (
         <>
           <div

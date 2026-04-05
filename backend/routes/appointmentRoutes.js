@@ -6,10 +6,9 @@ const Doctor = require("../models/Doctor");
 const { protect, admin, pharmacist } = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/role");
 const sendEmail = require("../utils/sendEmail");
-// ✅ 1. IMPORT YOUR TEMPLATE
 const { getEmailTemplate } = require("../utils/emailTemplates");
 
-// ✅ UPDATED: Set capacity to 1 to strictly enforce one patient per time slot
+// Set capacity to 1 to strictly enforce one patient per time slot
 const SLOT_CAPACITY = 1;
 
 /**
@@ -88,7 +87,7 @@ router.post("/", protect, async (req, res) => {
         .json({ message: "This doctor is currently unavailable." });
     }
 
-    // ✅ PREVENT DOUBLE BOOKING: Check if anyone else already has this slot
+    // PREVENT DOUBLE BOOKING: Check if anyone else already has this slot
     const slotAlreadyTaken = await Appointment.findOne({
       doctor,
       date: bookingDate,
@@ -139,7 +138,7 @@ router.post("/", protect, async (req, res) => {
       },
     });
 
-    // ✅ 2. SEND TEMPLATE EMAIL (Booking Request)
+    // 2. SEND TEMPLATE EMAIL (Booking Request)
     try {
       const emailContent = `
         Your request for an appointment with <strong>Dr. ${
@@ -307,7 +306,7 @@ router.put("/:id/status", protect, async (req, res) => {
     appointment.status = status;
     await appointment.save();
 
-    // ✅ 3. SEND TEMPLATE EMAIL (Status Update)
+    // 3. SEND TEMPLATE EMAIL (Status Update)
     if (["confirmed", "cancelled", "completed"].includes(status)) {
       const recipientEmail =
         appointment.user?.email || appointment.customerDetails?.email;

@@ -34,7 +34,7 @@ const PharmacistOrders = () => {
   const [error, setError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(null);
 
-  // ✅ NEW: Modal States for viewing order details securely
+  //  Modal States for viewing order details securely
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -56,7 +56,7 @@ const PharmacistOrders = () => {
     }
   };
 
-  // ✅ Existing Status Update Function
+  // Existing Status Update Function
   const updateStatus = async (id, newStatus) => {
     try {
       setUpdateLoading(id);
@@ -79,7 +79,7 @@ const PharmacistOrders = () => {
     }
   };
 
-  // ✅ Manual Payment Function
+  // Manual Payment Function
   const markAsPaid = async (id) => {
     if (
       !window.confirm("Confirm: Have you received the cash for this order?")
@@ -102,7 +102,7 @@ const PharmacistOrders = () => {
     }
   };
 
-  // ✅ Prescription Approval/Rejection Logic
+  // Prescription Approval/Rejection Logic
   const handlePrescriptionUpdate = async (id, status) => {
     if (
       !window.confirm(
@@ -201,7 +201,7 @@ const PharmacistOrders = () => {
     }
   };
 
-  // ✅ NEW: Open Order Details Modal
+  //  Open Order Details Modal
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -347,7 +347,7 @@ const PharmacistOrders = () => {
                         />
                       ) : (
                         <div className="d-flex justify-content-end gap-2">
-                          {/* ✅ REPLACED: Now opens the local secure Modal instead of navigating */}
+                          {/* REPLACED: Now opens the local secure Modal instead of navigating */}
                           <Button
                             variant="light"
                             size="sm"
@@ -468,7 +468,7 @@ const PharmacistOrders = () => {
       </div>
 
       {/* ====================================================================== */}
-      {/* ✅ SECURE ORDER DETAILS MODAL FOR PHARMACIST */}
+      {/* SECURE ORDER DETAILS MODAL FOR PHARMACIST */}
       {/* ====================================================================== */}
       <Modal
         show={showOrderModal}

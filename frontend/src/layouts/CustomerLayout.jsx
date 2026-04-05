@@ -32,7 +32,7 @@ const CustomerLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ✅ Language State
+  // Language State
   const [isNepali, setIsNepali] = useState(false);
 
   // --- Separate Notification States ---
@@ -61,7 +61,7 @@ const CustomerLayout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ✅ Global Language Toggle Function
+  // Global Language Toggle Function
   const toggleLanguage = () => {
     const newLang = isNepali ? "en" : "ne"; // Switch between English and Nepali
     const select = document.querySelector(".goog-te-combo");
@@ -81,7 +81,9 @@ const CustomerLayout = () => {
       const [msgRes, orderRes, apptRes] = await Promise.all([
         api.get("/messages/my").catch(() => ({ data: [] })),
         api.get("/orders/myorders").catch(() => ({ data: [] })),
-        api.get("/customer/appointments").catch(() => ({ data: { appointments: [] } })),
+        api
+          .get("/customer/appointments")
+          .catch(() => ({ data: { appointments: [] } })),
       ]);
 
       const messages = Array.isArray(msgRes.data)
@@ -90,7 +92,9 @@ const CustomerLayout = () => {
       const orders = Array.isArray(orderRes.data)
         ? orderRes.data
         : orderRes.data?.orders || [];
-      const appointments = apptRes.data?.appointments || (Array.isArray(apptRes.data) ? apptRes.data : []);
+      const appointments =
+        apptRes.data?.appointments ||
+        (Array.isArray(apptRes.data) ? apptRes.data : []);
       setActiveAppointments(appointments);
 
       // 1. MESSAGE ALERTS
@@ -220,7 +224,8 @@ const CustomerLayout = () => {
     if (!appointment) {
       try {
         const res = await api.get("/customer/appointments");
-        const allAppts = res.data?.appointments || (Array.isArray(res.data) ? res.data : []);
+        const allAppts =
+          res.data?.appointments || (Array.isArray(res.data) ? res.data : []);
         appointment = allAppts.find((a) => a._id === appointmentId);
       } catch (err) {
         console.error("Failed to fetch appointment:", err);
@@ -370,7 +375,7 @@ const CustomerLayout = () => {
 
             {/* Right Side Icons */}
             <div className="d-flex align-items-center gap-4">
-              {/* ✅ LANGUAGE TOGGLE BUTTON */}
+              {/* LANGUAGE TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center gap-1 transition-all hover-opacity fw-bold"
                 onClick={toggleLanguage}
@@ -689,7 +694,7 @@ const CustomerLayout = () => {
       </div>
 
       {/* ====================================================================== */}
-      {/* PATIENT CHAT MODAL (Same style as Doctor Dashboard) */}
+      {/* PATIENT CHAT MODAL */}
       {/* ====================================================================== */}
       <Modal
         show={showChatModal}

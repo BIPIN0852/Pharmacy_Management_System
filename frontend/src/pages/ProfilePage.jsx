@@ -185,7 +185,6 @@ const ProfilePage = () => {
         formData.append("profilePhoto", selectedFile);
       }
 
-      // ✅ FIX: The multipart header MUST be here to prevent the image from turning into "{}"
       const { data } = await api.put("/users/profile", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -238,7 +237,7 @@ const ProfilePage = () => {
     return Math.round((filled / fields.length) * 100);
   };
 
-  // ✅ ROBUST IMAGE FORMATTER
+  //  ROBUST IMAGE FORMATTER
   const getProfileImage = () => {
     if (preview) return preview;
 

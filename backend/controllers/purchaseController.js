@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Purchase = require("../models/Purchase");
-const Medicine = require("../models/Medicine"); // ✅ CRITICAL FIX: Import this!
+const Medicine = require("../models/Medicine");
 
 // @desc    Get all purchase orders
 // @route   GET /api/admin/purchases
@@ -13,7 +13,7 @@ const getPurchases = asyncHandler(async (req, res) => {
       .populate({
         path: "items.medicine",
         select: "name manufacturer",
-        model: Medicine, // ✅ Pass the actual Model object, not a string
+        model: Medicine,
       })
       .sort({ createdAt: -1 });
 
@@ -74,7 +74,7 @@ const updatePurchaseStatus = asyncHandler(async (req, res) => {
     throw new Error("This order has already been received.");
   }
 
-  // ✅ Update Stock Logic
+  // Update Stock Logic
   if (status === "Received") {
     for (const item of purchase.items) {
       const medicine = await Medicine.findById(item.medicine);

@@ -54,7 +54,7 @@ const AppointmentChat = () => {
       try {
         const res = await api.get(`/messages/appointment/${appointmentId}`);
 
-        // ✅ Only update state and scroll if new messages actually arrived
+        // Only update state and scroll if new messages actually arrived
         if (res.data.length !== lastMessageCount) {
           setMessages(res.data);
           lastMessageCount = res.data.length;
@@ -76,7 +76,7 @@ const AppointmentChat = () => {
     // Set up the polling interval
     const interval = setInterval(fetchMessages, 3000);
 
-    // ✅ CLEANUP: Essential to prevent memory leaks and "ghost" polling
+    //  CLEANUP: Essential to prevent memory leaks and "ghost" polling
     return () => {
       clearInterval(interval);
     };
@@ -98,7 +98,7 @@ const AppointmentChat = () => {
       setNewMessage("");
       scrollToBottom();
 
-      // ✅ FIX 2: Send POST request to the /appointment route
+      //  FIX 2: Send POST request to the /appointment route
       await api.post("/messages/appointment", {
         appointmentId,
         receiverId: partnerId,

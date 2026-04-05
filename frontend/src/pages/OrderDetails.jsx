@@ -35,7 +35,7 @@ import api from "../services/api";
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams(); // ✅ Added searchParams
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ const OrderDetails = () => {
     const pidx = searchParams.get("pidx");
     const paymentStatus = searchParams.get("status");
 
-    // ✅ AUTOMATIC PAYMENT VERIFICATION LOGIC
+    // AUTOMATIC PAYMENT VERIFICATION LOGIC
     const verifyPaymentAndFetch = async () => {
       try {
         // If the URL contains Khalti success parameters

@@ -9,13 +9,13 @@ import {
   Button,
 } from "react-bootstrap";
 import { Receipt, FileText, AlertCircle, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // ✅ Added for navigation
+import { useNavigate } from "react-router-dom";
 import BillingForm from "../components/BillingForm";
 import InvoiceTable from "../components/InvoiceTable";
-import api from "../services/api"; // Uses interceptor for token
+import api from "../services/api";
 
 const SalesBilling = () => {
-  const navigate = useNavigate(); // ✅ Initialize navigation
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,7 +97,6 @@ const SalesBilling = () => {
       }}
     >
       <Container className="py-4 fade-in">
-        {/* ✅ NEW: Back Button */}
         <div className="mb-3">
           <Button
             variant="link"
@@ -203,193 +202,3 @@ const SalesBilling = () => {
 };
 
 export default SalesBilling;
-
-// import React, { useState, useEffect } from "react";
-// import {
-//   Container,
-//   Row,
-//   Col,
-//   Card,
-//   Alert,
-//   Spinner,
-//   Badge
-// } from "react-bootstrap";
-// import {
-//   Receipt,
-//   FileText,
-//   AlertCircle,
-//   CheckCircle,
-//   History
-// } from "lucide-react";
-// import BillingForm from "../components/BillingForm";
-// import InvoiceTable from "../components/InvoiceTable";
-// import api from "../services/api";
-
-// const SalesBilling = () => {
-//   const [invoices, setInvoices] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [success, setSuccess] = useState("");
-
-//   // --- 1. Fetch Invoices ---
-//   const fetchInvoices = async () => {
-//     try {
-//       setLoading(true);
-//       setError("");
-//       const res = await api.get("/invoices");
-//       // Ensure we set an array even if backend returns null/undefined
-//       setInvoices(Array.isArray(res.data) ? res.data : []);
-//     } catch (err) {
-//       console.error("Fetch Invoices Error:", err);
-//       setError(err.response?.data?.message || "Failed to load sales history.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchInvoices();
-//   }, []);
-
-//   // --- 2. Add Invoice (Passed to BillingForm) ---
-//   const addInvoice = async (invoiceData) => {
-//     try {
-//       setError("");
-//       setSuccess("");
-
-//       const res = await api.post("/invoices", invoiceData);
-
-//       // Add new invoice to top of list
-//       setInvoices((prev) => [res.data, ...prev]);
-//       setSuccess("Invoice generated successfully.");
-
-//       // Auto-dismiss success message
-//       setTimeout(() => setSuccess(""), 3000);
-//       return true; // Signal success to clear form
-//     } catch (err) {
-//       console.error("Create Invoice Error:", err);
-//       setError(err.response?.data?.message || "Failed to create invoice.");
-//       return false; // Signal failure
-//     }
-//   };
-
-//   // --- 3. Delete Invoice ---
-//   const deleteInvoice = async (id) => {
-//     if (!window.confirm("Are you sure you want to delete this invoice record?")) {
-//       return;
-//     }
-
-//     try {
-//       setError("");
-//       await api.delete(`/invoices/${id}`);
-
-//       // Remove from UI
-//       setInvoices((prev) => prev.filter((inv) => inv._id !== id));
-//       setSuccess("Invoice record deleted.");
-//       setTimeout(() => setSuccess(""), 3000);
-//     } catch (err) {
-//       console.error("Delete Invoice Error:", err);
-//       setError(err.response?.data?.message || "Failed to delete invoice.");
-//     }
-//   };
-
-//   return (
-//     <Container className="py-5 animate-fade-in" style={{ minHeight: "85vh" }}>
-//       {/* Header Section */}
-//       <div className="d-flex align-items-center gap-3 mb-4">
-//         <div className="bg-primary bg-opacity-10 p-3 rounded-circle text-primary shadow-sm">
-//           <Receipt size={32} />
-//         </div>
-//         <div>
-//           <h2 className="fw-bold mb-0 text-dark">Sales & Billing</h2>
-//           <p className="text-muted mb-0 small">
-//             Generate invoices, track sales, and manage billing records.
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* Notifications */}
-//       {error && (
-//         <Alert
-//           variant="danger"
-//           onClose={() => setError("")}
-//           dismissible
-//           className="d-flex align-items-center shadow-sm"
-//         >
-//           <AlertCircle size={18} className="me-2" /> {error}
-//         </Alert>
-//       )}
-//       {success && (
-//         <Alert
-//           variant="success"
-//           onClose={() => setSuccess("")}
-//           dismissible
-//           className="d-flex align-items-center shadow-sm"
-//         >
-//           <CheckCircle size={18} className="me-2" /> {success}
-//         </Alert>
-//       )}
-
-//       <Row className="g-4">
-//         {/* LEFT COLUMN: Billing Form */}
-//         <Col lg={5}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-white">
-//             <Card.Header className="bg-white border-bottom p-4">
-//               <h5 className="fw-bold mb-0 text-primary d-flex align-items-center">
-//                 <FileText size={20} className="me-2" /> New Invoice
-//               </h5>
-//             </Card.Header>
-//             <Card.Body className="p-4">
-//               <BillingForm addInvoice={addInvoice} />
-//             </Card.Body>
-//           </Card>
-//         </Col>
-
-//         {/* RIGHT COLUMN: Invoice History */}
-//         <Col lg={7}>
-//           <Card className="border-0 shadow-sm rounded-4 h-100 bg-white">
-//             <Card.Header className="bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-//               <h5 className="fw-bold mb-0 text-dark d-flex align-items-center">
-//                 <History size={20} className="me-2" /> Recent Invoices
-//               </h5>
-//               <Badge bg="light" text="dark" className="border px-3 py-2 rounded-pill">
-//                 {invoices.length} Records
-//               </Badge>
-//             </Card.Header>
-//             <Card.Body className="p-0">
-//               {loading ? (
-//                 <div className="d-flex flex-column align-items-center justify-content-center py-5">
-//                   <Spinner animation="border" variant="primary" className="mb-2" />
-//                   <span className="text-muted small">Loading history...</span>
-//                 </div>
-//               ) : invoices.length === 0 ? (
-//                 <div className="text-center py-5 text-muted">
-//                   <div className="bg-light rounded-circle p-4 d-inline-block mb-3">
-//                     <FileText size={40} className="opacity-25" />
-//                   </div>
-//                   <p className="mb-0 fw-medium">No invoices generated yet.</p>
-//                   <small className="text-muted">Create a new invoice to get started.</small>
-//                 </div>
-//               ) : (
-//                 <div className="table-responsive">
-//                   {/* Ensure InvoiceTable handles 'invoices' prop correctly */}
-//                   <InvoiceTable
-//                     invoices={invoices}
-//                     deleteInvoice={deleteInvoice}
-//                   />
-//                 </div>
-//               )}
-//             </Card.Body>
-//           </Card>
-//         </Col>
-//       </Row>
-
-//       <style>{`
-//         .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
-//         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-//       `}</style>
-//     </Container>
-//   );
-// };
-
-// export default SalesBilling;

@@ -30,7 +30,7 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [paymentFilter, setPaymentFilter] = useState("All");
 
-  // ✅ State for Order Details Modal
+  // State for Order Details Modal
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
@@ -107,7 +107,7 @@ const AdminOrders = () => {
     }
   };
 
-  // ✅ Open Modal Handler
+  // Open Modal Handler
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -287,7 +287,7 @@ const AdminOrders = () => {
                       className="border-bottom border-light-subtle table-row-hover"
                     >
                       <td className="ps-4">
-                        {/* ✅ CLICKABLE ORDER ID */}
+                        {/* CLICKABLE ORDER ID */}
                         <button
                           className="btn btn-link p-0 fw-bold font-monospace shadow-none text-decoration-none hover-underline"
                           style={{ color: "#007185", fontSize: "0.9rem" }}
@@ -328,7 +328,7 @@ const AdminOrders = () => {
                         Rs. {order.totalPrice?.toFixed(2)}
                       </td>
 
-                      {/* ✅ UPDATED PAYMENT STATUS BADGE (TABLE) */}
+                      {/* UPDATED PAYMENT STATUS BADGE (TABLE) */}
                       <td>
                         <div className="d-flex flex-column align-items-start">
                           <Badge
@@ -565,7 +565,7 @@ const AdminOrders = () => {
       </div>
 
       {/* ==================================================================================== */}
-      {/* ✅ ORDER DETAILS MODAL */}
+      {/*  ORDER DETAILS MODAL */}
       {/* ==================================================================================== */}
       {showOrderModal && selectedOrder && (
         <>
@@ -658,7 +658,7 @@ const AdminOrders = () => {
                           </span>
                         </div>
 
-                        {/* ✅ UPDATED PAYMENT STATUS BADGE (MODAL) */}
+                        {/* PAYMENT STATUS BADGE (MODAL) */}
                         <div className="d-flex justify-content-between mb-2 small">
                           <span className="text-muted">Payment Status:</span>
                           <Badge

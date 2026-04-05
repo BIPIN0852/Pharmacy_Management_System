@@ -11,7 +11,7 @@ import {
  * Normalizes item data for consistent state management
  */
 export const addToCart = (item) => (dispatch, getState) => {
-  // ✅ STRICT VALIDATION: Ensure we actually have an ID before dispatching
+  // STRICT VALIDATION: Ensure we actually have an ID before dispatching
   const productId = item.medicine || item._id || item.id || item.product;
 
   if (!productId) {
@@ -21,7 +21,7 @@ export const addToCart = (item) => (dispatch, getState) => {
 
   const payload = {
     product: productId, // Standardized ID key for Redux
-    medicine: productId, // Added for backward compatibility with your components
+    medicine: productId,
     name: item.name || "Unknown Item",
     image: item.image || "",
     price: Number(item.price) || 0,

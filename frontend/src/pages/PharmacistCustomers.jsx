@@ -55,7 +55,7 @@ const PharmacistCustomers = () => {
     setPage(1);
   };
 
-  // ✅ FIX: Helper function to safely render address
+  // Helper function to safely render address
   const formatAddress = (addr) => {
     if (!addr) return "No address provided";
 
@@ -257,7 +257,6 @@ const PharmacistCustomers = () => {
                           style={{ maxWidth: "250px", lineHeight: "1.3" }}
                           className="text-truncate d-inline-block"
                         >
-                          {/* ✅ FIX APPLIED HERE */}
                           {formatAddress(user.address)}
                         </span>
                       </div>

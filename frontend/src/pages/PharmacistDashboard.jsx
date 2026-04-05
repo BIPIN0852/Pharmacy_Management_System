@@ -24,6 +24,7 @@
 //   TrendingDown,
 //   ArrowRight,
 //   Settings,
+//   Calendar,
 // } from "lucide-react";
 // import { useNavigate } from "react-router-dom";
 // import api from "../services/api";
@@ -37,7 +38,7 @@
 //     pendingRx: 0,
 //     pendingOrders: 0,
 //     lowStock: 0,
-//     totalMedicines: 0,
+//     expiring: 0,
 //     todaysOrdersCount: 0,
 //   });
 
@@ -56,30 +57,72 @@
 //       const statsRes = await api.get("/pharmacist/dashboard");
 //       const dashboardStats = statsRes.data || statsRes;
 
-//       // 2. Fetch Low Stock Items for the preview table
-//       const medRes = await api.get("/medicines");
+//       // 2. Data Fetching (Matches the Alerts Page exactly!)
+//       let lowStockData = [];
+//       let expiringData = [];
 
-//       // ROBUST DATA EXTRACTION:
-//       const medPayload = medRes.data || medRes;
-//       const allMedicines = Array.isArray(medPayload)
-//         ? medPayload
-//         : medPayload.medicines || [];
+//       try {
+//         // Try the new dedicated alerts route first
+//         const alertsRes = await api.get("/pharmacist/alerts");
+//         lowStockData = alertsRes.data.lowStockMedicines || [];
+//         expiringData = alertsRes.data.expiringMedicines || [];
+//       } catch (alertErr) {
+//         // Fallback to client-side math if the alerts route isn't available yet
+//         const medRes = await api.get("/medicines");
+//         const allMeds = Array.isArray(medRes.data)
+//           ? medRes.data
+//           : medRes.data.medicines || [];
 
-//       // Filter for low stock (Threshold < 15) and take top 5 for preview
-//       const lowStockList = allMedicines
-//         .filter((m) => (m.countInStock || 0) < 15)
-//         .slice(0, 5);
+//         lowStockData = allMeds.filter((m) => Number(m.countInStock || 0) < 15);
+
+//         const ninetyDaysFromNow = new Date();
+//         ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
+//         ninetyDaysFromNow.setHours(23, 59, 59, 999);
+
+//         allMeds.forEach((m) => {
+//           let hasPushed = false;
+//           const isExpiringSoon = (dateStr) => {
+//             if (!dateStr) return false;
+//             const d = new Date(dateStr);
+//             return !isNaN(d.getTime()) && d <= ninetyDaysFromNow;
+//           };
+
+//           if (m.batches && m.batches.length > 0) {
+//             m.batches.forEach((b) => {
+//               if (
+//                 isExpiringSoon(b.expiryDate || b.expireDate) &&
+//                 Number(b.qty || 0) > 0
+//               ) {
+//                 expiringData.push(b);
+//                 hasPushed = true;
+//               }
+//             });
+//           }
+//           if (
+//             !hasPushed &&
+//             isExpiringSoon(m.expiryDate || m.expireDate) &&
+//             Number(m.countInStock || 0) > 0
+//           ) {
+//             expiringData.push(m);
+//           }
+//         });
+//       }
 
 //       // 3. Update State with Real DB Data
 //       setStats({
 //         pendingRx: dashboardStats.pendingPrescriptionsCount || 0,
 //         pendingOrders: dashboardStats.pendingOrdersCount || 0,
-//         lowStock: dashboardStats.lowStockCount || 0,
-//         totalMedicines: dashboardStats.totalMedicines || 0,
+//         lowStock: lowStockData.length || dashboardStats.lowStockCount || 0,
+//         expiring: expiringData.length || 0,
 //         todaysOrdersCount: dashboardStats.todaysOrdersCount || 0,
 //       });
 
-//       setLowStockItems(lowStockList);
+//       // Show top 5 lowest stock items
+//       setLowStockItems(
+//         lowStockData
+//           .sort((a, b) => a.countInStock - b.countInStock)
+//           .slice(0, 5),
+//       );
 
 //       // 4. Generate Real-World Actionable Notifications
 //       const alerts = [];
@@ -99,12 +142,20 @@
 //           action: "/pharmacist/prescriptions",
 //         });
 //       }
-//       if (dashboardStats.lowStockCount > 0) {
+//       if (lowStockData.length > 0) {
 //         alerts.push({
 //           type: "inventory",
 //           title: "Critical Inventory",
-//           message: `${dashboardStats.lowStockCount} medicines have fallen below the minimum stock threshold.`,
-//           action: "/pharmacist/inventory",
+//           message: `${lowStockData.length} medicines have fallen below the minimum stock threshold.`,
+//           action: "/pharmacist/alerts",
+//         });
+//       }
+//       if (expiringData.length > 0) {
+//         alerts.push({
+//           type: "expiry",
+//           title: "Expiry Warning",
+//           message: `${expiringData.length} medicine batches are expiring within the next 90 days.`,
+//           action: "/pharmacist/alerts",
 //         });
 //       }
 //       setNotifications(alerts);
@@ -132,7 +183,7 @@
 //       label: "Pending Orders",
 //       value: stats.pendingOrders,
 //       subtext: `${stats.todaysOrdersCount} new orders today`,
-//       icon: Clock,
+//       icon: ShoppingBag,
 //       borderColor: "#007185", // Teal
 //       bgLight: "#e6f1f3",
 //       link: "/pharmacist/orders",
@@ -142,27 +193,27 @@
 //       value: stats.pendingRx,
 //       subtext: "Awaiting approval",
 //       icon: FileText,
-//       borderColor: "#F3A847", // Orange
-//       bgLight: "#fef6eb",
+//       borderColor: "#0ea5e9", // Sky Blue
+//       bgLight: "#e0f2fe",
 //       link: "/pharmacist/prescriptions",
 //     },
 //     {
-//       label: "Low Stock Alerts",
+//       label: "Low Stock Items",
 //       value: stats.lowStock,
-//       subtext: "Items critically low",
-//       icon: AlertTriangle,
-//       borderColor: "#B12704", // Red
-//       bgLight: "#fce9e5",
-//       link: "/pharmacist/inventory",
+//       subtext: "Below 15 units",
+//       icon: Package,
+//       borderColor: "#F3A847", // Orange
+//       bgLight: "#fef6eb",
+//       link: "/pharmacist/alerts",
 //     },
 //     {
-//       label: "Total Medicines",
-//       value: stats.totalMedicines,
-//       subtext: "Active in database",
-//       icon: Package,
-//       borderColor: "#166534", // Green
-//       bgLight: "#e8f5ec",
-//       link: "/pharmacist/inventory",
+//       label: "Expiring Soon",
+//       value: stats.expiring,
+//       subtext: "Within next 90 days",
+//       icon: Calendar, // ✅ Used Calendar instead of CalendarAlert
+//       borderColor: "#B12704", // Red
+//       bgLight: "#fce9e5",
+//       link: "/pharmacist/alerts",
 //     },
 //   ];
 
@@ -186,8 +237,8 @@
 //                 Action Required: {notifications.length} System Alerts
 //               </h5>
 //               <p className="mb-0 fw-medium text-muted">
-//                 Please clear pending verification queues and review low stock
-//                 items to maintain operational compliance.
+//                 Please clear pending verification queues and review low
+//                 stock/expiring items to maintain operational compliance.
 //               </p>
 //             </div>
 //           </div>
@@ -278,19 +329,46 @@
 //       <Row className="g-4">
 //         {/* --- MAIN LEFT COLUMN --- */}
 //         <Col lg={8} className="d-flex flex-column gap-4">
-//           {/* Analytics / Trends Component */}
+//           {/* Live Activity Chart (CSS Based) */}
 //           <Card className="border-0 shadow-sm rounded-4 bg-white overflow-hidden">
 //             <Card.Header className="bg-white py-4 px-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center">
 //               <span className="fw-bold fs-5 text-dark d-flex align-items-center gap-2">
-//                 <TrendingUp size={20} className="text-primary" /> Fulfillment
-//                 Trends
+//                 <TrendingUp size={20} className="text-primary" /> Live
+//                 Fulfillment Activity
 //               </span>
 //               <Badge bg="success" className="rounded-pill px-3">
-//                 Live
+//                 Real-Time
 //               </Badge>
 //             </Card.Header>
-//             <Card.Body className="p-4 bg-light d-flex justify-content-center align-items-center">
-//               {/* Inserted contextually relevant graph image for the dashboard */}
+//             <Card.Body className="p-4 bg-light">
+//               <div
+//                 className="d-flex align-items-end justify-content-between pt-4 pb-2 px-2"
+//                 style={{ height: "180px" }}
+//               >
+//                 {/* CSS Bar Chart Simulation */}
+//                 {[40, 65, 30, 80, 55, 90, 70].map((height, i) => (
+//                   <div
+//                     key={i}
+//                     className="d-flex flex-column align-items-center gap-2"
+//                     style={{ width: "10%" }}
+//                   >
+//                     <div
+//                       className="rounded-top w-100"
+//                       style={{
+//                         height: `${height}%`,
+//                         backgroundColor: i === 6 ? "#007185" : "#cbd5e1",
+//                         transition: "height 1s ease-out",
+//                       }}
+//                     ></div>
+//                     <small
+//                       className="text-muted fw-bold"
+//                       style={{ fontSize: "0.7rem" }}
+//                     >
+//                       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"][i]}
+//                     </small>
+//                   </div>
+//                 ))}
+//               </div>
 //             </Card.Body>
 //           </Card>
 
@@ -343,7 +421,7 @@
 //                         <td className="ps-4 py-3">
 //                           <div className="fw-bold text-dark mb-1">{m.name}</div>
 //                           <div className="text-muted small d-flex align-items-center gap-1">
-//                             <Package size={12} /> {m.category}
+//                             <Package size={12} /> {m.category || "Generic"}
 //                           </div>
 //                         </td>
 //                         <td className="text-center py-3">
@@ -356,9 +434,9 @@
 //                             variant="outline-primary"
 //                             size="sm"
 //                             className="rounded-pill px-3 fw-bold shadow-sm hover-lift"
-//                             onClick={() => navigate("/pharmacist/inventory")}
+//                             onClick={() => navigate("/pharmacist/alerts")}
 //                           >
-//                             Restock <ChevronRight size={14} className="ms-1" />
+//                             Review <ChevronRight size={14} className="ms-1" />
 //                           </Button>
 //                         </td>
 //                       </tr>
@@ -441,10 +519,19 @@
 //                     >
 //                       <div className="d-flex align-items-start gap-3">
 //                         <div
-//                           className={`mt-1 flex-shrink-0 ${alert.type === "inventory" ? "text-danger" : alert.type === "prescription" ? "text-info" : "text-primary"}`}
+//                           className={`mt-1 flex-shrink-0 ${
+//                             alert.type === "inventory" ||
+//                             alert.type === "expiry"
+//                               ? "text-danger"
+//                               : alert.type === "prescription"
+//                                 ? "text-info"
+//                                 : "text-primary"
+//                           }`}
 //                         >
 //                           {alert.type === "inventory" ? (
 //                             <TrendingDown size={18} />
+//                           ) : alert.type === "expiry" ? (
+//                             <Calendar size={18} />
 //                           ) : alert.type === "prescription" ? (
 //                             <FileText size={18} />
 //                           ) : (
@@ -527,7 +614,7 @@ import {
   TrendingDown,
   ArrowRight,
   Settings,
-  Calendar, // ✅ Changed from CalendarAlert to Calendar for version compatibility
+  Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -560,7 +647,7 @@ const PharmacistDashboard = () => {
       const statsRes = await api.get("/pharmacist/dashboard");
       const dashboardStats = statsRes.data || statsRes;
 
-      // 2. Bulletproof Data Fetching (Matches the Alerts Page exactly!)
+      // 2. Data Fetching (Matches the Alerts Page exactly!)
       let lowStockData = [];
       let expiringData = [];
 
@@ -713,7 +800,7 @@ const PharmacistDashboard = () => {
       label: "Expiring Soon",
       value: stats.expiring,
       subtext: "Within next 90 days",
-      icon: Calendar, // ✅ Used Calendar instead of CalendarAlert
+      icon: Calendar,
       borderColor: "#B12704", // Red
       bgLight: "#fce9e5",
       link: "/pharmacist/alerts",
@@ -852,11 +939,11 @@ const PharmacistDashboard = () => {
                 {[40, 65, 30, 80, 55, 90, 70].map((height, i) => (
                   <div
                     key={i}
-                    className="d-flex flex-column align-items-center gap-2"
-                    style={{ width: "10%" }}
+                    className="d-flex flex-column align-items-center justify-content-end gap-2"
+                    style={{ width: "10%", height: "100%" }}
                   >
                     <div
-                      className="rounded-top w-100"
+                      className="rounded-top w-100 shadow-sm"
                       style={{
                         height: `${height}%`,
                         backgroundColor: i === 6 ? "#007185" : "#cbd5e1",
@@ -864,7 +951,7 @@ const PharmacistDashboard = () => {
                       }}
                     ></div>
                     <small
-                      className="text-muted fw-bold"
+                      className="text-muted fw-bold mt-auto"
                       style={{ fontSize: "0.7rem" }}
                     >
                       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"][i]}
@@ -1034,7 +1121,7 @@ const PharmacistDashboard = () => {
                           {alert.type === "inventory" ? (
                             <TrendingDown size={18} />
                           ) : alert.type === "expiry" ? (
-                            <Calendar size={18} /> // ✅ Changed here as well
+                            <Calendar size={18} />
                           ) : alert.type === "prescription" ? (
                             <FileText size={18} />
                           ) : (

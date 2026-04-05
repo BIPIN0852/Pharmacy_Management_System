@@ -18,12 +18,12 @@ import {
   Package,
   MessageSquare,
   CheckCircle2,
-  Globe, // ✅ Added for language
-  Sun, // ✅ Added for theme
-  Moon, // ✅ Added for theme
+  Globe,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext"; // ✅ Import Theme Context
+import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
 
 // Import Admin Sub-Pages
@@ -44,17 +44,17 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // ✅ Extract theme variables
+  //  Extract theme variables
   const { isDarkMode, toggleTheme } = useTheme();
 
-  // ✅ Language State
+  // Language State
   const [isNepali, setIsNepali] = useState(false);
 
   // --- Notification States ---
   const [sysAlerts, setSysAlerts] = useState([]);
   const [msgAlerts, setMsgAlerts] = useState([]);
 
-  // ✅ Global Language Toggle Function
+  // Global Language Toggle Function
   const toggleLanguage = () => {
     const newLang = isNepali ? "en" : "ne"; // Switch between English and Nepali
     const select = document.querySelector(".goog-te-combo");
@@ -226,7 +226,7 @@ const AdminLayout = () => {
                 <GlobalSearch />
               </div>
 
-              {/* ✅ LANGUAGE TOGGLE BUTTON */}
+              {/* LANGUAGE TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center gap-1 transition-all hover-opacity fw-bold"
                 onClick={toggleLanguage}
@@ -243,7 +243,7 @@ const AdminLayout = () => {
                 </span>
               </button>
 
-              {/* ✅ THEME TOGGLE BUTTON */}
+              {/* THEME TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center transition-all hover-opacity"
                 onClick={toggleTheme}

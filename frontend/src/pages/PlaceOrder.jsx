@@ -103,7 +103,6 @@ const PlaceOrder = () => {
     }
   };
 
-  // ✅ FIXED: This NO LONGER creates the order! It just passes the data to the Payment page.
   const placeOrderHandler = () => {
     setError("");
 
@@ -133,7 +132,7 @@ const PlaceOrder = () => {
       prescriptionImage: requiresPrescription ? prescriptionImage : null,
     };
 
-    // ✅ Pass data cleanly to the next screen. No database hits, no cart clearing.
+    //  Pass data cleanly to the next screen. No database hits, no cart clearing.
     navigate("/payment", {
       state: {
         orderData,
@@ -202,7 +201,6 @@ const PlaceOrder = () => {
                         Postal Code: {shippingAddress.postalCode},{" "}
                         {shippingAddress.country}
                       </p>
-                      {/* ✅ FIXED: Correctly displaying the Phone Number */}
                       <p className="mb-0 small" style={{ color: "#565959" }}>
                         <strong className="text-dark">Phone:</strong>{" "}
                         {shippingAddress.phoneNumber ||

@@ -315,7 +315,7 @@ const AdminCustomers = () => {
               />
             </form>
 
-            {/* ✅ FIXED FILTER DROPDOWN */}
+            {/* FILTER DROPDOWN */}
             <Dropdown align="end">
               <Dropdown.Toggle
                 variant="light"
@@ -355,7 +355,7 @@ const AdminCustomers = () => {
               </Dropdown.Menu>
             </Dropdown>
 
-            {/* ✅ FIXED ADD CONTACT BUTTON */}
+            {/*ADD CONTACT BUTTON */}
             <button
               className="btn rounded-1 px-3 d-flex align-items-center gap-2 fw-medium shadow-sm border-0 hover-lift"
               style={{ backgroundColor: "#007185", color: "#fff" }}
@@ -526,7 +526,7 @@ const AdminCustomers = () => {
                           className="shadow border-0 rounded-1 py-2"
                           style={{ border: "1px solid #D5D9D9 !important" }}
                         >
-                          {/* ✅ FIXED ACTION MENUS */}
+                          {/* ACTION MENUS */}
                           <Dropdown.Item
                             className="small fw-medium d-flex align-items-center gap-2 py-2 text-dark"
                             onClick={() => {

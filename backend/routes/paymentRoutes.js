@@ -6,7 +6,7 @@ const { protect } = require("../middleware/authMiddleware");
 const {
   createStripeIntent,
   verifyStripePayment,
-  initiateKhaltiPayment, // ✅ ADDED: This was missing
+  initiateKhaltiPayment,
   verifyKhalti,
   setCodMethod,
 } = require("../controllers/paymentController");

@@ -12,7 +12,7 @@ const cartSchema = mongoose.Schema(
         medicine: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          ref: "medicine", // Matches your lowercase model name
+          ref: "medicine",
         },
         name: { type: String, required: true },
         qty: { type: Number, required: true },
@@ -24,14 +24,14 @@ const cartSchema = mongoose.Schema(
     ],
     totalPrice: { type: Number, required: true, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Middleware to calculate total price before saving
 cartSchema.pre("save", function (next) {
   this.totalPrice = this.cartItems.reduce(
     (acc, item) => acc + item.qty * item.price,
-    0
+    0,
   );
   next();
 });

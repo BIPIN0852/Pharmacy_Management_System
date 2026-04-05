@@ -5,12 +5,12 @@ const Medicine = require("../models/Medicine");
 const PurchaseOrder = require("../models/PurchaseOrder");
 const Doctor = require("../models/Doctor");
 
-// ✅ NEW IMPORTS REQUIRED FOR DOCTOR OTP REGISTRATION
+// IMPORTS REQUIRED FOR DOCTOR OTP REGISTRATION
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
 const mongoose = require("mongoose");
 
-// ✅ TEMPORARY OTP SCHEMA (Auto-deletes after 10 mins)
+// TEMPORARY OTP SCHEMA (Auto-deletes after 10 mins)
 const doctorOtpSchema = new mongoose.Schema({
   email: String,
   otp: String,
@@ -80,12 +80,12 @@ const getAdminStats = async (req, res) => {
 
     // Response mapped for the new Report UI
     res.json({
-      revenue, // Filtered Revenue
-      orders, // Filtered Order Count
+      revenue,
+      orders,
       users: totalCustomers,
       doctors: totalDoctors,
       medicines: totalMedicines,
-      salesData, // Graph Data
+      salesData,
 
       // Keeping legacy keys for backward compatibility
       totalOrders: orders,
@@ -152,7 +152,7 @@ const updateOrderStatus = async (req, res) => {
 // 🩺 4. DOCTOR MANAGEMENT
 // -------------------------------------------------------------------
 
-// ✅ UPDATED: Auto-Syncs new doctors created via User Management
+//  Auto-Syncs new doctors created via User Management
 const getAllDoctors = async (req, res) => {
   try {
     // 1. Fetch existing doctor profiles
@@ -201,7 +201,7 @@ const getAllDoctors = async (req, res) => {
 
 const createDoctor = async (req, res) => {
   try {
-    // ✅ Logic Enhancement: Check unique NMC before creation
+    // Logic Enhancement: Check unique NMC before creation
     const existingNMC = await Doctor.findOne({ nmcNumber: req.body.nmcNumber });
     if (existingNMC) {
       return res
@@ -214,7 +214,7 @@ const createDoctor = async (req, res) => {
 
     res.status(201).json(createdDoctor);
   } catch (error) {
-    // ✅ Enhanced Error Handling for Mongoose Validation
+    // Enhanced Error Handling for Mongoose Validation
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
       return res.status(400).json({ message: messages.join(", ") });
@@ -223,7 +223,7 @@ const createDoctor = async (req, res) => {
   }
 };
 
-// ✅ NEW: Admin requests OTP to register a doctor securely
+//  Admin requests OTP to register a doctor securely
 const requestDoctorOtp = async (req, res) => {
   try {
     const { name, email } = req.body;
@@ -263,7 +263,7 @@ const requestDoctorOtp = async (req, res) => {
   }
 };
 
-// ✅ NEW: Admin verifies OTP and creates both Auth (User) and Profile (Doctor) records
+// Admin verifies OTP and creates both Auth (User) and Profile (Doctor) records
 const verifyAndCreateDoctor = async (req, res) => {
   try {
     const {
@@ -353,7 +353,7 @@ const verifyAndCreateDoctor = async (req, res) => {
 
 const updateDoctor = async (req, res) => {
   try {
-    // ✅ Basic duplicate check for NMC on update
+    //  Basic duplicate check for NMC on update
     if (req.body.nmcNumber) {
       const existing = await Doctor.findOne({ nmcNumber: req.body.nmcNumber });
       if (existing && existing._id.toString() !== req.params.id) {
@@ -361,7 +361,7 @@ const updateDoctor = async (req, res) => {
       }
     }
 
-    // ✅ Handle image updates if a new file is uploaded
+    // Handle image updates if a new file is uploaded
     let updateData = { ...req.body };
     if (req.file) {
       updateData.image = `/uploads/${req.file.filename}`;
@@ -383,7 +383,7 @@ const updateDoctor = async (req, res) => {
   }
 };
 
-// ✅ UPDATED: Deletes BOTH the clinical profile and the user login account!
+// UPDATED: Deletes BOTH the clinical profile and the user login account!
 const deleteDoctor = async (req, res) => {
   try {
     // 1. Delete the clinical profile
@@ -542,8 +542,8 @@ module.exports = {
   updateMedicine,
   getAllDoctors,
   createDoctor,
-  requestDoctorOtp, // ✅ Exported New Route
-  verifyAndCreateDoctor, // ✅ Exported New Route
+  requestDoctorOtp,
+  verifyAndCreateDoctor,
   updateDoctor,
   deleteDoctor,
   getAllPurchases,

@@ -96,7 +96,6 @@ const verifyStripePayment = async (req, res) => {
 
       if (order.isPaid) return res.json({ message: "Order already paid" });
 
-      // ✅ BULLETPROOF UPDATE
       order.isPaid = true;
       order.paidAt = Date.now();
       order.paymentMethod = "Stripe";
@@ -108,10 +107,10 @@ const verifyStripePayment = async (req, res) => {
         amount_paid_usd: paymentIntent.amount / 100,
       };
 
-      await order.save(); // Will no longer crash!
+      await order.save(); // Save the order before creating the transaction to ensure order._id is available
 
       await Transaction.create({
-        user: req.user?._id || order.user._id, // Failsafe
+        user: req.user?._id || order.user._id,
         order: order._id,
         amount: order.totalPrice,
         currency: "NPR",
@@ -214,7 +213,6 @@ const verifyKhalti = async (req, res) => {
       if (order.isPaid)
         return res.json({ success: true, message: "Already Paid", order });
 
-      // ✅ BULLETPROOF UPDATE
       order.isPaid = true;
       order.paidAt = Date.now();
       order.paymentMethod = "Khalti";

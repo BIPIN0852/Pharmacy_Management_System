@@ -15,7 +15,7 @@ import {
 import { Link } from "react-router-dom";
 import { Search, ShoppingCart, Filter, Ban, Plus, Package } from "lucide-react";
 import { addToCart } from "../redux/actions/cartActions";
-import api from "../services/api"; // ✅ Uses interceptor for token
+import api from "../services/api";
 
 const MedicineCatalog = () => {
   const dispatch = useDispatch();
@@ -51,7 +51,7 @@ const MedicineCatalog = () => {
       setLoading(true);
       setError("");
 
-      // ✅ Call API (Interceptor handles Token)
+      // Call API (Interceptor handles Token)
       const res = await api.get("/medicines");
 
       // Handle potentially different response structures
@@ -127,7 +127,7 @@ const MedicineCatalog = () => {
         unit: selection.unitName,
         price: selection.price,
         buyingMultiplier: selection.multiplier,
-      })
+      }),
     );
   };
 

@@ -3,8 +3,8 @@ import {
   ORDER_CREATE_SUCCESS,
   ORDER_CREATE_FAIL,
 } from "../constants/orderConstants";
-import { EMPTY_CART } from "./cartActions"; // Import your standardized cart action
-import api from "../services/api"; // ✅ Use the configured api service with interceptors
+import { EMPTY_CART } from "./cartActions";
+import api from "../services/api";
 
 /**
  * Create a new medicine order
@@ -14,7 +14,7 @@ export const createOrder = (order) => async (dispatch) => {
   try {
     dispatch({ type: ORDER_CREATE_REQUEST });
 
-    // ✅ Using the api service - it already knows the base URL and the User Token
+    // Using the api service - it already knows the base URL and the User Token
     const data = await api.post("/orders", order);
 
     dispatch({
@@ -22,7 +22,7 @@ export const createOrder = (order) => async (dispatch) => {
       payload: data,
     });
 
-    // ✅ Clear cart after successful order placement
+    //  Clear cart after successful order placement
     // This keeps the Redux state and LocalStorage in sync
     dispatch({ type: EMPTY_CART });
     localStorage.removeItem("cartItems");

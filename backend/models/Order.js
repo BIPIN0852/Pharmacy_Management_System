@@ -65,7 +65,7 @@ const orderSchema = mongoose.Schema(
       type: Date,
     },
 
-    // ✅ NEW: Prescription Verification Fields
+    // Prescription Verification Fields
     prescriptionImage: {
       type: String, // URL of the uploaded prescription image
     },
@@ -75,14 +75,14 @@ const orderSchema = mongoose.Schema(
       default: "Not Required",
     },
 
-    // ✅ EXISTING: Main Status Field (Processing, Shipped, Delivered, Cancelled)
+    // EXISTING: Main Status Field (Processing, Shipped, Delivered, Cancelled)
     orderStatus: {
       type: String,
       required: true,
       default: "Processing",
     },
 
-    // ✅ EXISTING: Shipping Details
+    //  EXISTING: Shipping Details
     isShipped: {
       type: Boolean,
       default: false,
@@ -91,7 +91,7 @@ const orderSchema = mongoose.Schema(
       type: Date,
     },
 
-    // ✅ EXISTING: Delivery Details
+    // EXISTING: Delivery Details
     isDelivered: {
       type: Boolean,
       required: true,
@@ -101,7 +101,7 @@ const orderSchema = mongoose.Schema(
       type: Date,
     },
 
-    // ✅ EXISTING: Cancellation Details
+    // EXISTING: Cancellation Details
     isCancelled: {
       type: Boolean,
       default: false,
@@ -115,7 +115,7 @@ const orderSchema = mongoose.Schema(
   },
 );
 
-// ✅ EXISTING: Auto-generate the Real-World Order ID before saving
+// EXISTING: Auto-generate the Real-World Order ID before saving
 orderSchema.pre("save", function (next) {
   // Only generate it if it doesn't already exist (i.e., this is a new order)
   if (!this.orderNumber) {

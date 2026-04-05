@@ -9,7 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Stethoscope, // ✅ Added icon for Doctor speciality
+  Stethoscope,
 } from "lucide-react";
 
 // Point to the correct base API URL
@@ -23,7 +23,7 @@ const AdminCreateUser = ({ onUserCreated }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // ✅ New state specifically for doctors
+  // New state specifically for doctors
   const [speciality, setSpeciality] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,7 @@ const AdminCreateUser = ({ onUserCreated }) => {
       setError("Passwords do not match.");
       return;
     }
-    // If role is doctor, ensure speciality is filled (optional, but good practice)
+    // If role is doctor, ensure speciality is filled
     if (role === "doctor" && !speciality) {
       setError("Please provide a medical speciality for the doctor.");
       return;
@@ -157,7 +157,6 @@ const AdminCreateUser = ({ onUserCreated }) => {
                 >
                   <option value="customer">Patient / Customer</option>
                   <option value="doctor">Doctor</option>{" "}
-                  {/* ✅ ADDED DOCTOR ROLE */}
                   <option value="pharmacist">Pharmacist</option>
                   <option value="staff">Staff</option>
                   <option value="admin">Administrator</option>
@@ -165,7 +164,7 @@ const AdminCreateUser = ({ onUserCreated }) => {
               </div>
             </div>
 
-            {/* ✅ CONDITIONAL RENDER: Doctor Speciality */}
+            {/* CONDITIONAL RENDER: Doctor Speciality */}
             {role === "doctor" && (
               <div className="mb-3 animate-fade-in">
                 <label className="form-label text-secondary fw-bold small mb-1 text-uppercase tracking-wider">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ ADDED React Router Navigation
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   BarChart,
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 const AdminReports = () => {
-  const navigate = useNavigate(); // ✅ INITIALIZED Navigation Hook
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -164,7 +164,7 @@ const AdminReports = () => {
     document.body.removeChild(link);
   };
 
-  // ✅ UPDATED: Now navigates to the supplier page and passes the medicine data!
+  // navigates to the supplier page and passes the medicine data!
   const handleOrderStock = (itemId, itemName) => {
     // Change '/admin/suppliers' to whatever route your supplier page is actually on
     navigate("/admin/suppliers", {
@@ -578,7 +578,7 @@ const AdminReports = () => {
                       </span>
                     </td>
                     <td className="text-end pe-4">
-                      {/* ✅ NOW USES ROUTER NAVIGATION */}
+                      {/* USES ROUTER NAVIGATION */}
                       <button
                         type="button"
                         className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm hover-lift transition-all d-inline-flex align-items-center gap-2"

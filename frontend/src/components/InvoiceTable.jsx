@@ -33,12 +33,12 @@ const InvoiceTable = ({ invoices, deleteInvoice, viewInvoice }) => {
             Card / Stripe
           </Badge>
         );
-      case "esewa":
-        return (
-          <Badge bg="success" className="rounded-1 px-2 fw-medium">
-            eSewa
-          </Badge>
-        );
+      // case "esewa":
+      //   return (
+      //     <Badge bg="success" className="rounded-1 px-2 fw-medium">
+      //       eSewa
+      //     </Badge>
+      //   );
       case "cash":
       case "cod":
         return (

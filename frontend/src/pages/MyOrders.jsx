@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-// ✅ Fixed: Added 'FileText' (replacing 'Receipt') and ensured all icons are here
+
 import {
   Eye,
   Trash2,
@@ -41,7 +41,6 @@ const MyOrders = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
 
-  // ✅ Order Details Modal States
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
@@ -86,7 +85,7 @@ const MyOrders = () => {
     }
   };
 
-  // ✅ Trigger Modal
+  // Trigger Modal
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -149,7 +148,7 @@ const MyOrders = () => {
                   {orders.map((order) => (
                     <tr key={order._id}>
                       <td className="ps-4">
-                        {/* ✅ Clickable Order ID */}
+                        {/* Clickable Order ID */}
                         <Button
                           variant="link"
                           className="p-0 fw-bold text-decoration-none shadow-none"
@@ -223,7 +222,7 @@ const MyOrders = () => {
           </Card>
         )}
 
-        {/* ✅ ORDER DETAILS MODAL */}
+        {/* ORDER DETAILS MODAL */}
         <Modal
           show={showOrderModal}
           onHide={() => setShowOrderModal(false)}

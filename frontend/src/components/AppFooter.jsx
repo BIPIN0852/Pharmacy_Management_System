@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
-import api from "../services/api"; // Make sure this path is correct for your axios instance
+import api from "../services/api";
 
 const AppFooter = ({ context }) => {
   const year = new Date().getFullYear();
@@ -46,7 +46,7 @@ const AppFooter = ({ context }) => {
 
   return (
     <>
-      {/* MAIN FOOTER (Amazon Dark Style) */}
+      {/* MAIN FOOTER */}
       <footer
         className="mt-auto"
         style={{
@@ -192,7 +192,7 @@ const AppFooter = ({ context }) => {
                   <Clock size={14} /> 24/7 Support
                 </li>
                 <li className="mt-1">
-                  {/* ✅ Opens the Chat Box */}
+                  {/* Opens the Chat Box */}
                   <button
                     className="btn btn-sm d-flex align-items-center gap-2 border-0 fw-medium shadow-sm"
                     style={{
@@ -251,7 +251,7 @@ const AppFooter = ({ context }) => {
         `}</style>
       </footer>
 
-      {/* 🟢 FLOATING MESSAGE BOX (AWS Style) */}
+      {/* FLOATING MESSAGE BOX (AWS Style) */}
       {isChatOpen && (
         <div
           className="position-fixed bottom-0 end-0 m-3 m-md-4 z-3 shadow rounded-1 bg-white text-dark border"

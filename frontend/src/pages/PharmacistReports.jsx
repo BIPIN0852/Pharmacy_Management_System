@@ -103,7 +103,7 @@ const PharmacistReports = () => {
     }
   };
 
-  // ✅ FIXED: Actual CSV Download Logic
+  //  Actual CSV Download Logic
   const handleDownload = () => {
     // 1. Prepare the CSV content
     const csvRows = [];
@@ -210,7 +210,7 @@ const PharmacistReports = () => {
 
       {/* KPI Cards */}
       <div className="row g-4 mb-4">
-        {/* Revenue Card (Amazon Style Dark Green) */}
+        {/* Revenue Card  */}
         <div className="col-md-4">
           <div
             className="card border-0 shadow-sm h-100 rounded-1 text-white aws-card"

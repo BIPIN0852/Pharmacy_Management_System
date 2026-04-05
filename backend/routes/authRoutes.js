@@ -12,8 +12,8 @@ const {
 } = require("../middleware/authMiddleware");
 
 // Utilities
-const sendEmail = require("../utils/sendEmail"); // ✅ Uses your fixed Gmail transporter
-const { getEmailTemplate } = require("../utils/emailTemplates"); // ✅ Uses your HTML template
+const sendEmail = require("../utils/sendEmail");
+const { getEmailTemplate } = require("../utils/emailTemplates");
 
 const router = express.Router();
 
@@ -56,7 +56,7 @@ router.post(
           const htmlMsg = getEmailTemplate(
             user.name,
             "Here is your new verification code.",
-            otp
+            otp,
           );
           await sendEmail({
             email: user.email,
@@ -82,7 +82,7 @@ router.post(
         phone,
         role: "customer",
         isVerified: false,
-        otp: otp, // ✅ Standardized field name
+        otp: otp, // Standardized field name
         otpExpires: Date.now() + 10 * 60 * 1000,
       });
 
@@ -94,7 +94,7 @@ router.post(
       const htmlMsg = getEmailTemplate(
         user.name,
         "Welcome! Please verify your email.",
-        otp
+        otp,
       );
       await sendEmail({
         email: user.email,
@@ -110,7 +110,7 @@ router.post(
       console.error("❌ Register Error:", err);
       res.status(500).json({ message: "Server error during registration" });
     }
-  }
+  },
 );
 
 // -------------------------------------------------------------------
@@ -182,7 +182,7 @@ router.post("/resend-otp", async (req, res) => {
     const htmlMsg = getEmailTemplate(
       user.name,
       "Here is your new verification code.",
-      otp
+      otp,
     );
     await sendEmail({
       email: user.email,
@@ -278,7 +278,7 @@ router.post("/forgot-password", async (req, res) => {
     const htmlMsg = getEmailTemplate(
       user.name,
       "Use this code to reset your password.",
-      code
+      code,
     );
     await sendEmail({
       email: user.email,
@@ -393,7 +393,7 @@ router.put("/profile", protect, async (req, res) => {
 // -------------------------------------------------------------------
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
 router.get(
@@ -402,7 +402,7 @@ router.get(
   (req, res) => {
     const token = generateToken(req.user._id);
     res.redirect(`http://localhost:3000/dashboard?token=${token}`);
-  }
+  },
 );
 
 module.exports = router;

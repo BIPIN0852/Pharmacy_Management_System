@@ -2071,7 +2071,7 @@ const Login = () => {
               }}
             ></div>
 
-            {/* ✅ NEW REDESIGNED WHITE LOGIN CARD */}
+            {/*  REDESIGNED WHITE LOGIN CARD */}
             <div className="w-100 z-1 slide-up delay-1 px-4 px-md-5">
               <div
                 className="bg-white p-4 p-md-5 rounded-4 shadow-sm border border-light-subtle"

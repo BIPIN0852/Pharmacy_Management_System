@@ -884,7 +884,7 @@ const PaymentSuccess = () => {
               </p>
               <p className="text-muted small mb-0">Bagmati Province, Nepal</p>
               <p className="text-muted small mb-0">
-                support@smartpharmacy.com | +977-1234567890
+                support@smartpharmacy.com | +977-9876543210
               </p>
             </div>
             <div className="text-sm-end text-start">

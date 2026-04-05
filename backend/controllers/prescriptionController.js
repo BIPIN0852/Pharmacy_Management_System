@@ -1,10 +1,10 @@
-const Prescription = require("../models/prescriptionModel"); // ✅ Matches your actual filename
-const Appointment = require("../models/Appointment"); // ✅ Required to update appointment status
-const Doctor = require("../models/Doctor"); // ✅ Required to find the correct doctor profile ID
+const Prescription = require("../models/prescriptionModel");
+const Appointment = require("../models/Appointment");
+const Doctor = require("../models/Doctor");
 const fs = require("fs");
 const path = require("path");
-const sendEmail = require("../utils/sendEmail"); // Uses your global email utility
-const { getEmailTemplate } = require("../utils/emailTemplates"); // Assumes you have this
+const sendEmail = require("../utils/sendEmail");
+const { getEmailTemplate } = require("../utils/emailTemplates");
 
 // -------------------------------------------------------------------
 // 🩺 NEW: CREATE DIGITAL PRESCRIPTION (Doctor Action)
@@ -39,17 +39,17 @@ const createDigitalPrescription = async (req, res) => {
     // 3. Create the Digital Prescription
     const prescription = await Prescription.create({
       user: patientId,
-      doctor: doctorProfile._id, // ✅ Fixed: Uses the actual Doctor ID, not User ID
+      doctor: doctorProfile._id,
       appointment: appointmentId || null,
       items: items, // Array of { medicine, customName, dosageInstructions, durationDays, quantity }
       notes: notes,
       customerName: patientName,
       customerEmail: patientEmail,
       status: "Approved", // Doctor-issued prescriptions are approved by default
-      imageUrl: "digital", // ✅ THE CLEVER FIX: Prevents MongoDB from crashing due to missing image!
+      imageUrl: "digital",
     });
 
-    // 4. ✅ AUTO-COMPLETE APPOINTMENT
+    // 4. AUTO-COMPLETE APPOINTMENT
     // If this was created linked to an appointment, update that appointment to "Completed"
     if (appointmentId) {
       await Appointment.findByIdAndUpdate(appointmentId, {
@@ -253,7 +253,7 @@ const deletePrescription = async (req, res) => {
       return res.status(404).json({ message: "Prescription not found" });
     }
 
-    // ✅ CLEANUP: Delete the actual file from 'uploads' folder
+    // Delete the actual file from 'uploads' folder
     if (prescription.imageUrl && prescription.imageUrl !== "digital") {
       const filePath = path.join(__dirname, "..", prescription.imageUrl);
       if (fs.existsSync(filePath)) {
@@ -290,7 +290,7 @@ const getPatientHistory = async (req, res) => {
 };
 
 module.exports = {
-  createDigitalPrescription, // ✅ Added to exports
+  createDigitalPrescription,
   uploadPrescription,
   getMyPrescriptions,
   getPrescriptions,

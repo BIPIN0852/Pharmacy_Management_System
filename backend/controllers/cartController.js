@@ -43,7 +43,7 @@ const addToCart = async (req, res) => {
     if (cart) {
       // --- Cart Exists: Check if item is already inside ---
       const itemIndex = cart.cartItems.findIndex(
-        (item) => item.medicine.toString() === medicineId
+        (item) => item.medicine.toString() === medicineId,
       );
 
       if (itemIndex > -1) {
@@ -94,7 +94,7 @@ const removeFromCart = async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id });
     if (cart) {
       cart.cartItems = cart.cartItems.filter(
-        (item) => item.medicine.toString() !== req.params.id
+        (item) => item.medicine.toString() !== req.params.id,
       );
       await cart.save();
       res.json(cart);

@@ -32,7 +32,7 @@ const CartPage = () => {
   const [error, setError] = useState("");
   const [updatingItems, setUpdatingItems] = useState({});
 
-  // ✅ NEW: State to track which items the user has checked/selected
+  //  State to track which items the user has checked/selected
   const [selectedItemIds, setSelectedItemIds] = useState(new Set());
   const [prescriptionUploaded, setPrescriptionUploaded] = useState(false);
 
@@ -50,7 +50,7 @@ const CartPage = () => {
   const shippingPrice = itemsPrice > 1000 || itemsPrice === 0 ? 0 : 50;
   const totalPrice = itemsPrice + taxPrice + shippingPrice;
 
-  // ✅ Check if ANY SELECTED item requires a prescription
+  // Check if ANY SELECTED item requires a prescription
   const requiresPrescription = selectedCartItems.some(
     (item) =>
       item.prescriptionRequired === true ||
@@ -132,7 +132,7 @@ const CartPage = () => {
       setCartItems(finalCart);
       localStorage.setItem("cartItems", JSON.stringify(finalCart));
 
-      // ✅ By default, select ALL items when cart loads
+      // By default, select ALL items when cart loads
       setSelectedItemIds(
         new Set(finalCart.map((item) => String(item.medicine))),
       );
@@ -184,7 +184,7 @@ const CartPage = () => {
     }
   };
 
-  // ✅ Toggle individual item selection
+  // Toggle individual item selection
   const handleToggleItem = (id) => {
     const newSelected = new Set(selectedItemIds);
     if (newSelected.has(String(id))) {
@@ -195,7 +195,7 @@ const CartPage = () => {
     setSelectedItemIds(newSelected);
   };
 
-  // ✅ Toggle Select All / Deselect All
+  // Toggle Select All / Deselect All
   const handleToggleAll = () => {
     if (selectedItemIds.size === cartItems.length) {
       setSelectedItemIds(new Set()); // Deselect all
@@ -207,7 +207,7 @@ const CartPage = () => {
   };
 
   const checkoutHandler = () => {
-    // ✅ Send ONLY the selected items to the checkout process
+    //  Send ONLY the selected items to the checkout process
     localStorage.setItem(
       "checkoutData",
       JSON.stringify({
@@ -321,7 +321,7 @@ const CartPage = () => {
                     Shopping Cart
                   </h3>
 
-                  {/* ✅ SELECT ALL TOGGLE */}
+                  {/*  SELECT ALL TOGGLE */}
                   <div className="d-flex align-items-center pb-2">
                     <Form.Check
                       type="checkbox"
@@ -366,7 +366,7 @@ const CartPage = () => {
                         style={{ transition: "opacity 0.2s" }}
                       >
                         <Row className="align-items-center">
-                          {/* ✅ ITEM CHECKBOX */}
+                          {/*  ITEM CHECKBOX */}
                           <Col xs={1} className="text-center px-0 pe-2">
                             <Form.Check
                               type="checkbox"

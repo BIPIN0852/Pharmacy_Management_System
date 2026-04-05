@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ Updated to send HTML instead of plain text
+// to send HTML instead of plain text
 async function sendCodeEmail(to, subject, htmlContent) {
   await transporter.sendMail({
     from: `"Smart Pharmacy" <${process.env.EMAIL_USER}>`,
@@ -51,7 +51,7 @@ const registerUser = async (req, res) => {
       // Optional: Send Welcome Email
       const emailHtml = getEmailTemplate(
         user.fullName,
-        "Welcome to Smart Pharmacy! Your account has been created successfully."
+        "Welcome to Smart Pharmacy! Your account has been created successfully.",
       );
       // await sendCodeEmail(user.email, "Welcome to Smart Pharmacy", emailHtml);
 
@@ -120,17 +120,17 @@ const sendLoginCode = async (req, res) => {
     user.loginCodeExpires = expiry;
     await user.save();
 
-    // ✅ Use Professional HTML Template
+    // Use Professional HTML Template
     const emailHtml = getEmailTemplate(
       user.fullName || "User",
       "Please use the code below to verify your login. This code expires in 10 minutes.",
-      loginCode
+      loginCode,
     );
 
     await sendCodeEmail(
       email,
       "Your Verification Code - Smart Pharmacy", // Subject
-      emailHtml
+      emailHtml,
     );
 
     res.json({ message: "Verification code sent to email" });
@@ -206,17 +206,17 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = expiry;
     await user.save();
 
-    // ✅ Use Professional HTML Template
+    // Use Professional HTML Template
     const emailHtml = getEmailTemplate(
       user.fullName || "User",
       "We received a request to reset your password. Use the code below to proceed:",
-      resetCode
+      resetCode,
     );
 
     await sendCodeEmail(
       email,
       "Password Reset Request - Smart Pharmacy", // Subject
-      emailHtml
+      emailHtml,
     );
 
     res.json({ message: "Reset code sent to email" });
@@ -258,10 +258,10 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    // ✅ Optional: Send confirmation email
+    // Send confirmation email
     const emailHtml = getEmailTemplate(
       user.fullName || "User",
-      "Your password has been successfully reset. You can now login with your new password."
+      "Your password has been successfully reset. You can now login with your new password.",
     );
     await sendCodeEmail(email, "Password Changed Successfully", emailHtml);
 
@@ -388,7 +388,7 @@ const deleteUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
-      { new: true }
+      { new: true },
     );
 
     if (!user) {

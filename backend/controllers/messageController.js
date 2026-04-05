@@ -122,7 +122,7 @@ const getAppointmentMessages = asyncHandler(async (req, res) => {
     appointment: req.params.appointmentId,
   }).sort({ createdAt: 1 });
 
-  // ✅ CRITICAL FIX: Only auto-read messages if it is NOT a background notification poll!
+  // Only auto-read messages if it is NOT a background notification poll!
   if (req.query.background !== "true") {
     const unreadMessages = messages.filter(
       (m) =>
@@ -169,7 +169,7 @@ const sendAppointmentMessage = asyncHandler(async (req, res) => {
   res.status(201).json(message);
 });
 
-const User = require("../models/User"); // Make sure User model is imported at the top!
+const User = require("../models/User");
 
 // @desc    Admin sends direct message/email to a user
 // @route   POST /api/messages/send
