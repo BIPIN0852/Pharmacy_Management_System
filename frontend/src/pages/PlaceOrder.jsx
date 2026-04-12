@@ -34,6 +34,10 @@ const PlaceOrder = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [prescriptionImage, setPrescriptionImage] = useState("");
 
+  // ✅ NEW: Supportive Document States
+  const [uploadingSupportDoc, setUploadingSupportDoc] = useState(false);
+  const [supportiveDocument, setSupportiveDocument] = useState("");
+
   const getCartItems = () => {
     const checkoutData = JSON.parse(
       localStorage.getItem("checkoutData") || "{}",
@@ -103,14 +107,45 @@ const PlaceOrder = () => {
     }
   };
 
+  // ✅ NEW: Supportive Document Upload Handler
+  const uploadSupportiveDocHandler = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+    setUploadingSupportDoc(true);
+    setError("");
+
+    try {
+      const config = { headers: { "Content-Type": "multipart/form-data" } };
+      const { data } = await api.post("/upload", formData, config);
+      setSupportiveDocument(data.imageUrl || data);
+      setUploadingSupportDoc(false);
+    } catch (err) {
+      console.error(err);
+      setError("Document upload failed. Please try again.");
+      setUploadingSupportDoc(false);
+    }
+  };
+
   const placeOrderHandler = () => {
     setError("");
 
-    if (requiresPrescription && !prescriptionImage) {
-      setError(
-        "You must upload a valid prescription for the restricted medicines in your order.",
-      );
-      return;
+    // ✅ ADDED: Validation for both documents
+    if (requiresPrescription) {
+      if (!prescriptionImage) {
+        setError(
+          "You must upload a valid prescription for the restricted medicines in your order.",
+        );
+        return;
+      }
+      if (!supportiveDocument) {
+        setError(
+          "You must upload a valid supportive document (ID) to verify your prescription.",
+        );
+        return;
+      }
     }
 
     const orderData = {
@@ -130,9 +165,10 @@ const PlaceOrder = () => {
       taxPrice,
       totalPrice,
       prescriptionImage: requiresPrescription ? prescriptionImage : null,
+      supportiveDocument: requiresPrescription ? supportiveDocument : null, // ✅ ADDED payload data
     };
 
-    //  Pass data cleanly to the next screen. No database hits, no cart clearing.
+    // Pass data cleanly to the next screen. No database hits, no cart clearing.
     navigate("/payment", {
       state: {
         orderData,
@@ -241,7 +277,7 @@ const PlaceOrder = () => {
                     </h5>
                     <Alert
                       variant="warning"
-                      className="small mb-3 d-flex align-items-start gap-2 border-0 rounded-1 shadow-sm"
+                      className="small mb-4 d-flex align-items-start gap-2 border-0 rounded-1 shadow-sm"
                       style={{
                         backgroundColor: "#fff9e6",
                         color: "#B12704",
@@ -251,17 +287,21 @@ const PlaceOrder = () => {
                       <AlertCircle size={18} className="mt-1 flex-shrink-0" />
                       <div>
                         <strong>Verification Needed.</strong> One or more items
-                        requires a valid doctor's prescription. Your order will
-                        be manually verified by our pharmacist.
+                        requires a valid doctor's prescription and a matching
+                        ID. Your order will be manually verified by our
+                        pharmacist.
                       </div>
                     </Alert>
 
-                    <Form.Group controlId="prescriptionImage" className="mb-0">
+                    {/* ========================================= */}
+                    {/* 1. PRESCRIPTION UPLOAD */}
+                    {/* ========================================= */}
+                    <Form.Group controlId="prescriptionImage" className="mb-4">
                       <Form.Label
                         className="fw-bold small mb-2"
                         style={{ color: "#0F1111" }}
                       >
-                        Upload Prescription Image (JPG/PNG)
+                        1. Upload Prescription Image (JPG/PNG) *
                       </Form.Label>
                       <div className="d-flex align-items-center gap-3">
                         <Form.Control
@@ -279,37 +319,102 @@ const PlaceOrder = () => {
                           />
                         )}
                       </div>
+
+                      {prescriptionImage && (
+                        <div
+                          className="mt-3 p-2 border rounded-1 bg-light d-inline-block text-center position-relative shadow-sm"
+                          style={{ borderColor: "#D5D9D9" }}
+                        >
+                          <div
+                            className="position-absolute top-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle shadow-sm"
+                            style={{ backgroundColor: "#067D62 !important" }}
+                          >
+                            <CheckCircle2 size={14} className="text-white" />
+                          </div>
+                          <Image
+                            src={
+                              prescriptionImage.startsWith("http")
+                                ? prescriptionImage
+                                : `http://localhost:5000${prescriptionImage}`
+                            }
+                            alt="Prescription"
+                            style={{ height: "100px", objectFit: "contain" }}
+                            className="rounded-1"
+                          />
+                          <div
+                            className="small fw-bold mt-2"
+                            style={{ color: "#067D62" }}
+                          >
+                            File Attached
+                          </div>
+                        </div>
+                      )}
                     </Form.Group>
 
-                    {prescriptionImage && (
-                      <div
-                        className="mt-3 p-2 border rounded-1 bg-light d-inline-block text-center position-relative shadow-sm"
-                        style={{ borderColor: "#D5D9D9" }}
+                    <hr style={{ borderColor: "#D5D9D9" }} className="mb-4" />
+
+                    {/* ========================================= */}
+                    {/* 2. SUPPORTIVE DOCUMENT (ID) UPLOAD */}
+                    {/* ========================================= */}
+                    <Form.Group controlId="supportiveDocument" className="mb-0">
+                      <Form.Label
+                        className="fw-bold small mb-1 d-block"
+                        style={{ color: "#0F1111" }}
                       >
-                        <div
-                          className="position-absolute top-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle shadow-sm"
-                          style={{ backgroundColor: "#067D62 !important" }}
-                        >
-                          <CheckCircle2 size={14} className="text-white" />
-                        </div>
-                        <Image
-                          src={
-                            prescriptionImage.startsWith("http")
-                              ? prescriptionImage
-                              : `http://localhost:5000${prescriptionImage}`
-                          }
-                          alt="Prescription"
-                          style={{ height: "100px", objectFit: "contain" }}
-                          className="rounded-1"
+                        2. Upload ID / Supportive Document (JPG/PNG) *
+                      </Form.Label>
+                      <Form.Text className="text-muted mb-2 d-block small">
+                        Please provide a valid ID to verify this prescription
+                        belongs to you.
+                      </Form.Text>
+
+                      <div className="d-flex align-items-center gap-3">
+                        <Form.Control
+                          type="file"
+                          onChange={uploadSupportiveDocHandler}
+                          accept="image/jpeg, image/png, image/jpg"
+                          className="shadow-none border-1 amazon-input"
+                          style={{ maxWidth: "400px" }}
                         />
-                        <div
-                          className="small fw-bold mt-2"
-                          style={{ color: "#067D62" }}
-                        >
-                          File Attached
-                        </div>
+                        {uploadingSupportDoc && (
+                          <Loader2
+                            size={24}
+                            style={{ color: "#007185" }}
+                            className="spin-animation"
+                          />
+                        )}
                       </div>
-                    )}
+
+                      {supportiveDocument && (
+                        <div
+                          className="mt-3 p-2 border rounded-1 bg-light d-inline-block text-center position-relative shadow-sm"
+                          style={{ borderColor: "#D5D9D9" }}
+                        >
+                          <div
+                            className="position-absolute top-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle shadow-sm"
+                            style={{ backgroundColor: "#067D62 !important" }}
+                          >
+                            <CheckCircle2 size={14} className="text-white" />
+                          </div>
+                          <Image
+                            src={
+                              supportiveDocument.startsWith("http")
+                                ? supportiveDocument
+                                : `http://localhost:5000${supportiveDocument}`
+                            }
+                            alt="Supportive ID"
+                            style={{ height: "100px", objectFit: "contain" }}
+                            className="rounded-1"
+                          />
+                          <div
+                            className="small fw-bold mt-2"
+                            style={{ color: "#067D62" }}
+                          >
+                            ID Attached
+                          </div>
+                        </div>
+                      )}
+                    </Form.Group>
                   </Card.Body>
                 </Card>
               )}
@@ -505,17 +610,26 @@ const PlaceOrder = () => {
                   className="w-100 py-2 fw-medium shadow-sm border-0 d-flex justify-content-center align-items-center gap-2 mb-3"
                   style={{
                     backgroundColor:
-                      finalCartItems.length === 0 || loading
+                      finalCartItems.length === 0 ||
+                      loading ||
+                      uploadingImage ||
+                      uploadingSupportDoc
                         ? "#F0F2F2"
                         : "#FFD814",
                     color:
-                      finalCartItems.length === 0 || loading
+                      finalCartItems.length === 0 ||
+                      loading ||
+                      uploadingImage ||
+                      uploadingSupportDoc
                         ? "#888C8C"
                         : "#0F1111",
                     borderRadius: "8px",
                   }}
                   disabled={
-                    finalCartItems.length === 0 || loading || uploadingImage
+                    finalCartItems.length === 0 ||
+                    loading ||
+                    uploadingImage ||
+                    uploadingSupportDoc
                   }
                   onClick={placeOrderHandler}
                 >

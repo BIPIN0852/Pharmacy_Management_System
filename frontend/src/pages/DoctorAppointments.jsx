@@ -38,7 +38,13 @@ const DoctorAppointments = () => {
       setLoading(true);
       setError("");
       const res = await api.get("/doctor/appointments");
-      const data = res.data?.appointments || res.data || [];
+      let data = res.data?.appointments || res.data || [];
+
+      // ✅ FIXED: Sort the data so the most recent appointments appear at the top!
+      if (Array.isArray(data)) {
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+
       setAppointments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching appointments:", err);

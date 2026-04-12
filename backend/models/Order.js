@@ -69,6 +69,10 @@ const orderSchema = mongoose.Schema(
     prescriptionImage: {
       type: String, // URL of the uploaded prescription image
     },
+    supportiveDocument: {
+      type: String,
+      required: false,
+    },
     prescriptionStatus: {
       type: String,
       enum: ["Not Required", "Pending Verification", "Approved", "Rejected"],

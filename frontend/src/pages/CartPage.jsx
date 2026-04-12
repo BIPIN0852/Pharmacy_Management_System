@@ -22,7 +22,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import PrescriptionUpload from "../components/PrescriptionUpload";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -32,9 +31,8 @@ const CartPage = () => {
   const [error, setError] = useState("");
   const [updatingItems, setUpdatingItems] = useState({});
 
-  //  State to track which items the user has checked/selected
+  // State to track which items the user has checked/selected
   const [selectedItemIds, setSelectedItemIds] = useState(new Set());
-  const [prescriptionUploaded, setPrescriptionUploaded] = useState(false);
 
   // Determine exactly which items are currently selected for checkout
   const selectedCartItems = cartItems.filter((item) =>
@@ -57,10 +55,9 @@ const CartPage = () => {
       String(item.prescriptionRequired) === "true",
   );
 
-  // Block if Rx needed but not uploaded, OR if NO items are selected
-  const canProceed =
-    selectedCartItems.length > 0 &&
-    (!requiresPrescription || prescriptionUploaded);
+  // ✅ FIXED: The user only needs to have items selected to proceed.
+  // The actual document upload is now strictly handled on the PlaceOrder screen.
+  const canProceed = selectedCartItems.length > 0;
 
   useEffect(() => {
     fetchCart();
@@ -173,7 +170,6 @@ const CartPage = () => {
       setCartItems(updatedCart);
       localStorage.setItem("cartItems", JSON.stringify(updatedCart));
 
-      // Remove from selected items if it was checked
       const newSelected = new Set(selectedItemIds);
       newSelected.delete(String(id));
       setSelectedItemIds(newSelected);
@@ -184,7 +180,6 @@ const CartPage = () => {
     }
   };
 
-  // Toggle individual item selection
   const handleToggleItem = (id) => {
     const newSelected = new Set(selectedItemIds);
     if (newSelected.has(String(id))) {
@@ -195,26 +190,23 @@ const CartPage = () => {
     setSelectedItemIds(newSelected);
   };
 
-  // Toggle Select All / Deselect All
   const handleToggleAll = () => {
     if (selectedItemIds.size === cartItems.length) {
-      setSelectedItemIds(new Set()); // Deselect all
+      setSelectedItemIds(new Set());
     } else {
       setSelectedItemIds(
         new Set(cartItems.map((item) => String(item.medicine))),
-      ); // Select all
+      );
     }
   };
 
   const checkoutHandler = () => {
-    //  Send ONLY the selected items to the checkout process
     localStorage.setItem(
       "checkoutData",
       JSON.stringify({
         cartItems: selectedCartItems,
         totalPrice,
         requiresPrescription,
-        prescriptionUploaded,
       }),
     );
     navigate("/shipping");
@@ -261,56 +253,35 @@ const CartPage = () => {
         {cartItems.length > 0 && (
           <Row className="mb-3">
             <Col lg={8}>
-              {requiresPrescription &&
-                !prescriptionUploaded &&
-                selectedCartItems.length > 0 && (
-                  <div className="mb-4 animate-fade-in">
-                    <Alert
-                      variant="warning"
-                      className="border-0 shadow-sm rounded-1 d-flex align-items-start gap-2"
-                      style={{
-                        backgroundColor: "#fff9e6",
-                        color: "#B12704",
-                        borderLeft: "4px solid #B12704",
-                      }}
-                    >
-                      <AlertTriangle size={24} className="mt-1 flex-shrink-0" />
-                      <div>
-                        <h6 className="fw-bold mb-1 fs-6">
-                          Prescription Required
-                        </h6>
-                        <span className="small text-dark">
-                          One or more selected items require a valid
-                          prescription. Please securely upload below.
-                        </span>
-                      </div>
-                    </Alert>
-                    <PrescriptionUpload
-                      user={user}
-                      onUploadSuccess={() => setPrescriptionUploaded(true)}
-                    />
-                  </div>
-                )}
-
-              {requiresPrescription &&
-                prescriptionUploaded &&
-                selectedCartItems.length > 0 && (
+              {/* ✅ UPDATED: Informational Alert Only */}
+              {requiresPrescription && selectedCartItems.length > 0 && (
+                <div className="mb-4 animate-fade-in">
                   <Alert
-                    variant="success"
-                    className="border-0 shadow-sm rounded-1 d-flex align-items-center gap-2 mb-4 animate-fade-in"
+                    variant="warning"
+                    className="border-0 shadow-sm rounded-1 d-flex align-items-start gap-2"
                     style={{
-                      backgroundColor: "#f2fcf5",
-                      color: "#067D62",
-                      borderLeft: "4px solid #067D62",
+                      backgroundColor: "#fff9e6",
+                      color: "#B12704",
+                      borderLeft: "4px solid #B12704",
                     }}
                   >
-                    <CheckCircle size={20} className="flex-shrink-0" />
-                    <span className="fw-bold small">
-                      Prescription securely attached! You may now proceed to
-                      checkout.
-                    </span>
+                    <AlertTriangle size={24} className="mt-1 flex-shrink-0" />
+                    <div>
+                      <h6 className="fw-bold mb-1 fs-6">
+                        Prescription & ID Will Be Required
+                      </h6>
+                      <span className="small text-dark">
+                        One or more selected items require a valid prescription
+                        and a matching supportive ID for verification.{" "}
+                        <strong>
+                          You will be asked to securely upload these documents
+                          during the final checkout step.
+                        </strong>
+                      </span>
+                    </div>
                   </Alert>
-                )}
+                </div>
+              )}
 
               <Card
                 className="border-0 rounded-1 shadow-sm mb-3"
@@ -321,7 +292,6 @@ const CartPage = () => {
                     Shopping Cart
                   </h3>
 
-                  {/*  SELECT ALL TOGGLE */}
                   <div className="d-flex align-items-center pb-2">
                     <Form.Check
                       type="checkbox"
@@ -366,7 +336,6 @@ const CartPage = () => {
                         style={{ transition: "opacity 0.2s" }}
                       >
                         <Row className="align-items-center">
-                          {/*  ITEM CHECKBOX */}
                           <Col xs={1} className="text-center px-0 pe-2">
                             <Form.Check
                               type="checkbox"
@@ -586,9 +555,7 @@ const CartPage = () => {
                   >
                     {selectedCartItems.length === 0
                       ? "Select items to buy"
-                      : !canProceed
-                        ? "Upload Rx to Checkout"
-                        : "Proceed to Checkout"}
+                      : "Proceed to Checkout"}
                   </Button>
 
                   <div

@@ -41,16 +41,15 @@ const createDigitalPrescription = async (req, res) => {
       user: patientId,
       doctor: doctorProfile._id,
       appointment: appointmentId || null,
-      items: items, // Array of { medicine, customName, dosageInstructions, durationDays, quantity }
+      items: items,
       notes: notes,
       customerName: patientName,
       customerEmail: patientEmail,
-      status: "Approved", // Doctor-issued prescriptions are approved by default
+      status: "Approved",
       imageUrl: "digital",
     });
 
     // 4. AUTO-COMPLETE APPOINTMENT
-    // If this was created linked to an appointment, update that appointment to "Completed"
     if (appointmentId) {
       await Appointment.findByIdAndUpdate(appointmentId, {
         status: "completed", // Lowercase to match frontend checks
@@ -75,17 +74,26 @@ const createDigitalPrescription = async (req, res) => {
 // -------------------------------------------------------------------
 const uploadPrescription = async (req, res) => {
   try {
-    // req.file is provided by Multer
-    if (!req.file) {
-      return res.status(400).json({ message: "Please upload an image." });
+    // Handle multiple files (Prescription + Supportive Document)
+    // req.files is provided by Multer when using upload.fields()
+    if (!req.files || !req.files["image"]) {
+      return res
+        .status(400)
+        .json({ message: "Please upload a prescription image." });
     }
 
-    // Create the public URL
-    const imageUrl = `/uploads/prescriptions/${req.file.filename}`;
+    // Create the public URLs
+    const imageUrl = `/uploads/prescriptions/${req.files["image"][0].filename}`;
+
+    let supportiveDocumentUrl = null;
+    if (req.files["supportiveDocument"]) {
+      supportiveDocumentUrl = `/uploads/prescriptions/${req.files["supportiveDocument"][0].filename}`;
+    }
 
     const prescription = await Prescription.create({
       user: req.user._id,
-      imageUrl: imageUrl, // Matches your schema field
+      imageUrl: imageUrl,
+      supportiveDocument: supportiveDocumentUrl,
       notes: req.body.notes,
       customerName: req.user.name,
       customerEmail: req.user.email,
@@ -94,7 +102,7 @@ const uploadPrescription = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Prescription uploaded successfully!",
+      message: "Prescription and documents uploaded successfully!",
       prescription,
     });
   } catch (error) {
@@ -253,12 +261,25 @@ const deletePrescription = async (req, res) => {
       return res.status(404).json({ message: "Prescription not found" });
     }
 
-    // Delete the actual file from 'uploads' folder
+    // Delete the primary prescription file from 'uploads' folder
     if (prescription.imageUrl && prescription.imageUrl !== "digital") {
       const filePath = path.join(__dirname, "..", prescription.imageUrl);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         console.log(`🗑️ Deleted file: ${filePath}`);
+      }
+    }
+
+    // ✅ FIXED: Delete the supportive ID file as well to save server space
+    if (prescription.supportiveDocument) {
+      const supportPath = path.join(
+        __dirname,
+        "..",
+        prescription.supportiveDocument,
+      );
+      if (fs.existsSync(supportPath)) {
+        fs.unlinkSync(supportPath);
+        console.log(`🗑️ Deleted supportive document: ${supportPath}`);
       }
     }
 

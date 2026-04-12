@@ -37,16 +37,54 @@ const PharmacistPrescriptions = () => {
     fetchPrescriptions();
   }, []);
 
+  // ✅ UPGRADED: Hybrid Fetcher pulls from BOTH Orders and Prescriptions
   const fetchPrescriptions = async () => {
     try {
       setLoading(true);
-      // Interceptor handles token and base URL
-      const response = await api.get("/prescriptions");
-      // Handle various response structures (axios data vs direct array)
-      const data = response.data || response;
-      setPrescriptions(Array.isArray(data) ? data : data.prescriptions || []);
+
+      const [ordersRes, rxRes] = await Promise.all([
+        api.get("/orders").catch(() => ({ data: [] })),
+        api.get("/prescriptions").catch(() => ({ data: [] })),
+      ]);
+
+      // 1. Format Checkout Orders
+      const ordersData = Array.isArray(ordersRes.data) ? ordersRes.data : [];
+      const checkoutDocs = ordersData
+        .filter((o) => o.prescriptionImage || o.supportiveDocument)
+        .map((o) => ({
+          _id: o._id,
+          user: o.user,
+          createdAt: o.createdAt,
+          notes: "Checkout Order Verification",
+          displayStatus: o.prescriptionStatus || "Pending",
+          displayImage: o.prescriptionImage,
+          supportiveDocument: o.supportiveDocument,
+          isOrder: true, // Flag to track source
+        }));
+
+      // 2. Format Standalone Prescriptions
+      const rxData = Array.isArray(rxRes.data)
+        ? rxRes.data
+        : rxRes.data?.prescriptions || [];
+      const standaloneDocs = rxData.map((rx) => ({
+        _id: rx._id,
+        user: rx.user,
+        createdAt: rx.createdAt,
+        notes: rx.notes,
+        displayStatus: rx.status,
+        displayImage: rx.imageUrl || rx.image,
+        supportiveDocument: rx.supportiveDocument,
+        isOrder: false, // Flag to track source
+      }));
+
+      // Combine both lists and sort by newest first
+      const combined = [...checkoutDocs, ...standaloneDocs].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+
+      setPrescriptions(combined);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch prescriptions");
+      setError("Failed to fetch medical documents.");
     } finally {
       setLoading(false);
     }
@@ -57,23 +95,25 @@ const PharmacistPrescriptions = () => {
     setActionLoading(true);
 
     try {
-      // Synchronized with backend PUT /api/prescriptions/:id
-      await api.put(`/prescriptions/${selectedRx._id}`, {
-        status,
-        notes: status === "Rejected" ? rejectReason : selectedRx.notes,
-      });
+      // ✅ UPGRADED: Hits the correct API depending on where the doc came from
+      if (selectedRx.isOrder) {
+        await api.put(`/orders/${selectedRx._id}/prescription`, { status });
+      } else {
+        await api.put(`/prescriptions/${selectedRx._id}`, {
+          status,
+          notes: status === "Rejected" ? rejectReason : selectedRx.notes,
+        });
+      }
 
-      // Update UI locally to reflect the change immediately
+      // Update UI locally
       const updatedList = prescriptions.map((p) =>
-        p._id === selectedRx._id ? { ...p, status } : p,
+        p._id === selectedRx._id ? { ...p, displayStatus: status } : p,
       );
       setPrescriptions(updatedList);
       setShowModal(false);
       setRejectReason("");
     } catch (err) {
-      alert(
-        err.response?.data?.message || "Failed to update prescription status.",
-      );
+      alert(err.response?.data?.message || "Failed to update document status.");
     } finally {
       setActionLoading(false);
     }
@@ -112,9 +152,10 @@ const PharmacistPrescriptions = () => {
   // HELPER: Get correct image URL (Handling localhost ports)
   const getImageUrl = (path) => {
     if (!path) return "";
-    if (path.startsWith("http")) return path;
-    // Prepend Backend URL if it's a relative path from the server
-    return `http://localhost:5000${path}`;
+    if (path.startsWith("http") || path.startsWith("data:")) return path;
+    return path.startsWith("/")
+      ? `http://localhost:5000${path}`
+      : `http://localhost:5000/${path}`;
   };
 
   if (loading)
@@ -131,7 +172,8 @@ const PharmacistPrescriptions = () => {
         <div>
           <h3 className="fw-bold text-dark mb-1">Prescription Verification</h3>
           <p className="text-muted small">
-            Verify uploaded medical documents before medicine fulfillment
+            Verify uploaded medical documents from both Direct Uploads and
+            Checkout Orders.
           </p>
         </div>
       </div>
@@ -147,7 +189,7 @@ const PharmacistPrescriptions = () => {
           <Table hover className="align-middle mb-0">
             <thead className="bg-light border-bottom">
               <tr className="small text-uppercase text-muted fw-bold">
-                <th className="py-3 ps-4">Rx ID</th>
+                <th className="py-3 ps-4">Record ID</th>
                 <th className="py-3">Patient / Customer</th>
                 <th className="py-3">Upload Date</th>
                 <th className="py-3">Status</th>
@@ -178,11 +220,18 @@ const PharmacistPrescriptions = () => {
                       >
                         {rx.notes?.substring(0, 30)}...
                       </div>
+                      <Badge
+                        bg={rx.isOrder ? "info" : "secondary"}
+                        className="mt-1"
+                        style={{ fontSize: "0.65rem" }}
+                      >
+                        {rx.isOrder ? "Checkout Flow" : "Direct Upload"}
+                      </Badge>
                     </td>
                     <td className="text-secondary small">
                       {new Date(rx.createdAt).toLocaleDateString()}
                     </td>
-                    <td>{getStatusBadge(rx.status)}</td>
+                    <td>{getStatusBadge(rx.displayStatus)}</td>
                     <td className="text-end pe-4">
                       <Button
                         size="sm"
@@ -204,11 +253,10 @@ const PharmacistPrescriptions = () => {
         </div>
       </Card>
 
-      {/* Review Modal */}
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
-        size="lg"
+        size="xl"
         centered
         className="rx-modal"
       >
@@ -220,32 +268,82 @@ const PharmacistPrescriptions = () => {
         </Modal.Header>
         <Modal.Body className="p-4">
           <Row className="g-4">
-            <Col md={6}>
-              <div className="bg-light rounded-4 p-2 text-center border h-100 d-flex align-items-center justify-content-center overflow-hidden position-relative">
-                {selectedRx?.image ? (
-                  <img
-                    // FIXED: Use helper to resolve full localhost:5000 URL
-                    src={getImageUrl(selectedRx.image)}
-                    className="img-fluid rounded-3 shadow-sm cursor-zoom"
-                    style={{ maxHeight: "450px", cursor: "zoom-in" }}
-                    alt="Prescription"
-                    // FIXED: Use helper for window.open too
-                    onClick={() =>
-                      window.open(getImageUrl(selectedRx.image), "_blank")
-                    }
-                  />
-                ) : (
-                  <div className="text-muted p-5">Image not found</div>
-                )}
-                <div className="position-absolute bottom-0 end-0 p-2">
-                  <Badge bg="dark" className="opacity-75">
-                    Click to Expand
-                  </Badge>
-                </div>
+            <Col lg={8}>
+              <h6 className="fw-bold text-uppercase text-muted small mb-3">
+                Uploaded Documents
+              </h6>
+              <Row className="g-3 h-100">
+                {/* 1. Prescription Box */}
+                <Col md={6}>
+                  <div
+                    className="bg-light rounded-4 p-2 text-center border h-100 d-flex flex-column align-items-center justify-content-center overflow-hidden position-relative"
+                    style={{ minHeight: "350px" }}
+                  >
+                    <Badge
+                      bg="primary"
+                      className="position-absolute top-0 start-0 m-3 z-1 shadow-sm"
+                    >
+                      1. Prescription
+                    </Badge>
+                    {selectedRx?.displayImage ? (
+                      <img
+                        src={getImageUrl(selectedRx.displayImage)}
+                        className="img-fluid rounded-3 shadow-sm cursor-zoom mt-4"
+                        style={{ maxHeight: "350px", cursor: "zoom-in" }}
+                        alt="Prescription"
+                        onClick={() =>
+                          window.open(
+                            getImageUrl(selectedRx.displayImage),
+                            "_blank",
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="text-muted p-5">Image not found</div>
+                    )}
+                  </div>
+                </Col>
+
+                {/* 2. Supportive ID Box */}
+                <Col md={6}>
+                  <div
+                    className="bg-light rounded-4 p-2 text-center border h-100 d-flex flex-column align-items-center justify-content-center overflow-hidden position-relative"
+                    style={{ minHeight: "350px" }}
+                  >
+                    <Badge
+                      bg="secondary"
+                      className="position-absolute top-0 start-0 m-3 z-1 shadow-sm"
+                    >
+                      2. Supportive ID
+                    </Badge>
+                    {selectedRx?.supportiveDocument ? (
+                      <img
+                        src={getImageUrl(selectedRx.supportiveDocument)}
+                        className="img-fluid rounded-3 shadow-sm cursor-zoom mt-4"
+                        style={{ maxHeight: "350px", cursor: "zoom-in" }}
+                        alt="Supportive ID"
+                        onClick={() =>
+                          window.open(
+                            getImageUrl(selectedRx.supportiveDocument),
+                            "_blank",
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="text-danger small fw-bold p-5 d-flex flex-column align-items-center gap-2">
+                        <XCircle size={32} />
+                        No ID provided by customer
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              </Row>
+              <div className="text-muted small mt-2 d-flex justify-content-end">
+                * Click on any document to open full size in a new tab.
               </div>
             </Col>
 
-            <Col md={6} className="d-flex flex-column">
+            <Col lg={4} className="d-flex flex-column">
               <h6 className="fw-bold text-uppercase text-muted small mb-3">
                 Patient Information
               </h6>
@@ -266,7 +364,9 @@ const PharmacistPrescriptions = () => {
                 </div>
               </div>
 
-              {["pending", "Pending"].includes(selectedRx?.status) ? (
+              {["pending", "Pending", "Pending Verification"].includes(
+                selectedRx?.displayStatus,
+              ) ? (
                 <div className="mt-auto">
                   <Form.Group className="mb-3">
                     <Form.Label className="small fw-bold">
@@ -315,11 +415,15 @@ const PharmacistPrescriptions = () => {
               ) : (
                 <Alert
                   variant={
-                    selectedRx?.status === "Approved" ? "success" : "danger"
+                    selectedRx?.displayStatus === "Approved"
+                      ? "success"
+                      : "danger"
                   }
                   className="mt-auto border-0 shadow-sm"
                 >
-                  <div className="fw-bold">Document {selectedRx?.status}</div>
+                  <div className="fw-bold">
+                    Document {selectedRx?.displayStatus}
+                  </div>
                   <small>Processed on {new Date().toLocaleDateString()}</small>
                 </Alert>
               )}

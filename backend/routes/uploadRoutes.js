@@ -61,9 +61,10 @@ const upload = multer({
 // -------------------------------------------------------------------
 // 4. DEFINE ROUTE
 // @route   POST /api/upload
-// @desc    Upload product/medicine image (Admin Only)
+// @desc    Upload product/medicine image (Customers & Admins)
 // -------------------------------------------------------------------
-router.post("/", protect, admin, upload.single("image"), (req, res) => {
+
+router.post("/", protect, upload.single("image"), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -76,6 +77,7 @@ router.post("/", protect, admin, upload.single("image"), (req, res) => {
     res.status(201).json({
       message: "Image uploaded successfully",
       image: formattedPath,
+      imageUrl: formattedPath,
     });
   } catch (err) {
     console.error("Upload error:", err);
