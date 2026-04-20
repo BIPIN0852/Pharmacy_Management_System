@@ -847,12 +847,12 @@ const CustomerLayout = () => {
         .hover-bg-light:hover { background-color: #f8fafc !important; }
         .transition-all { transition: background-color 0.3s ease, color 0.3s ease, opacity 0.2s ease-in-out; }
         .hover-opacity:hover { opacity: 0.7; }
-        
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
+
         @keyframes pulse-badge {
           0% { transform: translate(-50%, -50%) scale(1); }
           50% { transform: translate(-50%, -50%) scale(1.1); }
