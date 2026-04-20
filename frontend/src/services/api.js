@@ -49,15 +49,24 @@
 import axios from "axios";
 
 // Create an Axios instance with base configuration
+// const api = axios.create({
+//   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+//   timeout: 10000, // 10-second timeout
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+//   withCredentials: false,
+// });
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  timeout: 10000, // 10-second timeout
+  // HARDCODED TO LIVE SERVER
+  baseURL: "https://pharmacy-management-system-07gx.onrender.com/api",
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: false,
 });
-
 // --- Request Interceptor ---
 // Automatically attach JWT token to every outgoing request if it exists
 api.interceptors.request.use(
