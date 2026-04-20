@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"createdAt":{"$numberInt":"1"}},"name":"createdAt_1","background":true,"expireAfterSeconds":{"$numberInt":"600"}}],"uuid":"dde8d77d42d4442e9c94bfc5908f2762","collectionName":"doctorotps","type":"collection"}
