@@ -149,7 +149,7 @@ const DoctorProfile = () => {
                   formData.image && formData.image !== "none"
                     ? formData.image.startsWith("http")
                       ? formData.image
-                      : `http://localhost:5000${formData.image}`
+                      : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${formData.image}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || "Doctor")}&background=eff6ff&color=2563eb&size=150`
                 }
                 alt="Profile"

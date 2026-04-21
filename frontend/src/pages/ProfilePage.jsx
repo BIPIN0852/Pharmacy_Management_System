@@ -253,7 +253,7 @@ const ProfilePage = () => {
       let cleanPath = photoPath.replace(/\\/g, "/");
       if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
 
-      return `http://localhost:5000${cleanPath}`;
+      return `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${cleanPath}`;
     }
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "User")}&background=eff6ff&color=2563eb&size=128`;

@@ -77,7 +77,7 @@ const AdminDoctors = () => {
       if (imgSource.startsWith("http")) return imgSource;
       const baseUrl = api.defaults.baseURL
         ? api.defaults.baseURL.replace(/\/api\/?$/, "")
-        : "http://localhost:5000";
+        : (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
       return `${baseUrl}${imgSource.replace(/\\/g, "/").startsWith("/") ? "" : "/"}${imgSource.replace(/\\/g, "/")}`;
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor?.name || "Doctor")}&background=f0f2f2&color=007185&size=150`;

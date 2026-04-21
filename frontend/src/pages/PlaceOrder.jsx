@@ -335,7 +335,7 @@ const PlaceOrder = () => {
                             src={
                               prescriptionImage.startsWith("http")
                                 ? prescriptionImage
-                                : `http://localhost:5000${prescriptionImage}`
+                                : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${prescriptionImage}`
                             }
                             alt="Prescription"
                             style={{ height: "100px", objectFit: "contain" }}
@@ -400,7 +400,7 @@ const PlaceOrder = () => {
                             src={
                               supportiveDocument.startsWith("http")
                                 ? supportiveDocument
-                                : `http://localhost:5000${supportiveDocument}`
+                                : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${supportiveDocument}`
                             }
                             alt="Supportive ID"
                             style={{ height: "100px", objectFit: "contain" }}
@@ -470,7 +470,7 @@ const PlaceOrder = () => {
                                 src={
                                   item.image?.startsWith("http")
                                     ? item.image
-                                    : `http://localhost:5000${item.image}`
+                                    : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${item.image}`
                                 }
                                 alt={item.name}
                                 fluid

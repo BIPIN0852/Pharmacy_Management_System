@@ -43,8 +43,8 @@ const Shipping = () => {
       saveShippingAddress({ address, city, postalCode, country, phoneNumber }),
     );
 
-    // 2. Redirect to Payment
-    navigate("/payment");
+    // 2. Redirect to Place Order (review step)
+    navigate("/placeorder");
   };
 
   return (

@@ -617,7 +617,7 @@ const DoctorPrescriptions = () => {
                                 src={
                                   rx.imageUrl.startsWith("http")
                                     ? rx.imageUrl
-                                    : `http://localhost:5000${rx.imageUrl}`
+                                    : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${rx.imageUrl}`
                                 }
                                 alt="Prescription Scan"
                                 className="img-fluid rounded-2 object-fit-cover"

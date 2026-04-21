@@ -831,7 +831,7 @@ const AdminOrders = () => {
                           href={
                             selectedOrder.prescriptionImage.startsWith("http")
                               ? selectedOrder.prescriptionImage
-                              : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                              : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${selectedOrder.prescriptionImage}`
                           }
                           target="_blank"
                           rel="noopener noreferrer"
@@ -840,7 +840,7 @@ const AdminOrders = () => {
                             src={
                               selectedOrder.prescriptionImage.startsWith("http")
                                 ? selectedOrder.prescriptionImage
-                                : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                                : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${selectedOrder.prescriptionImage}`
                             }
                             alt="Prescription"
                             className="img-fluid rounded border shadow-sm mt-2 cursor-pointer"

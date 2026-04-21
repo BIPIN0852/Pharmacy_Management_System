@@ -354,7 +354,7 @@ const CartPage = () => {
                               src={
                                 item.image?.startsWith("http")
                                   ? item.image
-                                  : `http://localhost:5000${item.image}`
+                                  : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${item.image}`
                               }
                               alt={item.name}
                               fluid

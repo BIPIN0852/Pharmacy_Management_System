@@ -596,6 +596,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -622,7 +624,7 @@ const PaymentSuccess = () => {
     const fetchOrderWithRetry = async (orderId, config, retries = 4) => {
       for (let i = 0; i < retries; i++) {
         const res = await axios.get(
-          `http://localhost:5000/api/orders/${orderId}`,
+          `${API_BASE_URL}/orders/${orderId}`,
           config,
         );
 
@@ -657,7 +659,7 @@ const PaymentSuccess = () => {
               // 🚨 FIX 1: GUARANTEE THE DATABASE UPDATES FIRST!
               try {
                 await axios.put(
-                  `http://localhost:5000/api/orders/${urlOrderId}/pay`,
+                  `${API_BASE_URL}/orders/${urlOrderId}/pay`,
                   {
                     id: transactionId || pidx,
                     status: "COMPLETED",
@@ -673,7 +675,7 @@ const PaymentSuccess = () => {
               // 2. Optional: Hit the Khalti lookup route to trigger emails/transaction records
               try {
                 await axios.post(
-                  "http://localhost:5000/api/payments/khalti-lookup",
+                  `${API_BASE_URL}/payments/khalti-lookup`,
                   { pidx, orderId: urlOrderId },
                   config,
                 );

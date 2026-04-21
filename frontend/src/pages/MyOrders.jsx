@@ -54,7 +54,7 @@ const MyOrders = () => {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       };
       const { data } = await axios.get(
-        "http://localhost:5000/api/orders/myorders",
+        `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api")}/orders/myorders`,
         config,
       );
       setOrders(Array.isArray(data) ? data : []);
@@ -75,7 +75,7 @@ const MyOrders = () => {
         headers: { Authorization: `Bearer ${userInfo.token}` },
       };
       await axios.delete(
-        `http://localhost:5000/api/orders/${orderToDelete}`,
+        `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api")}/orders/${orderToDelete}`,
         config,
       );
       setOrders(orders.filter((order) => order._id !== orderToDelete));
@@ -331,7 +331,7 @@ const MyOrders = () => {
                       src={
                         selectedOrder.prescriptionImage.startsWith("http")
                           ? selectedOrder.prescriptionImage
-                          : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                          : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${selectedOrder.prescriptionImage}`
                       }
                       alt="Rx"
                       className="img-fluid rounded border"

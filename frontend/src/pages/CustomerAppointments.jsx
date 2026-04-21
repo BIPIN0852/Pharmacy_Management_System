@@ -202,7 +202,7 @@ const CustomerAppointments = () => {
     if (doctor?.image && doctor.image !== "none") {
       return doctor.image.startsWith("http")
         ? doctor.image
-        : `http://localhost:5000${doctor.image}`;
+        : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${doctor.image}`;
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor?.name || "Doctor")}&background=eff6ff&color=2563eb&size=150&font-size=0.33`;
   };

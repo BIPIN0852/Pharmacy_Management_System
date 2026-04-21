@@ -152,7 +152,7 @@ const AdminLayout = () => {
       if (user.profilePhoto.startsWith("http")) return user.profilePhoto;
       let cleanPath = user.profilePhoto.replace(/\\/g, "/");
       if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
-      return `http://localhost:5000${cleanPath}`;
+      return `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${cleanPath}`;
     }
     return null;
   };

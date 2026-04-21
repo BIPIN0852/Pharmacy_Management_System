@@ -178,7 +178,7 @@ const PrescriptionsPage = () => {
                     // Fix image path: server stores relative path, ensuring localhost prefix if needed
                     src={
                       pres.imageUrl
-                        ? `http://localhost:5000${pres.imageUrl}`
+                        ? `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${pres.imageUrl}`
                         : pres.image
                     }
                     alt="Prescription"
@@ -204,7 +204,7 @@ const PrescriptionsPage = () => {
                       className="flex-grow-1"
                       onClick={() =>
                         window.open(
-                          `http://localhost:5000${pres.imageUrl}`,
+                          `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${pres.imageUrl}`,
                           "_blank",
                         )
                       }

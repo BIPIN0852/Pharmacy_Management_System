@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Search,
   Package,
@@ -240,7 +240,8 @@ const MedicineShop = () => {
     if (path.startsWith("http")) {
       return path;
     }
-    return `http://localhost:5000${path}`;
+    const backendUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+    return `${backendUrl}${path}`;
   };
 
   const categoriesList = [

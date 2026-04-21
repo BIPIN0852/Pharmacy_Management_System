@@ -75,7 +75,7 @@ const MedicineDetails = () => {
   const getImageUrl = (path) => {
     if (!path)
       return "https://ui-avatars.com/api/?name=Med&background=f8fafc&color=0f172a";
-    return path.startsWith("http") ? path : `http://localhost:5000${path}`;
+    return path.startsWith("http") ? path : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${path}`;
   };
 
   const handleUnitChange = (e) => {

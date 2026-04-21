@@ -187,7 +187,7 @@ const SavedMedicinesPage = () => {
                         src={
                           med.image?.startsWith("http")
                             ? med.image
-                            : `http://localhost:5000${med.image}`
+                            : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${med.image}`
                         }
                         alt={med.name}
                         className="img-fluid"

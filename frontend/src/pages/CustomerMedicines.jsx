@@ -160,7 +160,7 @@ const CustomerMedicines = () => {
   const getImageUrl = (path) => {
     if (!path)
       return "https://ui-avatars.com/api/?name=Med&background=0f172a&color=00d4ff";
-    return path.startsWith("http") ? path : `http://localhost:5000${path}`;
+    return path.startsWith("http") ? path : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${path}`;
   };
 
   // --- Filtering Logic ---

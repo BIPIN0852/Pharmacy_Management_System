@@ -29,7 +29,7 @@ import CheckoutSteps from "../components/CheckoutSteps";
 import { savePaymentMethod } from "../redux/actions/cartActions";
 import api from "../services/api";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 // ==============================================================================

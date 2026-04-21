@@ -154,8 +154,8 @@ const PharmacistPrescriptions = () => {
     if (!path) return "";
     if (path.startsWith("http") || path.startsWith("data:")) return path;
     return path.startsWith("/")
-      ? `http://localhost:5000${path}`
-      : `http://localhost:5000/${path}`;
+      ? `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${path}`
+      : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}/${path}`;
   };
 
   if (loading)

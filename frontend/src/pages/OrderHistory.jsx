@@ -30,6 +30,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +58,7 @@ const OrderHistory = () => {
         headers: { Authorization: `Bearer ${userInfo?.token}` },
       };
       const response = await axios.get(
-        "http://localhost:5000/api/orders/myorders",
+        `${API_BASE_URL}/orders/myorders`,
         config,
       );
       const orderData = Array.isArray(response.data)
@@ -97,7 +100,7 @@ const OrderHistory = () => {
       setDeleteLoading(true);
       const token = userInfo?.token || localStorage.getItem("token");
 
-      await axios.delete(`http://localhost:5000/api/orders/${orderToDelete}`, {
+      await axios.delete(`${API_BASE_URL}/orders/${orderToDelete}`, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 8000, // 8 second strict timeout to prevent infinite hanging
       });
@@ -655,7 +658,7 @@ const OrderHistory = () => {
                         href={
                           selectedOrder.prescriptionImage.startsWith("http")
                             ? selectedOrder.prescriptionImage
-                            : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                            : `${BACKEND_URL}${selectedOrder.prescriptionImage}`
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -664,7 +667,7 @@ const OrderHistory = () => {
                           src={
                             selectedOrder.prescriptionImage.startsWith("http")
                               ? selectedOrder.prescriptionImage
-                              : `http://localhost:5000${selectedOrder.prescriptionImage}`
+                              : `${BACKEND_URL}${selectedOrder.prescriptionImage}`
                           }
                           alt="Prescription"
                           className="img-fluid rounded border shadow-sm mt-2 cursor-pointer"
