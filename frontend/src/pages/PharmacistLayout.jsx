@@ -545,7 +545,7 @@ const PharmacistLayout = () => {
             <div className="d-flex align-items-center gap-2 gap-md-3">
               {/* CSS-driven mobile hamburger button */}
               <button
-                className="btn p-1 border-0 shadow-none hover-opacity d-flex align-items-center justify-content-center d-md-none"
+                className="btn p-1 border-0 shadow-none hover-opacity d-flex align-items-center justify-content-center d-md-none flex-shrink-0"
                 onClick={() => setCollapsed(!collapsed)}
                 style={{
                   color: isDarkMode ? "var(--text-primary)" : "#0F1111",
@@ -556,15 +556,15 @@ const PharmacistLayout = () => {
               </button>
 
               {/* Title Wrapper (Crucial for Flexbox layout) */}
-              <div>
+              <div className="text-truncate">
                 <h4
-                  className="mb-0 fw-bold theme-text d-none d-sm-block"
+                  className="mb-0 fw-bold theme-text d-none d-sm-block text-truncate"
                   style={{ fontSize: "1.25rem" }}
                 >
                   Pharmacist Workspace
                 </h4>
                 <h4
-                  className="mb-0 fw-bold theme-text d-block d-sm-none"
+                  className="mb-0 fw-bold theme-text d-block d-sm-none text-truncate"
                   style={{ fontSize: "1.1rem" }}
                 >
                   Workspace
@@ -573,7 +573,7 @@ const PharmacistLayout = () => {
             </div>
 
             {/* Right Side Icons */}
-            <div className="d-flex align-items-center gap-3 gap-md-4">
+            <div className="d-flex align-items-center gap-3 gap-md-4 flex-shrink-0">
               {/* LANGUAGE TOGGLE BUTTON */}
               <button
                 className="btn btn-link p-0 border-0 shadow-none d-flex align-items-center gap-1 transition-all hover-opacity fw-bold"
@@ -711,21 +711,25 @@ const PharmacistLayout = () => {
                     boxShadow: "none",
                   }}
                 >
-                  <div className="text-end d-none d-lg-block theme-text">
+                  <div className="text-end d-none d-lg-block theme-text text-truncate">
                     <div
-                      className="fw-bold small"
-                      style={{ lineHeight: "1.2" }}
+                      className="fw-bold small text-truncate"
+                      style={{ lineHeight: "1.2", maxWidth: "120px" }}
                     >
                       {user?.name || "Staff User"}
                     </div>
                     <div
-                      className="fw-medium mt-1"
-                      style={{ fontSize: "0.75rem", color: "#007185" }}
+                      className="fw-medium mt-1 text-truncate"
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#007185",
+                        maxWidth: "120px",
+                      }}
                     >
                       Pharmacist Lead
                     </div>
                   </div>
-                  <div className="d-flex align-items-center justify-content-center bg-light rounded-circle p-1 hover-lift">
+                  <div className="d-flex align-items-center justify-content-center bg-light rounded-circle p-1 hover-lift flex-shrink-0">
                     <UserCircle
                       size={isMobile ? 26 : 32}
                       style={{ color: "#565959", strokeWidth: "1.5" }}
@@ -810,6 +814,12 @@ const PharmacistLayout = () => {
           }
           .sidebar-open .sidebar-container {
             transform: translateX(0);
+          }
+          
+          /* FORCE HIDE INTERNAL SIDEBAR BUTTONS ON MOBILE */
+          .sidebar-container button.sidebar-toggle-btn,
+          .sidebar-container .pro-sidebar-toggle {
+             display: none !important;
           }
         }
 
