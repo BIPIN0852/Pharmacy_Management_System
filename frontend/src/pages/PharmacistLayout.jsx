@@ -485,7 +485,6 @@ const PharmacistLayout = () => {
   const themeBg = isDarkMode ? "var(--bg-primary)" : "#f0f2f2";
   const headerBg = isDarkMode ? "var(--bg-secondary)" : "#ffffff";
   const headerBorder = isDarkMode ? "var(--border-color)" : "#D5D9D9";
-  const textMuted = isDarkMode ? "var(--text-muted)" : "#565959";
 
   return (
     <div
@@ -544,30 +543,33 @@ const PharmacistLayout = () => {
           <div className="d-flex align-items-center justify-content-between">
             {/* Left Side: Hamburger (Mobile) + Page Title */}
             <div className="d-flex align-items-center gap-2 gap-md-3">
-              {isMobile && (
-                <button
-                  className="btn p-1 border-0 shadow-none hover-opacity d-flex align-items-center justify-content-center"
-                  onClick={() => setCollapsed(!collapsed)}
-                  style={{
-                    color: isDarkMode ? "var(--text-primary)" : "#0F1111",
-                  }}
-                  aria-label="Toggle Sidebar"
+              {/* CSS-driven mobile hamburger button */}
+              <button
+                className="btn p-1 border-0 shadow-none hover-opacity d-flex align-items-center justify-content-center d-md-none"
+                onClick={() => setCollapsed(!collapsed)}
+                style={{
+                  color: isDarkMode ? "var(--text-primary)" : "#0F1111",
+                }}
+                aria-label="Toggle Sidebar"
+              >
+                <Menu size={24} />
+              </button>
+
+              {/* Title Wrapper (Crucial for Flexbox layout) */}
+              <div>
+                <h4
+                  className="mb-0 fw-bold theme-text d-none d-sm-block"
+                  style={{ fontSize: "1.25rem" }}
                 >
-                  <Menu size={24} />
-                </button>
-              )}
-              <h4
-                className="mb-0 fw-bold theme-text d-none d-sm-block"
-                style={{ fontSize: "1.25rem" }}
-              >
-                Pharmacist Workspace
-              </h4>
-              <h4
-                className="mb-0 fw-bold theme-text d-block d-sm-none"
-                style={{ fontSize: "1.1rem" }}
-              >
-                Workspace
-              </h4>
+                  Pharmacist Workspace
+                </h4>
+                <h4
+                  className="mb-0 fw-bold theme-text d-block d-sm-none"
+                  style={{ fontSize: "1.1rem" }}
+                >
+                  Workspace
+                </h4>
+              </div>
             </div>
 
             {/* Right Side Icons */}
