@@ -1216,41 +1216,40 @@ const CustomerLayout = () => {
       {/* 1. MOBILE OVERLAY (Dismisses sidebar when clicked outside) */}
       {isMobile && !collapsed && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark opacity-50 z-2"
+          className="position-fixed top-0 start-0 w-100 h-100 bg-dark opacity-50 transition-all"
           onClick={() => setCollapsed(true)}
-          style={{ transition: "opacity 0.3s ease" }}
+          style={{ zIndex: 1040 }}
         />
       )}
 
       {/* 2. SIDEBAR */}
-      <CustomerSidebar
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        isMobile={isMobile}
-      />
+      <div
+        className="sidebar-container transition-all"
+        style={{
+          width: isMobile
+            ? collapsed
+              ? "0"
+              : "280px"
+            : collapsed
+              ? "80px"
+              : "260px",
+          zIndex: 1050,
+          position: isMobile ? "fixed" : "relative",
+          height: "100%",
+        }}
+      >
+        <CustomerSidebar
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          isMobile={isMobile}
+        />
+      </div>
 
       {/* 3. MAIN AREA */}
       <div
         className="flex-grow-1 d-flex flex-column transition-all w-100"
-        style={{ height: "100vh", overflow: "hidden" }}
+        style={{ height: "100vh", overflow: "hidden", minWidth: 0 }}
       >
-        {/* Mobile Toggle Trigger (Float) */}
-        {isMobile && (
-          <button
-            className="btn position-fixed bottom-0 end-0 m-3 m-md-4 z-3 rounded-circle shadow-lg d-flex align-items-center justify-content-center hover-lift border-0"
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              width: "56px",
-              height: "56px",
-              backgroundColor: "#007185",
-              color: "#ffffff",
-            }}
-            aria-label="Toggle Menu"
-          >
-            <Menu size={26} />
-          </button>
-        )}
-
         {/* HEADER */}
         <header
           className="px-3 px-md-4 py-3 flex-shrink-0 z-1 shadow-sm transition-all"
@@ -1260,26 +1259,40 @@ const CustomerLayout = () => {
           }}
         >
           <div className="d-flex align-items-center justify-content-between">
-            {/* Page Title */}
-            <div>
-              <h4
-                className="mb-0 fw-bold theme-text d-none d-sm-block"
-                style={{ fontSize: "1.25rem" }}
-              >
-                Patient Portal
-              </h4>
-              <h4
-                className="mb-0 fw-bold theme-text d-block d-sm-none"
-                style={{ fontSize: "1.1rem" }}
-              >
-                Portal
-              </h4>
-              <p
-                className="small mb-0 d-none d-md-block"
-                style={{ color: textMuted }}
-              >
-                Manage your health, prescriptions, and orders.
-              </p>
+            {/* Left Side: Hamburger (Mobile) + Page Title */}
+            <div className="d-flex align-items-center gap-2 gap-md-3">
+              {isMobile && (
+                <button
+                  className="btn p-1 border-0 shadow-none hover-opacity d-flex align-items-center justify-content-center"
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{
+                    color: isDarkMode ? "var(--text-primary)" : "#0F1111",
+                  }}
+                  aria-label="Toggle Sidebar"
+                >
+                  <Menu size={24} />
+                </button>
+              )}
+              <div>
+                <h4
+                  className="mb-0 fw-bold theme-text d-none d-sm-block"
+                  style={{ fontSize: "1.25rem" }}
+                >
+                  Patient Portal
+                </h4>
+                <h4
+                  className="mb-0 fw-bold theme-text d-block d-sm-none"
+                  style={{ fontSize: "1.1rem" }}
+                >
+                  Portal
+                </h4>
+                <p
+                  className="small mb-0 d-none d-md-block"
+                  style={{ color: textMuted }}
+                >
+                  Manage your health, prescriptions, and orders.
+                </p>
+              </div>
             </div>
 
             {/* Right Side Icons */}
@@ -1378,7 +1391,7 @@ const CustomerLayout = () => {
 
                 <Dropdown.Menu
                   className="shadow-lg border-0 rounded-4 p-0 overflow-hidden mt-3"
-                  style={{ width: "300px", maxWidth: "90vw" }}
+                  style={{ width: "300px", maxWidth: "90vw", zIndex: 1060 }}
                 >
                   <div className="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
                     <span className="fw-bold text-dark mb-0">Messages</span>
@@ -1461,7 +1474,7 @@ const CustomerLayout = () => {
 
                 <Dropdown.Menu
                   className="shadow-lg border-0 rounded-4 p-0 overflow-hidden mt-3"
-                  style={{ width: "300px", maxWidth: "90vw" }}
+                  style={{ width: "300px", maxWidth: "90vw", zIndex: 1060 }}
                 >
                   <div className="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
                     <span className="fw-bold text-dark mb-0">
@@ -1571,7 +1584,7 @@ const CustomerLayout = () => {
 
                 <Dropdown.Menu
                   className="shadow-lg border-0 rounded-4 mt-3"
-                  style={{ minWidth: "200px" }}
+                  style={{ minWidth: "200px", zIndex: 1060 }}
                 >
                   <div className="px-3 py-2 border-bottom mb-2 bg-light">
                     <p className="small text-muted mb-0">Signed in as</p>
@@ -1763,7 +1776,7 @@ const CustomerLayout = () => {
         /* Layout Structure Basics */
         .customer-layout-wrapper {
           position: relative;
-          width: 100%;
+          width: 100vw;
         }
 
         .hide-caret::after { display: none !important; }
@@ -1771,23 +1784,32 @@ const CustomerLayout = () => {
         
         /* Smooth Dark/Light Mode Transitions */
         .transition-all { 
-          transition: background-color 0.3s ease, color 0.3s ease, opacity 0.2s ease-in-out, margin 0.3s ease, width 0.3s ease; 
+          transition: background-color 0.3s ease, color 0.3s ease, opacity 0.2s ease-in-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease; 
         }
         .hover-opacity:hover { opacity: 0.7; }
 
-        /* Floating Button Animation */
-        .hover-lift { 
-          transition: transform 0.2s ease, box-shadow 0.2s ease; 
-        }
-        .hover-lift:hover { 
-          transform: translateY(-3px); 
-          box-shadow: 0 8px 20px rgba(0, 113, 133, 0.4) !important; 
+        /* Responsive Mobile Drawer Styling */
+        @media (max-width: 767.98px) {
+          .sidebar-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 1050;
+          }
+          .sidebar-collapsed .sidebar-container {
+            transform: translateX(-100%);
+          }
+          .sidebar-open .sidebar-container {
+            transform: translateX(0);
+          }
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: ${isDarkMode ? "#334155" : "#cbd5e1"}; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: ${isDarkMode ? "#475569" : "#94a3b8"}; }
 
         @keyframes pulse-badge {
           0% { transform: translate(-50%, -50%) scale(1); }
