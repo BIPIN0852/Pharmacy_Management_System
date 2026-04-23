@@ -535,7 +535,7 @@ const CustomerDashboard = () => {
               link: "/medicines",
             },
             {
-              label: "Book Doctor",
+              label: "Doctor Appointment",
               icon: Stethoscope,
               color: "text-success",
               bg: "bg-success",
