@@ -48,35 +48,9 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
   return (
     <>
-      {/* ✅ NEW: Floating Action Button specifically for Mobile to open the menu */}
-      {isMobile && collapsed && (
-        <button
-          className="btn position-fixed shadow-lg d-flex align-items-center justify-content-center animate-fade-in"
-          onClick={() => setCollapsed(false)}
-          style={{
-            bottom: "30px",
-            right: "24px",
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            zIndex: 1040,
-            backgroundColor: "#0ea5e9", // Solid blue for the button
-            border: `2px solid white`,
-          }}
-        >
-          <Menu size={28} className="text-white" />
-        </button>
-      )}
-
-      {/* Mobile Overlay with blur effect */}
-      {isMobile && !collapsed && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 animate-fade-in"
-          style={{ zIndex: 1040, backdropFilter: "blur(4px)" }}
-          onClick={() => setCollapsed(true)}
-        ></div>
-      )}
-
+      {/* ✅ FIXED: Removed the rogue floating action button and dark overlay from here. 
+        The sidebar now strictly obeys the Layout wrapper! 
+      */}
       <aside
         className={`d-flex flex-column transition-all duration-300 ${
           isMobile
@@ -85,13 +59,13 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         }`}
         style={{
           width: collapsed && !isMobile ? "85px" : "280px",
-          height: "100vh", // ✅ FIXED: Strictly forces full viewport height
+          height: "100vh", // Strictly forces full viewport height
           zIndex: 1050,
           background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)", // Rich dark blue gradient
           color: "white",
           borderRight: "1px solid rgba(255,255,255,0.05)",
           boxShadow: isMobile ? "none" : "4px 0 25px rgba(0,0,0,0.1)",
-          // ✅ FIXED: Smoothly slides off-screen on mobile
+          // Smoothly slides off-screen on mobile
           transform:
             isMobile && collapsed ? "translateX(-100%)" : "translateX(0)",
           visibility: isMobile && collapsed ? "hidden" : "visible",
@@ -108,14 +82,14 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         >
           {(!collapsed || isMobile) && (
             <div
-              className="d-flex align-items-center gap-3 overflow-hidden cursor-pointer ps-2 animate-fade-in"
+              className="d-flex align-items-center gap-3 overflow-hidden cursor-pointer ps-2 animate-fade-in w-100"
               onClick={() => {
                 navigate("/doctor-dashboard");
                 handleLinkClick();
               }}
             >
               <div
-                className="d-flex align-items-center justify-content-center rounded-3 shadow-sm"
+                className="d-flex align-items-center justify-content-center rounded-3 shadow-sm flex-shrink-0"
                 style={{
                   width: "40px",
                   height: "40px",
@@ -125,15 +99,15 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
               >
                 <Stethoscope size={24} strokeWidth={2.5} />
               </div>
-              <div style={{ lineHeight: "1.2" }}>
+              <div style={{ lineHeight: "1.2" }} className="text-truncate">
                 <div
-                  className="fw-black text-white tracking-wide"
+                  className="fw-black text-white tracking-wide text-truncate"
                   style={{ fontSize: "1.15rem", letterSpacing: "0.5px" }}
                 >
                   Doctor Hub
                 </div>
                 <small
-                  className="text-white-50 text-uppercase fw-bold"
+                  className="text-white-50 text-uppercase fw-bold text-truncate d-block"
                   style={{ fontSize: "0.65rem", letterSpacing: "1px" }}
                 >
                   Provider Portal
@@ -143,7 +117,7 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
           )}
 
           <button
-            className="btn btn-link p-2 shadow-none hover-white text-white-50"
+            className="btn btn-link p-2 shadow-none hover-white text-white-50 flex-shrink-0"
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             style={{ margin: collapsed && !isMobile ? "0 auto" : "0" }}
@@ -175,14 +149,16 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
                 <link.icon
                   size={22}
                   strokeWidth={isActive ? 2.5 : 2}
-                  className={isActive ? "text-white" : ""}
+                  className={
+                    isActive ? "text-white flex-shrink-0" : "flex-shrink-0"
+                  }
                   style={{
                     color: isActive ? "white" : "rgba(255,255,255,0.7)",
                   }}
                 />
                 {(!collapsed || isMobile) && (
                   <span
-                    className="small tracking-wide"
+                    className="small tracking-wide text-truncate"
                     style={{ fontSize: "0.9rem" }}
                   >
                     {link.name}
@@ -204,7 +180,7 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
           {(!collapsed || isMobile) && user && (
             <div className="px-4 py-3 border-bottom border-light border-opacity-10 d-flex align-items-center gap-3">
               <div
-                className="text-white fw-black rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                className="text-white fw-black rounded-circle d-flex align-items-center justify-content-center shadow-sm flex-shrink-0"
                 style={{
                   width: 40,
                   height: 40,
@@ -215,7 +191,7 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
               >
                 {user.name?.charAt(0).toUpperCase() || "D"}
               </div>
-              <div className="overflow-hidden">
+              <div className="overflow-hidden w-100">
                 <div
                   className="text-white fw-bold text-truncate"
                   style={{ fontSize: "0.9rem" }}
@@ -224,11 +200,11 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
                 </div>
                 <div className="d-flex align-items-center gap-2 mt-1">
                   <div
-                    className="rounded-circle bg-success"
+                    className="rounded-circle bg-success flex-shrink-0"
                     style={{ width: 8, height: 8 }}
                   ></div>
                   <div
-                    className="text-white-50 fw-medium"
+                    className="text-white-50 fw-medium text-truncate"
                     style={{ fontSize: "0.75rem" }}
                   >
                     Medical Staff
@@ -245,9 +221,12 @@ const DoctorSidebar = ({ collapsed, setCollapsed, isMobile }) => {
             onClick={handleLogout}
             title={collapsed ? "Logout" : ""}
           >
-            <LogOut size={20} className={collapsed ? "mx-auto" : ""} />
+            <LogOut
+              size={20}
+              className={collapsed ? "mx-auto flex-shrink-0" : "flex-shrink-0"}
+            />
             {(!collapsed || isMobile) && (
-              <span className="small fw-bold">Sign Out Securely</span>
+              <span className="small fw-bold text-truncate">Logout</span>
             )}
           </button>
         </div>
