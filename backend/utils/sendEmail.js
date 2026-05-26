@@ -67,8 +67,8 @@ const sendEmail = async (options) => {
   //         so it throws an error within ~8s instead of hanging for 60s
   const transporter = nodeMailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // false = STARTTLS on port 587 (correct for Gmail)
+    port: 465,
+    secure: true, // true for 465, false for other ports
     auth: {
       user: smtpUser,
       pass: smtpPass, // Must be a Gmail App Password, NOT your real password
