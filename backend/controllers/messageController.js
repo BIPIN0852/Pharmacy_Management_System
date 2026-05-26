@@ -177,11 +177,20 @@ const User = require("../models/User");
 const sendDirectMessage = asyncHandler(async (req, res) => {
   const { userId, subject, body } = req.body;
 
+  if (!userId || !body) {
+    return res.status(400).json({
+      success: false,
+      message: "userId and body are required fields.",
+    });
+  }
+
   const user = await User.findById(userId);
 
   if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
   }
 
   try {
@@ -195,7 +204,7 @@ const sendDirectMessage = asyncHandler(async (req, res) => {
           </div>
           <div style="padding: 20px; color: #333;">
             <p>Hello <strong>${user.name}</strong>,</p>
-            <p style="line-height: 1.6;">${body.replace(/\n/g, "<br/>")}</p>
+            <p style="line-height: 1.6;">${(body || "").replace(/\n/g, "<br/>")}</p>
             <br/>
             <p style="color: #666; font-size: 0.9em;">
               Regards,<br/>
@@ -206,11 +215,16 @@ const sendDirectMessage = asyncHandler(async (req, res) => {
       `,
     });
 
-    res.status(200).json({ message: "Message sent successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "Message sent successfully",
+    });
   } catch (error) {
-    console.error("Email send error:", error);
-    res.status(500);
-    throw new Error("Email failed to send. Check your email configuration.");
+    console.error("❌ Email send error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: `Email failed to send: ${error.message}`,
+    });
   }
 });
 module.exports = {

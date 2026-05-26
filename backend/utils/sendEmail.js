@@ -1,6 +1,19 @@
 const nodeMailer = require("nodemailer");
 
 const sendEmail = async (options) => {
+  // 0. Validate SMTP credentials exist
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASSWORD;
+
+  if (!smtpUser || !smtpPass) {
+    console.error("❌ SMTP credentials missing!");
+    console.error("  SMTP_USER:", smtpUser ? "SET" : "NOT SET");
+    console.error("  SMTP_PASSWORD:", smtpPass ? "SET" : "NOT SET");
+    throw new Error(
+      "Email service not configured. SMTP_USER or SMTP_PASSWORD environment variable is missing."
+    );
+  }
+
   // 1. Create Transporter
   const transporter = nodeMailer.createTransport({
     host: "smtp.gmail.com",
@@ -8,21 +21,25 @@ const sendEmail = async (options) => {
     secure: true, // true for 465, false for other ports
     service: "gmail",
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      user: smtpUser,
+      pass: smtpPass,
     },
   });
 
   // 2. Define Email Options
   const mailOptions = {
-    from: process.env.SMTP_USER, // Sender address
+    from: smtpUser, // Sender address
     to: options.email, // Receiver address
     subject: options.subject,
     html: options.message, // HTML content
   };
 
   // 3. Send Email
-  await transporter.sendMail(mailOptions);
+  console.log(`📧 Sending email to: ${options.email} | Subject: ${options.subject}`);
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`✅ Email sent successfully! MessageID: ${info.messageId}`);
+  return info;
 };
 
 module.exports = sendEmail;
+
