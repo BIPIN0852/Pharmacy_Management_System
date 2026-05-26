@@ -215,22 +215,118 @@
 
 // module.exports = sendEmail;
 
+// const nodeMailer = require("nodemailer");
+
+// // ============================================================
+// // STRATEGY: Try Resend API first (works on Render free tier)
+// // Falls back to Nodemailer SMTP if RESEND_API_KEY is not set
+// // (useful for local development)
+// // ============================================================
+
+// const sendEmail = async (options) => {
+//   // ── OPTION 1: Resend API (HTTP, works on Render) ──────────
+//   if (process.env.RESEND_API_KEY) {
+//     const { Resend } = require("resend");
+//     const resend = new Resend(process.env.RESEND_API_KEY);
+
+//     const { data, error } = await resend.emails.send({
+//       from: "Smart Pharmacy <onboarding@resend.dev>", // works without domain verification
+//       to: [options.email],
+//       subject: options.subject,
+//       html: options.message,
+//     });
+
+//     if (error) {
+//       console.error("❌ Resend error:", error);
+//       throw new Error(error.message || "Failed to send email via Resend");
+//     }
+
+//     console.log(
+//       `✅ Email sent via Resend to ${options.email} | id: ${data.id}`,
+//     );
+//     return data;
+//   }
+
+//   // ── OPTION 2: Nodemailer SMTP (works locally, blocked on Render) ──
+//   const smtpUser = process.env.EMAIL_USER;
+//   const smtpPass = process.env.EMAIL_PASS;
+
+//   if (!smtpUser || !smtpPass) {
+//     console.error("❌ No email service configured!");
+//     console.error("   Either set RESEND_API_KEY (recommended for Render)");
+//     console.error("   or set EMAIL_USER + EMAIL_PASS (local development only)");
+//     throw new Error(
+//       "Email service not configured. Set RESEND_API_KEY in your environment variables.",
+//     );
+//   }
+
+//   const transporter = nodeMailer.createTransport({
+//     host: "smtp.gmail.com",
+//     port: 587,
+//     secure: false,
+//     auth: {
+//       user: smtpUser,
+//       pass: smtpPass,
+//     },
+//     connectionTimeout: 8000,
+//     greetingTimeout: 8000,
+//     socketTimeout: 10000,
+//   });
+
+//   try {
+//     await transporter.verify();
+//   } catch (verifyErr) {
+//     console.error("❌ SMTP verify failed:", verifyErr.message);
+
+//     if (
+//       verifyErr.message.includes("535") ||
+//       verifyErr.message.includes("Invalid login")
+//     ) {
+//       throw new Error(
+//         "Gmail login failed. EMAIL_PASS must be a Gmail App Password, not your real password. " +
+//           "Generate at: myaccount.google.com → Security → App Passwords",
+//       );
+//     }
+//     if (verifyErr.message.includes("timeout")) {
+//       throw new Error(
+//         "SMTP timed out. If you are on Render, SMTP is blocked — set RESEND_API_KEY instead.",
+//       );
+//     }
+//     throw verifyErr;
+//   }
+
+//   const info = await transporter.sendMail({
+//     from: `"Smart Pharmacy" <${smtpUser}>`,
+//     to: options.email,
+//     subject: options.subject,
+//     html: options.message,
+//   });
+
+//   console.log(
+//     `✅ Email sent via SMTP to ${options.email} | id: ${info.messageId}`,
+//   );
+//   return info;
+// };
+
+// module.exports = sendEmail;
+
 const nodeMailer = require("nodemailer");
 
 // ============================================================
-// STRATEGY: Try Resend API first (works on Render free tier)
-// Falls back to Nodemailer SMTP if RESEND_API_KEY is not set
-// (useful for local development)
+// STRATEGY:
+// 1. RESEND_API_KEY set + domain verified → use Resend (best for Render)
+// 2. SENDGRID_API_KEY set → use SendGrid (no domain needed, free tier)
+// 3. Fallback → Nodemailer SMTP (local dev only)
 // ============================================================
 
 const sendEmail = async (options) => {
-  // ── OPTION 1: Resend API (HTTP, works on Render) ──────────
-  if (process.env.RESEND_API_KEY) {
+  // ── OPTION 1: Resend (needs verified domain to send to others) ──
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
     const { Resend } = require("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
-      from: "Smart Pharmacy <onboarding@resend.dev>", // works without domain verification
+      from: `Smart Pharmacy <${process.env.RESEND_FROM_EMAIL}>`,
       to: [options.email],
       subject: options.subject,
       html: options.message,
@@ -247,16 +343,36 @@ const sendEmail = async (options) => {
     return data;
   }
 
-  // ── OPTION 2: Nodemailer SMTP (works locally, blocked on Render) ──
+  // ── OPTION 2: SendGrid (no domain needed, free 100 emails/day) ──
+  if (process.env.SENDGRID_API_KEY) {
+    const sgMail = require("@sendgrid/mail");
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const msg = {
+      to: options.email,
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER,
+        name: "Smart Pharmacy",
+      },
+      subject: options.subject,
+      html: options.message,
+    };
+
+    const result = await sgMail.send(msg);
+    console.log(`✅ Email sent via SendGrid to ${options.email}`);
+    return result;
+  }
+
+  // ── OPTION 3: Nodemailer SMTP (local dev only, blocked on Render) ──
   const smtpUser = process.env.EMAIL_USER;
   const smtpPass = process.env.EMAIL_PASS;
 
   if (!smtpUser || !smtpPass) {
-    console.error("❌ No email service configured!");
-    console.error("   Either set RESEND_API_KEY (recommended for Render)");
-    console.error("   or set EMAIL_USER + EMAIL_PASS (local development only)");
     throw new Error(
-      "Email service not configured. Set RESEND_API_KEY in your environment variables.",
+      "No email service configured. " +
+        "Set SENDGRID_API_KEY (easiest, no domain needed) " +
+        "or RESEND_API_KEY + RESEND_FROM_EMAIL " +
+        "or EMAIL_USER + EMAIL_PASS (local only).",
     );
   }
 
@@ -264,10 +380,7 @@ const sendEmail = async (options) => {
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
+    auth: { user: smtpUser, pass: smtpPass },
     connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 10000,
@@ -276,20 +389,17 @@ const sendEmail = async (options) => {
   try {
     await transporter.verify();
   } catch (verifyErr) {
-    console.error("❌ SMTP verify failed:", verifyErr.message);
-
     if (
       verifyErr.message.includes("535") ||
       verifyErr.message.includes("Invalid login")
     ) {
       throw new Error(
-        "Gmail login failed. EMAIL_PASS must be a Gmail App Password, not your real password. " +
-          "Generate at: myaccount.google.com → Security → App Passwords",
+        "Gmail login failed. EMAIL_PASS must be a Gmail App Password.",
       );
     }
     if (verifyErr.message.includes("timeout")) {
       throw new Error(
-        "SMTP timed out. If you are on Render, SMTP is blocked — set RESEND_API_KEY instead.",
+        "SMTP timed out. On Render, set SENDGRID_API_KEY instead.",
       );
     }
     throw verifyErr;
