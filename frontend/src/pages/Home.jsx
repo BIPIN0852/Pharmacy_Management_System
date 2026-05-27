@@ -853,7 +853,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
-// ✅ IMPORT GLOBAL THEME CONTEXT
+
 import { useTheme } from "../context/ThemeContext";
 
 // ==========================================
@@ -1048,7 +1048,6 @@ const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Connect to the GLOBAL Theme Context so the whole app reacts
   const { isDarkMode, toggleTheme } = useTheme();
 
   // Language State connected to LocalStorage & Global Google Translate

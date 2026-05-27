@@ -217,7 +217,7 @@ const AdminLayout = () => {
             <div>
               <h4 className="mb-0 fw-bold theme-text">{getPageTitle()}</h4>
               <small className="d-none d-md-block" style={{ color: textMuted }}>
-                Pharmacy Management System v1.0
+                Pharmacy Management System
               </small>
             </div>
 

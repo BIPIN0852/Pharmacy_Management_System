@@ -11,7 +11,7 @@ export default function AdminLogin() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [showLeftPane, setShowLeftPane] = useState(true); // toggle for branding pane
+  const [showLeftPane, setShowLeftPane] = useState(true);
 
   const navigate = useNavigate();
 
@@ -76,7 +76,7 @@ export default function AdminLogin() {
       setMessage(
         err.response?.data?.message ||
           err.message ||
-          "Admin login failed. Check your credentials."
+          "Admin login failed. Check your credentials.",
       );
     } finally {
       setLoading(false);
@@ -98,13 +98,12 @@ export default function AdminLogin() {
 
       const data = res.data || {};
       setMessage(
-        data.message ||
-          "Reset code sent to your email. Please check it."
+        data.message || "Reset code sent to your email. Please check it.",
       );
       navigate("/admin-reset-password");
     } catch (err) {
       setMessage(
-        err.response?.data?.message || "Failed to send reset code. Try again."
+        err.response?.data?.message || "Failed to send reset code. Try again.",
       );
     } finally {
       setForgotLoading(false);

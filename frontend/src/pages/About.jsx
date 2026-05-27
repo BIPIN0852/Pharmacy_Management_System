@@ -28,7 +28,7 @@ const About = () => {
         <div className="col-lg-6">
           <div className="pe-lg-4">
             <span className="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">
-              Since 2024
+              Since 2025
             </span>
             <h1 className="display-5 fw-bold mb-3 text-dark">
               Reimagining <span className="text-primary">Healthcare</span> for

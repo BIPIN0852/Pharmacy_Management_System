@@ -1146,11 +1146,7 @@ const AdminCustomers = () => {
     }
   };
 
-  // ==========================================
-  // SEND MESSAGE — FULLY FIXED
-  // Uses onClick directly on the button instead of Form onSubmit
-  // to avoid Bootstrap Modal footer being outside the Form DOM tree
-  // ==========================================
+  // SEND MESSAGE
   const openMessageModal = (customer) => {
     setSelectedCustomer(customer);
     setMessageForm({ subject: "", body: "" });
