@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import {
   Search,
   Package,
@@ -65,7 +65,6 @@ const MedicineShop = () => {
         const params = new URLSearchParams();
         if (debouncedSearch) params.append("keyword", debouncedSearch);
 
-        // ✅ FIXED: Category is no longer sent to the backend to force a reload.
         // We fetch everything matching the search and filter instantly on the frontend.
 
         const res = await api.get(`/medicines?${params.toString()}`);
@@ -101,7 +100,7 @@ const MedicineShop = () => {
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch]); // ✅ Removed `category` from dependency array so it doesn't trigger API calls
+  }, [debouncedSearch]);
 
   // ROBUST FETCH SAVED STATUS
   const fetchSavedStatus = async () => {
@@ -127,7 +126,7 @@ const MedicineShop = () => {
     }
   };
 
-  // ✅ INSTANT CLIENT-SIDE CATEGORY FILTERING
+  //  CLIENT-SIDE CATEGORY FILTERING
   const filteredMedicines = useMemo(() => {
     if (category === "All") return medicines;
     return medicines.filter(
@@ -240,7 +239,9 @@ const MedicineShop = () => {
     if (path.startsWith("http")) {
       return path;
     }
-    const backendUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+    const backendUrl = (
+      import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+    ).replace(/\/api\/?$/, "");
     return `${backendUrl}${path}`;
   };
 
@@ -402,7 +403,6 @@ const MedicineShop = () => {
           </div>
         )}
 
-        {/* ✅ FIXED: Use `filteredMedicines` instead of `medicines` */}
         {!loading && !loadError && filteredMedicines.length === 0 && (
           <div
             className="text-center text-muted py-5 my-5 bg-white border border-light-subtle rounded-3 mx-auto shadow-sm p-4"
@@ -426,7 +426,6 @@ const MedicineShop = () => {
         )}
 
         {/* --- E-COMMERCE PRODUCT GRID --- */}
-        {/* ✅ FIXED: Map over `filteredMedicines` instead of `medicines` */}
         {!loading && !loadError && filteredMedicines.length > 0 && (
           <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-3">
             {filteredMedicines.map((med) => {

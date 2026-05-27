@@ -46,7 +46,8 @@ import { useDispatch } from "react-redux";
 import { useAuth } from "../context/AuthContext";
 import { addToCart } from "../redux/actions/cartActions";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -128,7 +129,9 @@ const CustomerDashboard = () => {
   const getImageUrl = (path) => {
     if (!path)
       return "https://ui-avatars.com/api/?name=Item&background=f8fafc&color=0284c7";
-    return path.startsWith("http") ? path : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${path}`;
+    return path.startsWith("http")
+      ? path
+      : `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "")}${path}`;
   };
 
   const fetchAllData = async () => {
@@ -1000,9 +1003,7 @@ const CustomerDashboard = () => {
         </Row>
       </Container>
 
-      {/* ============================================================================== */}
       {/* MODALS */}
-      {/* ============================================================================== */}
 
       {/* ORDER MODAL */}
       <Modal

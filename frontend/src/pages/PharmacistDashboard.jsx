@@ -184,7 +184,7 @@ const PharmacistDashboard = () => {
       value: stats.pendingOrders,
       subtext: `${stats.todaysOrdersCount} new orders today`,
       icon: ShoppingBag,
-      borderColor: "#007185", // Teal
+      borderColor: "#007185",
       bgLight: "#e6f1f3",
       link: "/pharmacist/orders",
     },
@@ -193,7 +193,7 @@ const PharmacistDashboard = () => {
       value: stats.pendingRx,
       subtext: "Awaiting approval",
       icon: FileText,
-      borderColor: "#0ea5e9", // Sky Blue
+      borderColor: "#0ea5e9",
       bgLight: "#e0f2fe",
       link: "/pharmacist/prescriptions",
     },
@@ -202,7 +202,7 @@ const PharmacistDashboard = () => {
       value: stats.lowStock,
       subtext: "Below 15 units",
       icon: Package,
-      borderColor: "#F3A847", // Orange
+      borderColor: "#F3A847",
       bgLight: "#fef6eb",
       link: "/pharmacist/alerts",
     },
@@ -211,7 +211,7 @@ const PharmacistDashboard = () => {
       value: stats.expiring,
       subtext: "Within next 90 days",
       icon: Calendar,
-      borderColor: "#B12704", // Red
+      borderColor: "#B12704",
       bgLight: "#fce9e5",
       link: "/pharmacist/alerts",
     },

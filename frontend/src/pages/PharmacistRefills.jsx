@@ -28,16 +28,17 @@ const PharmacistRefills = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // NEW: State to track which specific email is currently sending
+  const [sendingId, setSendingId] = useState(null);
+
   const fetchRefills = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // 1. Fetch all orders (since refill math is stored inside orderItems)
       const res = await api.get("/orders");
       const allOrders = Array.isArray(res.data) ? res.data : [];
 
-      // 2. Extract and flatten all items that have a refillDate assigned
       let extractedRefills = [];
 
       allOrders.forEach((order) => {
@@ -57,7 +58,6 @@ const PharmacistRefills = () => {
         }
       });
 
-      // 3. Sort them so the most urgent (closest or overdue) refills appear at the top
       extractedRefills.sort(
         (a, b) => new Date(a.refillDate) - new Date(b.refillDate),
       );
@@ -82,7 +82,6 @@ const PharmacistRefills = () => {
     const today = new Date();
     const target = new Date(refillDate);
 
-    // Strip time for accurate day calculation
     today.setHours(0, 0, 0, 0);
     target.setHours(0, 0, 0, 0);
 
@@ -95,6 +94,40 @@ const PharmacistRefills = () => {
     if (diffDays <= 7)
       return { text: `Runs out in ${diffDays} Days`, color: "warning" };
     return { text: `Runs out in ${diffDays} Days`, color: "info" };
+  };
+
+  // NEW: Real API function to send the email via backend
+  const handleSendReminder = async (refill) => {
+    try {
+      setSendingId(refill.orderId); // Start spinner for this specific row
+
+      // Call your Node.js backend
+      await api.post(`/refill-reminders/send`, {
+        orderId: refill.orderId,
+        userId: refill.user?._id,
+        medicineName: refill.medicineName,
+        email: refill.user?.email,
+        name: refill.user?.name,
+      });
+
+      // Update UI state instantly to show "Sent"
+      setRefills(
+        refills.map((r) =>
+          r.orderId === refill.orderId && r.medicineName === refill.medicineName
+            ? { ...r, reminderSentAutomated: true }
+            : r,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to send reminder:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to send reminder email. Please try again.",
+      );
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setSendingId(null); // Stop spinner
+    }
   };
 
   if (loading && refills.length === 0) {
@@ -113,7 +146,6 @@ const PharmacistRefills = () => {
       className="animate-fade-in p-2 p-md-3 p-lg-4"
       style={{ backgroundColor: "#f0f2f2", minHeight: "100vh" }}
     >
-      {/* --- Responsive Header Section --- */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-3 mb-md-4 pb-3 border-bottom border-light-subtle">
         <div>
           <h3 className="fw-black mb-1 text-dark d-flex align-items-center gap-2 fs-4 fs-md-3">
@@ -153,7 +185,6 @@ const PharmacistRefills = () => {
         </Alert>
       )}
 
-      {/* --- Main Content Area --- */}
       {refills.length === 0 && !loading ? (
         <Card
           className="border-0 shadow-sm rounded-4 bg-white text-center py-5"
@@ -172,7 +203,7 @@ const PharmacistRefills = () => {
         </Card>
       ) : (
         <>
-          {/* DESKTOP VIEW: Beautiful Table */}
+          {/* DESKTOP VIEW */}
           <Card
             className="border-0 shadow-sm rounded-4 bg-white overflow-hidden d-none d-lg-block"
             style={{ borderColor: "#D5D9D9" }}
@@ -200,7 +231,6 @@ const PharmacistRefills = () => {
                         key={index}
                         className="table-row-hover border-bottom border-light-subtle transition-all"
                       >
-                        {/* Patient Details */}
                         <td className="ps-4 py-3">
                           <div className="d-flex align-items-center gap-3">
                             <div
@@ -230,7 +260,6 @@ const PharmacistRefills = () => {
                           </div>
                         </td>
 
-                        {/* Medicine Dispensed */}
                         <td>
                           <div
                             className="fw-bold text-dark mb-1 d-flex align-items-center gap-1 text-truncate"
@@ -250,7 +279,6 @@ const PharmacistRefills = () => {
                           </div>
                         </td>
 
-                        {/* Supply Timeline */}
                         <td>
                           <Badge
                             bg={
@@ -285,7 +313,6 @@ const PharmacistRefills = () => {
                           </div>
                         </td>
 
-                        {/* System Status (Cron Job Check) */}
                         <td>
                           {refill.reminderSentAutomated ? (
                             <div className="d-flex align-items-center gap-1 text-success small fw-bold">
@@ -298,17 +325,29 @@ const PharmacistRefills = () => {
                           )}
                         </td>
 
-                        {/* Actions */}
                         <td className="pe-4 text-end">
                           <Button
-                            variant="outline-primary"
+                            variant={
+                              refill.reminderSentAutomated
+                                ? "light"
+                                : "outline-primary"
+                            }
                             size="sm"
-                            className="rounded-pill px-3 fw-bold shadow-sm hover-lift d-inline-flex align-items-center gap-1"
-                            onClick={() =>
-                              (window.location.href = `mailto:${refill.user?.email}?subject=Refill Reminder: ${refill.medicineName}&body=Hi ${refill.user?.name}, it looks like you are running low on ${refill.medicineName}. Please visit our website to reorder.`)
+                            className="rounded-pill px-3 fw-bold shadow-sm hover-lift d-inline-flex align-items-center gap-2"
+                            onClick={() => handleSendReminder(refill)}
+                            disabled={
+                              sendingId === refill.orderId ||
+                              refill.reminderSentAutomated
                             }
                           >
-                            <Mail size={14} /> Contact
+                            {sendingId === refill.orderId ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : refill.reminderSentAutomated ? (
+                              <CheckCircle size={14} className="text-success" />
+                            ) : (
+                              <Mail size={14} />
+                            )}
+                            {refill.reminderSentAutomated ? "Sent" : "Contact"}
                           </Button>
                         </td>
                       </tr>
@@ -319,7 +358,7 @@ const PharmacistRefills = () => {
             </div>
           </Card>
 
-          {/* MOBILE VIEW: Stacked Cards instead of Table */}
+          {/* MOBILE VIEW */}
           <div className="d-block d-lg-none">
             <Row className="g-3">
               {refills.map((refill, index) => {
@@ -329,7 +368,6 @@ const PharmacistRefills = () => {
                   <Col xs={12} key={index}>
                     <Card className="border-0 shadow-sm rounded-4 bg-white overflow-hidden transition-all hover-lift">
                       <Card.Body className="p-3 p-md-4">
-                        {/* Top Row: User & Badge */}
                         <div className="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3 border-light-subtle">
                           <div className="d-flex align-items-center gap-2">
                             <div
@@ -388,7 +426,6 @@ const PharmacistRefills = () => {
                           </Badge>
                         </div>
 
-                        {/* Middle Row: Medicine Details */}
                         <div className="mb-3 bg-light p-2 rounded-3">
                           <div className="fw-bold text-dark d-flex align-items-start gap-2 mb-1 fs-6">
                             <Package
@@ -421,7 +458,6 @@ const PharmacistRefills = () => {
                           </div>
                         </div>
 
-                        {/* Bottom Row: Status & Button */}
                         <div className="d-flex justify-content-between align-items-center pt-2 mt-auto">
                           {refill.reminderSentAutomated ? (
                             <div
@@ -439,14 +475,27 @@ const PharmacistRefills = () => {
                             </div>
                           )}
                           <Button
-                            variant="primary"
+                            variant={
+                              refill.reminderSentAutomated ? "light" : "primary"
+                            }
                             size="sm"
                             className="rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center gap-2"
-                            onClick={() =>
-                              (window.location.href = `mailto:${refill.user?.email}?subject=Refill Reminder: ${refill.medicineName}&body=Hi ${refill.user?.name}, it looks like you are running low on ${refill.medicineName}. Please visit our website to reorder.`)
+                            onClick={() => handleSendReminder(refill)}
+                            disabled={
+                              sendingId === refill.orderId ||
+                              refill.reminderSentAutomated
                             }
                           >
-                            <Mail size={14} /> Send Email
+                            {sendingId === refill.orderId ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : refill.reminderSentAutomated ? (
+                              <CheckCircle size={14} className="text-success" />
+                            ) : (
+                              <Mail size={14} />
+                            )}
+                            {refill.reminderSentAutomated
+                              ? "Sent"
+                              : "Send Email"}
                           </Button>
                         </div>
                       </Card.Body>
@@ -471,7 +520,6 @@ const PharmacistRefills = () => {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         
-        /* Mobile Specific Styles */
         .w-sm-auto { width: auto !important; }
         @media (max-width: 575.98px) {
           .w-sm-auto { width: 100% !important; }

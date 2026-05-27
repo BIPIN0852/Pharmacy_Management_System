@@ -5,8 +5,41 @@ const router = express.Router();
 const RefillReminder = require("../models/RefillReminder");
 const Medicine = require("../models/Medicine");
 
+// Controllers (NEW: For the Pharmacist Email feature)
+const {
+  sendRefillReminder,
+  getRefillReminders,
+} = require("../controllers/refillController");
+
 // Middleware
 const { protect } = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/role");
+
+// ===================================================================
+// 🏥 PHARMACIST / ADMIN ROUTES
+// ===================================================================
+
+// POST: Send the reminder email and update Order database
+// @route POST /api/refill-reminders/send
+router.post(
+  "/send",
+  protect,
+  authorizeRoles("pharmacist", "admin", "admin "),
+  sendRefillReminder,
+);
+
+// GET: Fetch all reminders from orders (if you ever want to move the math to the backend)
+// @route GET /api/refill-reminders/pharmacist
+router.get(
+  "/pharmacist",
+  protect,
+  authorizeRoles("pharmacist", "admin"),
+  getRefillReminders,
+);
+
+// ===================================================================
+// 👤 CUSTOMER PORTAL ROUTES (Your original code)
+// ===================================================================
 
 // -------------------------------------------------------------------
 // GET: Upcoming Refills (For Customer Portal)

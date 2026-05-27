@@ -916,7 +916,7 @@ const CartPage = () => {
         {cartItems.length > 0 && (
           <Row className="mb-3 g-3 g-md-4">
             <Col lg={8}>
-              {/* ✅ UPDATED: Informational Alert Only */}
+              {/* Informational Alert Only */}
               {requiresPrescription && selectedCartItems.length > 0 && (
                 <div className="mb-3 mb-md-4 animate-fade-in">
                   <Alert

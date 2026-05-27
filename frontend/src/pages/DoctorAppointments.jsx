@@ -40,7 +40,6 @@ const DoctorAppointments = () => {
       const res = await api.get("/doctor/appointments");
       let data = res.data?.appointments || res.data || [];
 
-      // ✅ FIXED: Sort the data so the most recent appointments appear at the top!
       if (Array.isArray(data)) {
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       }
@@ -63,7 +62,6 @@ const DoctorAppointments = () => {
     try {
       setActionLoading(id);
 
-      // Force lowercase to match MongoDB strict Enums
       const dbStatus = newStatus.toLowerCase();
 
       await api.put(`/doctor/appointments/${id}/status`, { status: dbStatus });

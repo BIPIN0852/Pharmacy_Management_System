@@ -17,7 +17,7 @@ const CustomerPrescriptions = () => {
   useEffect(() => {
     const fetchPrescriptions = async () => {
       try {
-        const res = await api.get("/prescriptions/my"); // Matches backend getMyPrescriptions
+        const res = await api.get("/prescriptions/my");
         setPrescriptions(res.data);
       } catch (err) {
         console.error("Failed to load prescriptions", err);

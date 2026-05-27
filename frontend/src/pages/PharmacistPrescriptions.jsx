@@ -37,7 +37,6 @@ const PharmacistPrescriptions = () => {
     fetchPrescriptions();
   }, []);
 
-  // ✅ UPGRADED: Hybrid Fetcher pulls from BOTH Orders and Prescriptions
   const fetchPrescriptions = async () => {
     try {
       setLoading(true);
@@ -95,7 +94,6 @@ const PharmacistPrescriptions = () => {
     setActionLoading(true);
 
     try {
-      // ✅ UPGRADED: Hits the correct API depending on where the doc came from
       if (selectedRx.isOrder) {
         await api.put(`/orders/${selectedRx._id}/prescription`, { status });
       } else {

@@ -3,10 +3,8 @@ import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// ✅ UI Components
 import { Form, Modal, Badge, Button, Spinner } from "react-bootstrap";
 
-// ✅ Icons
 import {
   Calendar,
   Clock,
@@ -116,7 +114,7 @@ const CustomerAppointments = () => {
     }
   };
 
-  // ✅ OPEN CHAT & FETCH HISTORY
+  // OPEN CHAT & FETCH HISTORY
   const openChatModal = async (appt) => {
     setMessageTarget(appt);
     setShowMessageModal(true);
@@ -125,7 +123,6 @@ const CustomerAppointments = () => {
 
     try {
       // Fetch chat history specifically for this appointment
-      // Make sure your backend has this route!
       const res = await api.get(`/messages/appointment/${appt._id}`);
       setChatHistory(res.data.messages || res.data || []);
     } catch (err) {
@@ -135,8 +132,8 @@ const CustomerAppointments = () => {
     }
   };
 
-  // ✅ SEND CHAT MESSAGE
-  // ✅ SEND CHAT MESSAGE
+  // SEND CHAT MESSAGE
+
   const handleSendMessage = async () => {
     if (!messageText.trim() || !messageTarget) return;
 
@@ -144,7 +141,7 @@ const CustomerAppointments = () => {
       setSendingMessage(true);
 
       const payload = {
-        receiverId: messageTarget.doctor?._id, // ✅ Renamed this to match your backend exactly
+        receiverId: messageTarget.doctor?._id,
         appointmentId: messageTarget._id,
         text: messageText,
         senderModel: "User",
@@ -495,7 +492,7 @@ const CustomerAppointments = () => {
       />
 
       {/* ====================================================================== */}
-      {/* ✅ DOCTOR DETAILS MODAL */}
+      {/* DOCTOR DETAILS MODAL */}
       {/* ====================================================================== */}
       <Modal
         show={showDoctorModal}
@@ -565,7 +562,7 @@ const CustomerAppointments = () => {
       </Modal>
 
       {/* ====================================================================== */}
-      {/* ✅ LIVE CHAT HISTORY MODAL */}
+      {/* LIVE CHAT HISTORY MODAL */}
       {/* ====================================================================== */}
       <Modal
         show={showMessageModal}
