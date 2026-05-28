@@ -15,7 +15,7 @@ const {
   getDoctorAppointments,
   updateAppointmentStatus,
   getDoctorPatients,
-  deleteAppointment, // ✅ IMPORTED the delete function from appointmentController
+  deleteAppointment,
 } = require("../controllers/appointmentController");
 
 // IMPORT the prescription controller for the doctor route
@@ -23,7 +23,6 @@ const {
   createDigitalPrescription,
 } = require("../controllers/prescriptionController");
 
-// ✅ IMPORT the AI controller for smart features
 const {
   generateSmartReplies,
   summarizeChat,
@@ -307,7 +306,7 @@ router.get(
 );
 
 // ===================================================================
-// 🚨 PART 3: ROOT DYNAMIC ROUTES (MUST BE AT THE VERY BOTTOM)
+// 🚨 PART 3: ROOT DYNAMIC ROUTES
 // ===================================================================
 
 // 👉 ADMIN: UPDATE DOCTOR

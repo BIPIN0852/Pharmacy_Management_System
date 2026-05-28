@@ -34,7 +34,7 @@ const PlaceOrder = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [prescriptionImage, setPrescriptionImage] = useState("");
 
-  // ✅ NEW: Supportive Document States
+  // Supportive Document States
   const [uploadingSupportDoc, setUploadingSupportDoc] = useState(false);
   const [supportiveDocument, setSupportiveDocument] = useState("");
 
@@ -107,7 +107,7 @@ const PlaceOrder = () => {
     }
   };
 
-  // ✅ NEW: Supportive Document Upload Handler
+  // Supportive Document Upload Handler
   const uploadSupportiveDocHandler = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -132,7 +132,7 @@ const PlaceOrder = () => {
   const placeOrderHandler = () => {
     setError("");
 
-    // ✅ ADDED: Validation for both documents
+    // Validation for both documents
     if (requiresPrescription) {
       if (!prescriptionImage) {
         setError(
@@ -165,7 +165,7 @@ const PlaceOrder = () => {
       taxPrice,
       totalPrice,
       prescriptionImage: requiresPrescription ? prescriptionImage : null,
-      supportiveDocument: requiresPrescription ? supportiveDocument : null, // ✅ ADDED payload data
+      supportiveDocument: requiresPrescription ? supportiveDocument : null,
     };
 
     // Pass data cleanly to the next screen. No database hits, no cart clearing.

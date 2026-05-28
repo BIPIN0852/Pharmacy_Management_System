@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Order = require("../models/Order");
-const sendEmail = require("../utils/sendEmail"); // Make sure this path is correct!
+const sendEmail = require("../utils/sendEmail");
 
 // @desc    Get customers needing refills
 // @route   GET /api/refill-reminders
@@ -34,7 +34,7 @@ const getRefillReminders = asyncHandler(async (req, res) => {
           medicineName: item.name,
           qtyBought: item.qty * (item.buyingMultiplier || 1),
           refillDate: item.refillDate,
-          reminderSentAutomated: item.refillReminderSent || false, // Did we email them already?
+          reminderSentAutomated: item.refillReminderSent || false,
           originalOrderDate: order.createdAt,
         });
       }

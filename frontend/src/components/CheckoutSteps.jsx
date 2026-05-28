@@ -12,7 +12,6 @@ const CheckoutSteps = ({ step1, step2, step3, step4 }) => {
     return "0%";
   };
 
-  // Amazon Style Colors
   const activeColor = "#007185";
   const inactiveBorder = "#D5D9D9";
   const inactiveText = "#565959";

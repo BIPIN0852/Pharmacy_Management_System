@@ -7,8 +7,6 @@ const { protect, admin, pharmacist } = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/role");
 const sendEmail = require("../utils/sendEmail");
 const { getEmailTemplate } = require("../utils/emailTemplates");
-
-// Set capacity to 1 to strictly enforce one patient per time slot
 const SLOT_CAPACITY = 1;
 
 /**
@@ -92,7 +90,7 @@ router.post("/", protect, async (req, res) => {
       doctor,
       date: bookingDate,
       timeSlot,
-      status: { $in: ["pending", "confirmed"] }, // Ignore cancelled ones
+      status: { $in: ["pending", "confirmed"] },
     });
 
     if (slotAlreadyTaken) {
@@ -156,7 +154,7 @@ router.post("/", protect, async (req, res) => {
       await sendEmail({
         email: req.user.email,
         subject: `Appointment Request Received: ${reference}`,
-        message: htmlMessage, // Send the full HTML
+        message: htmlMessage,
       });
     } catch (emailErr) {
       console.warn("⚠️ Confirmation email could not be sent.");
@@ -351,7 +349,7 @@ router.put("/:id/status", protect, async (req, res) => {
           await sendEmail({
             email: recipientEmail,
             subject: emailSubject,
-            message: htmlMessage, // Send the formatted HTML
+            message: htmlMessage,
           });
           console.log(
             `📧 Email sent to ${recipientEmail} for status: ${status}`,

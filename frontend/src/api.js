@@ -6,14 +6,14 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
  * Now handles token extraction from localStorage automatically
  */
 async function request(path, method = "GET", body, options = {}) {
-  // ✅ Automatically get token from localStorage for convenience
+  // Automatically get token from localStorage for convenience
   const token = localStorage.getItem("token");
 
   const headers = {
     ...options.headers,
   };
 
-  // ✅ Add JSON header only if we aren't sending FormData (Multipart)
+  // Add JSON header only if we aren't sending FormData (Multipart)
   if (!(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
@@ -38,7 +38,7 @@ async function request(path, method = "GET", body, options = {}) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    // ✅ GLOBAL ERROR HANDLING: Auto-logout on 401 Unauthorized (Expired Token)
+    // GLOBAL ERROR HANDLING: Auto-logout on 401 Unauthorized (Expired Token)
     if (res.status === 401) {
       console.error("Session expired. Logging out...");
       localStorage.removeItem("token");

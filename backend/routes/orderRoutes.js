@@ -25,7 +25,6 @@ router
 // ===================================================================
 // USER SPECIFIC ROUTES
 // ===================================================================
-// Note: Put these BEFORE /:id routes to prevent "myorders" being treated as an ID
 router.route("/myorders").get(protect, getMyOrders);
 router.route("/my").get(protect, getMyOrders); // Alternative route to match frontend call /api/orders/my
 
@@ -56,10 +55,8 @@ router
 // ===================================================================
 // PAYMENT ROUTES
 // ===================================================================
-// ✅ CORRECT: Regular users can hit this route to verify their own payment
 router.route("/:id/pay").put(protect, updateOrderToPaid);
 
-// ✅ CORRECT: Only Admins/Pharmacists can manually override a payment status
 router
   .route("/:id/pay-manual")
   .put(protect, authorizeRoles("admin", "pharmacist"), updateOrderToPaidManual);

@@ -34,7 +34,6 @@ const CustomerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
     navigate("/login");
   };
 
-  // The primary color used for the sidebar background
   const sidebarBgColor = "#0f172a"; // Deep slate blue
   const hoverColor = "#1e293b"; // Slightly lighter slate
 

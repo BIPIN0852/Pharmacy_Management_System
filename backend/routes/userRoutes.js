@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer"); // ✅ Added multer
-const path = require("path"); // ✅ Added path
+const multer = require("multer");
+const path = require("path");
 
 // -------------------------------------------------------------------
 // 1. CONTROLLERS
@@ -58,7 +58,7 @@ const processProfilePhoto = (req, res, next) => {
  * @route   POST /api/users
  * @route   GET /api/users
  */
-// ✅ Best Practice: Grouped routes with the same path ("/")
+
 router
   .route("/")
   .post(registerUser)
@@ -82,7 +82,6 @@ router.post("/login", authUser);
 router
   .route("/profile")
   .get(protect, getUserProfile)
-  // ✅ ADDED: upload.single and processProfilePhoto middleware here
   .put(
     protect,
     upload.single("profilePhoto"),
@@ -98,7 +97,7 @@ router
  */
 router.get("/saved-medicines", protect, getSavedMedicines);
 router.post("/saved-medicines", protect, toggleSavedMedicine);
-router.delete("/saved-medicines/:id", protect, removeSavedMedicine); // ✅ Now this will work!
+router.delete("/saved-medicines/:id", protect, removeSavedMedicine);
 
 // -------------------------------------------------------------------
 // 5. ADMINISTRATIVE & STAFF ROUTES

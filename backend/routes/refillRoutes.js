@@ -28,7 +28,7 @@ router.post(
   sendRefillReminder,
 );
 
-// GET: Fetch all reminders from orders (if you ever want to move the math to the backend)
+// GET: Fetch all reminders from orders
 // @route GET /api/refill-reminders/pharmacist
 router.get(
   "/pharmacist",
@@ -38,7 +38,7 @@ router.get(
 );
 
 // ===================================================================
-// 👤 CUSTOMER PORTAL ROUTES (Your original code)
+// 👤 CUSTOMER PORTAL ROUTES
 // ===================================================================
 
 // -------------------------------------------------------------------
@@ -55,7 +55,7 @@ router.get("/", protect, async (req, res) => {
       // If a refill is past due, we STILL want the patient to see it so they don't run out.
     })
       .populate("medicine", "name price image brand")
-      .sort({ refillDate: 1 }) // Soonest/Past-Due first
+      .sort({ refillDate: 1 })
       .lean();
 
     res.json(reminders);
@@ -78,7 +78,6 @@ router.post("/", protect, async (req, res) => {
       return res.status(404).json({ message: "Medicine not found" });
     }
 
-    // ✅ SMART MATH ENGINE FALLBACK
     // If frontend provides daysSupply, use it. Otherwise, calculate it automatically!
     let finalDaysSupply = Number(daysSupply);
 

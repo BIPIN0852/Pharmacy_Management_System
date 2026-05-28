@@ -68,7 +68,7 @@ const RootLayout = ({ children }) => {
   const breadcrumbs = getBreadcrumbs();
 
   // NEW LOGIC: Strictly show the footer ONLY on the Home Page
-  // (If you ever want it on /about or /contact too, just change this to: ["/", "/about", "/contact"].includes(location.pathname) )
+  // (If ever want it on /about or /contact too, just change this to: ["/", "/about", "/contact"].includes(location.pathname) )
   const shouldShowFooter = location.pathname === "/";
 
   return (

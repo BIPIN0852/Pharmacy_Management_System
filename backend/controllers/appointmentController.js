@@ -248,7 +248,6 @@ const updateAppointmentStatus = async (req, res) => {
         .json({ message: "Customers can only cancel appointments." });
     }
 
-    // Force lowercase so Mongoose validation never fails (e.g., "Completed" -> "completed")
     appointment.status = status.toLowerCase();
     const updated = await appointment.save();
 

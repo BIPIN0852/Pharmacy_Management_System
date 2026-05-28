@@ -144,7 +144,7 @@ const PharmacistReports = () => {
       "download",
       `pharmacy_report_${new Date().toISOString().split("T")[0]}.csv`,
     );
-    document.body.appendChild(link); // Required for Firefox
+    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };

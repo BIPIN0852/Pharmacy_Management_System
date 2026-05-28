@@ -28,7 +28,7 @@ const PharmacistRefills = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // NEW: State to track which specific email is currently sending
+  //State to track which specific email is currently sending
   const [sendingId, setSendingId] = useState(null);
 
   const fetchRefills = async () => {
@@ -96,12 +96,11 @@ const PharmacistRefills = () => {
     return { text: `Runs out in ${diffDays} Days`, color: "info" };
   };
 
-  // NEW: Real API function to send the email via backend
+  // Real API function to send the email via backend
   const handleSendReminder = async (refill) => {
     try {
-      setSendingId(refill.orderId); // Start spinner for this specific row
+      setSendingId(refill.orderId);
 
-      // Call your Node.js backend
       await api.post(`/refill-reminders/send`, {
         orderId: refill.orderId,
         userId: refill.user?._id,
@@ -126,7 +125,7 @@ const PharmacistRefills = () => {
       );
       setTimeout(() => setError(""), 5000);
     } finally {
-      setSendingId(null); // Stop spinner
+      setSendingId(null);
     }
   };
 

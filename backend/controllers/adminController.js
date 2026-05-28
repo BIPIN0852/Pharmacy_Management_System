@@ -172,13 +172,13 @@ const getAllDoctors = async (req, res) => {
         const newProfile = await Doctor.create({
           name: user.name,
           email: user.email,
-          userId: user._id, // Link to login account
+          userId: user._id,
           speciality: "Pending Setup",
-          nmcNumber: "PENDING-" + Math.floor(Math.random() * 10000), // Temporary placeholder
+          nmcNumber: "PENDING-" + Math.floor(Math.random() * 10000),
           phone: user.phone || "",
           experience: 0,
           consultationFee: 500,
-          isAvailable: false, // Keep them unavailable until admin edits their profile
+          isAvailable: false,
           slots: [],
         });
 

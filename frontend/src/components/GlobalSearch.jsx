@@ -18,7 +18,7 @@ const GlobalSearch = () => {
   const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
   const timeoutRef = useRef(null);
-  const searchRef = useRef(null); // Ref to detect clicks outside
+  const searchRef = useRef(null);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -39,8 +39,6 @@ const GlobalSearch = () => {
 
     try {
       setLoading(true);
-      // UPDATED: Points to consolidated search endpoint
-      // Adjust this URL to /api/medicines/search or /api/users/search depending on user role if needed
       const res = await api.get(
         `/medicines?search=${encodeURIComponent(searchQuery)}`,
       );
@@ -80,7 +78,6 @@ const GlobalSearch = () => {
     setQuery("");
     setShowResults(false);
 
-    // Navigation logic matching our new route structure
     switch (result.type) {
       case "medicine":
         navigate(`/medicine/${result._id}`);
@@ -96,13 +93,13 @@ const GlobalSearch = () => {
   const getIcon = (type) => {
     switch (type) {
       case "medicine":
-        return <Pill size={14} style={{ color: "#007185" }} />; // Amazon Teal
+        return <Pill size={14} style={{ color: "#007185" }} />;
       case "supplier":
         return <Truck size={14} className="text-muted" />;
       case "doctor":
         return <Stethoscope size={14} className="text-muted" />;
       case "order":
-        return <ShoppingBag size={14} style={{ color: "#B12704" }} />; // Amazon Red
+        return <ShoppingBag size={14} style={{ color: "#B12704" }} />;
       default:
         return <User size={14} className="text-muted" />;
     }
@@ -123,7 +120,7 @@ const GlobalSearch = () => {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setShowResults(true)}
           style={{
-            padding: "10px 40px 10px 15px", // Padding right for the X button
+            padding: "10px 40px 10px 15px",
             borderRadius: "4px 0 0 4px",
             border: "1px solid #cdcdcd",
             borderRight: "none",
@@ -141,7 +138,7 @@ const GlobalSearch = () => {
               setResults([]);
             }}
             style={{
-              right: "55px", // Positioned just before the search icon block
+              right: "55px",
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 10,
@@ -155,7 +152,7 @@ const GlobalSearch = () => {
         <button
           className="btn amazon-search-button d-flex align-items-center justify-content-center"
           style={{
-            backgroundColor: "#FEBD69", // Amazon Search Bar Orange
+            backgroundColor: "#FEBD69",
             border: "1px solid #F3A847",
             borderRadius: "0 4px 4px 0",
             width: "45px",

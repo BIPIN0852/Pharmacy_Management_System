@@ -134,7 +134,7 @@ const deleteSupplier = asyncHandler(async (req, res) => {
   const supplier = await Supplier.findById(req.params.id);
 
   if (supplier) {
-    supplier.isActive = false; // Soft Delete
+    supplier.isActive = false;
     await supplier.save();
     res.json({ message: "Supplier marked as inactive" });
   } else {

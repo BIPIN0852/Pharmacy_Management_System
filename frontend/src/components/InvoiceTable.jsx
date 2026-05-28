@@ -14,7 +14,6 @@ const InvoiceTable = ({ invoices, deleteInvoice, viewInvoice }) => {
       .replace("NPR", "Rs.");
   };
 
-  // AWS-style Payment Badges
   const renderPaymentBadge = (method) => {
     switch (method?.toLowerCase()) {
       case "khalti":

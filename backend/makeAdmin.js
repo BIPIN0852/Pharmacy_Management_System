@@ -31,11 +31,10 @@ const promoteUser = async () => {
       process.exit(1);
     }
 
-    // ✅ FORCE UPDATE ROLE
     user.role = "admin";
     user.isAdmin = true;
 
-    // ✅ FORCE RESET PASSWORD (to "password123")
+    // FORCE RESET PASSWORD (to "password123")
     // The User model's pre-save hook will automatically hash this
     user.password = "bipin001";
 

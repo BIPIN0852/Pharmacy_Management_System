@@ -33,8 +33,8 @@ const storage = multer.diskStorage({
     cb(
       null,
       `profile-${req.user._id}-${uniqueSuffix}${path.extname(
-        file.originalname
-      )}`
+        file.originalname,
+      )}`,
     );
   },
 });
@@ -90,7 +90,7 @@ router.get("/prescriptions", protect, async (req, res) => {
 // -------------------------------------------------------------------
 router.get("/appointments", protect, async (req, res) => {
   try {
-    // ✅ Logic: Fetch all appointments for history, sort by date
+    //Fetch all appointments for history, sort by date
     const appointments = await Appointment.find({ user: req.user._id })
       .populate("doctor", "name speciality nmcNumber image")
       .select("date day timeSlot status bookingReference doctor notes")
@@ -164,7 +164,7 @@ router.put(
       console.error("Profile update error:", err);
       res.status(500).json({ message: "Update failed" });
     }
-  }
+  },
 );
 
 // -------------------------------------------------------------------

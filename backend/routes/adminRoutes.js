@@ -31,7 +31,6 @@ const upload = multer({
 const processDoctorFormData = (req, res, next) => {
   // 1. If an image was uploaded, attach the path to req.body.image
   if (req.file) {
-    // ✅ FIX: Set the database path to /uploads/ so the frontend can find it
     req.body.image = `/uploads/${req.file.filename}`;
   }
 
@@ -53,7 +52,6 @@ const processDoctorFormData = (req, res, next) => {
   next();
 };
 
-// Import the controller functions
 const {
   getAdminStats,
   getAllUsers,

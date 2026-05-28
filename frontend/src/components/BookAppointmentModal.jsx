@@ -12,10 +12,10 @@ import {
 const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
-  const [selectedDate, setSelectedDate] = useState(""); // Stores actual selected calendar date
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [availableDays, setAvailableDays] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]); // Holds status objects
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -115,7 +115,6 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
           params: { doctorId: selectedDoctor, date: selectedDate },
         });
 
-        // Backend should return an array of booked slots, e.g., [{ time: "10:00 - 10:15", status: "booked" }]
         const bookedSlotsFromServer = res.data || [];
 
         // 1. Get doctor's shifts for this day
@@ -134,7 +133,7 @@ const BookAppointmentModal = ({ show, onClose, onSuccess }) => {
         const detailedSlots = allChunks.map((slotString) => {
           // Check if this specific time slot exists in the booked slots array from the backend
           const isBooked = bookedSlotsFromServer.find(
-            (b) => b.time === slotString || b.timeSlot === slotString, // Handle both key variations just in case
+            (b) => b.time === slotString || b.timeSlot === slotString,
           );
 
           return {
